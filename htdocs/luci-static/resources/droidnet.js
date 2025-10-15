@@ -152,12 +152,15 @@ async function selectDeviceForm() {
   o.inputstyle = "negative";
   o.inputtitle = _("⟳ Reload ADB Daemon");
   o.onclick = async function () {
-    await droidnet.reloadAdbd();
+    await reloadAdbd();
     window.location.reload();
   };
   o.write = function () {};
   o.remove = function () {};
   return m.render();
+}
+async function reloadAdbd(){
+  return await fs.exec("adb", ["kill-server"]);
 }
 return baseclass.extend({
   title: title,
@@ -167,7 +170,5 @@ return baseclass.extend({
   suexec: suexec,
   getDeviceId: getDeviceId,
   selectDevices: selectDevices,
-  reloadAdbd: async function () {
-    const result = await fs.exec("adb", ["kill-server"]);
-  },
+  reloadAdbd: reloadAdbd,
 });

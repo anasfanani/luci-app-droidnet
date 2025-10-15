@@ -1,5 +1,4 @@
 config droidnet 'device'
-	option id 'id'
 	option display_app '100'
 	option display_msg '10'
 

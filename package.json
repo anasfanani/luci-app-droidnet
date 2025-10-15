@@ -1,6 +1,19 @@
 {
-  "dependencies": {
+  "name": "luci-app-droidnet",
+  "version": "1.1.0",
+  "description": "LuCI support for Android Modem",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "dev": "tsc --watch",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@kuoruan/luci-types": "^1.1.2",
     "@prettier/plugin-xml": "^3.4.2",
-    "prettier": "^3.6.2"
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.4",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3"
   }
 }

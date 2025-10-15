@@ -100,4 +100,6 @@ View all incoming messages received by Android modem, including sender informati
 
 ```sh
 curl -fsSL https://bun.com/install | bash
+source ~/.bashrc
+bun install
 ```

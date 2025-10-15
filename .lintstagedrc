@@ -1,0 +1,3 @@
+{
+  "*.ts": "bun x prettier --write --ignore-unknown src/**/*.ts"
+}
