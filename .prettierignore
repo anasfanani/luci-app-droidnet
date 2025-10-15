@@ -1,8 +1,5 @@
-node_modules
-dist
-build
-htdocs
-*.min.js
-*.min.css
-root
-*js
+node_modules/
+dist/
+build/
+root/
+*.js

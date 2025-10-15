@@ -13,13 +13,34 @@ interface DeviceList {
   devices: Record<string, string> | false;
 }
 
+interface TableRow {
+  label: string;
+  value: string | boolean;
+  action?: {
+    onEnable: () => Promise<void>;
+    onDisable: () => Promise<void>;
+  };
+}
+
+interface TabConfig {
+  tabId: string;
+  tabTitle: string;
+  tabContent: HTMLElement;
+}
+
+interface TableConfig {
+  col?: number;
+  colSizeMap?: Record<number, number[]>;
+}
+
 class DroidNet {
   private deviceId: string | null = null;
-  public title = _(
+  public title: string = _(
     `<p><strong><span style="margin-right: 5px;"><img src="/luci-static/resources/svg/droidnet.svg" style="height: 1em;width: auto;vertical-align: -0.15em;"></img></span><span style="color: rgb(102, 153, 51);">Droid</span> <span style="color: rgb(250, 197, 28);">Net</span></strong></p>`,
   );
-  public description = "Manage Android modem and optimize network settings.";
-  public header = [
+  public description: string =
+    "Manage Android modem and optimize network settings.";
+  public header: HTMLElement[] = [
     E("h2", { class: "section-title" }, this.title),
     E("div", { class: "cbi-map-descr" }, _(this.description)),
   ];
@@ -268,18 +289,268 @@ class DroidNet {
   async reloadAdbd(): Promise<ExecResult> {
     return await fs.exec("adb", ["kill-server"]);
   }
+
+  closeUi(type: "OK" | "Cancel"): HTMLElement {
+    if (type === "OK") {
+      return E(
+        "button",
+        {
+          class: "btn",
+          click: () => window.location.reload(),
+        },
+        _("OK"),
+      );
+    } else {
+      return E(
+        "button",
+        {
+          class: "btn cbi-button cbi-button-remove",
+          style: "margin-right: 10px",
+          click: ui.hideModal,
+        },
+        _("Cancel"),
+      );
+    }
+  }
+
+  writeLog(message: string): void {
+    const logFile = "/var/log/droidnet.log";
+    fs.read(logFile).then((result: string) => {
+      const service = _("Network service");
+      const date = new Date().toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "2-digit",
+      });
+      const time = new Date().toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const notif = `${date}, ${time} - ${service}: ${message}`;
+      const newData = result.trim() + "\n" + notif;
+      return fs.write(logFile, newData);
+    });
+  }
+
+  renderTable(rows: TableRow[] = [], config: TableConfig = {}): HTMLElement {
+    const defaultConfig: Required<TableConfig> = {
+      col: 2,
+      colSizeMap: {
+        2: [50, 50],
+        4: [25, 25, 25, 25],
+        6: [16.6, 16.6, 16.6, 16.6],
+      },
+    };
+    const finalConfig = { ...defaultConfig, ...config };
+    const filteredRows = rows.filter(
+      (item) => item !== null && item !== undefined,
+    );
+    const styles = ["cbi-rowstyle-1", "cbi-rowstyle-2"];
+    const columnsPerRow = finalConfig.col;
+    const itemsPerRow = Math.floor(columnsPerRow / 2);
+    const colSizes = finalConfig.colSizeMap[columnsPerRow] || [];
+
+    const chunkedRows: TableRow[][] = [];
+    for (let i = 0; i < filteredRows.length; i += itemsPerRow) {
+      chunkedRows.push(filteredRows.slice(i, i + itemsPerRow));
+    }
+
+    const tableHeader = E("tr", {
+      class: "tr table-titles",
+      style: "display: none;",
+    });
+
+    const tableRows = chunkedRows.map((rowGroup, rowIndex) => {
+      const rowStyle = styles[rowIndex % 2];
+
+      const cells = rowGroup.flatMap((row, idx) => {
+        let actionButtons: HTMLElement[] = [];
+
+        if (row.action) {
+          actionButtons = [
+            row.value
+              ? E(
+                  "button",
+                  {
+                    class: "btn cbi-button cbi-button-remove",
+                    style:
+                      "display: block; margin: 0 auto; padding: 2px 8px; font-size: 12px; line-height: 1.2;",
+                    click: row.action.onEnable,
+                  },
+                  _("Disable"),
+                )
+              : E(
+                  "button",
+                  {
+                    class: "btn cbi-button cbi-button-action",
+                    style:
+                      "display: block; margin: 0 auto; padding: 2px 8px; font-size: 12px; line-height: 1.2;",
+                    click: row.action.onDisable,
+                  },
+                  _("Enable"),
+                ),
+          ];
+        }
+
+        const labelIndex = idx * 2;
+        const valueIndex = labelIndex + 1;
+
+        const getWidth = (sizes: number[], index: number): string =>
+          sizes[index] !== undefined ? `${sizes[index]}%` : "auto";
+
+        const labelTd = E(
+          "td",
+          {
+            class: "td left",
+            style: `width: ${getWidth(colSizes, labelIndex)}`,
+          },
+          E("b", {}, _(row.label)),
+        );
+
+        const valueTd = E(
+          "td",
+          {
+            class: "td left",
+            style: `width: ${getWidth(colSizes, valueIndex)};`,
+          },
+          row.action ? actionButtons : _(String(row.value)),
+        );
+
+        return [labelTd, valueTd];
+      });
+
+      return E("tr", { class: "tr " + rowStyle }, cells);
+    });
+
+    return E("table", { class: "table cbi-section-table" }, [
+      tableHeader,
+      ...tableRows,
+    ]);
+  }
+
+  renderTitle(title: string): HTMLElement {
+    return E("h3", { class: "section-title" }, _(title));
+  }
+
+  modalError(message: string, errorMessage?: string): void {
+    ui.showModal(_("An error occurred"), [
+      E("p", _(message)),
+      errorMessage ? E("em", { style: "color: red;" }, errorMessage) : "",
+      E("div", { class: "right" }, [E(this.closeUi("OK"))]),
+    ]);
+  }
+
+  modalSuccess(message: string, successMessage?: string): void {
+    ui.showModal(_("Success"), [
+      E("p", _(message)),
+      successMessage ? E("em", { style: "color: green;" }, successMessage) : "",
+      E("div", { class: "right" }, [E(this.closeUi("OK"))]),
+    ]);
+  }
+
+  modalLoading(message: string): void {
+    ui.showModal(_("Loading..."), [E("p", { class: "spinning" }, _(message))]);
+  }
+
+  confirmAction(title: string, message: string, yesCallback: () => void): void {
+    ui.showModal(_(title), [
+      E("p", _(message)),
+      E("div", { class: "right" }, [
+        E(this.closeUi("Cancel")),
+        E(
+          "button",
+          {
+            class: "btn cbi-button cbi-button-action",
+            click: yesCallback,
+          },
+          _("Yes"),
+        ),
+      ]),
+    ]);
+  }
+
+  renderTab(tabs: (TabConfig | null)[] = []): HTMLElement {
+    const filteredTabs = tabs.filter(
+      (item): item is TabConfig => item !== null && item !== undefined,
+    );
+
+    const tabMenu = E(
+      "ul",
+      { class: "cbi-tabmenu" },
+      filteredTabs.map((tab, index) => {
+        const tabId = `tab-${index + 1}-${tab.tabId}`;
+        const isActive = index === 0;
+
+        return E(
+          "li",
+          { class: isActive ? "cbi-tab" : "cbi-tab-disabled", id: tabId },
+          [
+            E(
+              "a",
+              {
+                href: `#${tab.tabId}`,
+                click: () => {
+                  filteredTabs.forEach((_, i) => {
+                    const currentTab = filteredTabs[i];
+                    if (!currentTab) return;
+                    const tabElement = document.getElementById(
+                      `tab-${i + 1}-${currentTab.tabId}`,
+                    );
+                    const contentElement = document.getElementById(
+                      currentTab.tabId,
+                    );
+                    if (tabElement)
+                      tabElement.className =
+                        i === index ? "cbi-tab" : "cbi-tab-disabled";
+                    if (contentElement)
+                      contentElement.style.display =
+                        i === index ? "contents" : "none";
+                  });
+                },
+              },
+              _(tab.tabTitle),
+            ),
+          ],
+        );
+      }),
+    );
+
+    const contentSections = filteredTabs.map((tab, index) => {
+      return E(
+        "div",
+        {
+          id: tab.tabId,
+          style: index === 0 ? "display: contents;" : "display: none;",
+        },
+        [E(tab.tabContent)],
+      );
+    });
+
+    return E("div", {}, [tabMenu, ...contentSections]);
+  }
 }
 
-const droidNet = new DroidNet();
+type DroidNetType = DroidNet;
+
+const instance = new DroidNet();
+const proto = Object.getPrototypeOf(instance);
+const methods = Object.getOwnPropertyNames(proto)
+  .filter(
+    (name): name is keyof DroidNet =>
+      name !== "constructor" &&
+      typeof (instance as any)[name] === "function" &&
+      !name.startsWith("_"),
+  )
+  .reduce(
+    (obj, name) => {
+      obj[name] = (instance[name] as Function).bind(instance);
+      return obj;
+    },
+    {} as Record<keyof DroidNet, any>,
+  );
 
 // @ts-ignore
 return baseclass.extend({
-  title: droidNet.title,
-  header: droidNet.header,
-  selectDeviceForm: droidNet.selectDeviceForm.bind(droidNet),
-  exec: droidNet.exec.bind(droidNet),
-  suexec: droidNet.suexec.bind(droidNet),
-  getDeviceId: droidNet.getDeviceId.bind(droidNet),
-  selectDevices: droidNet.selectDevices.bind(droidNet),
-  reloadAdbd: droidNet.reloadAdbd.bind(droidNet),
-});
+  ...instance,
+  ...methods,
+} as DroidNet);
