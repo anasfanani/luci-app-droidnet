@@ -5,21 +5,19 @@
 "require form";
 "require baseclass";
 
-interface ExecResult extends fs.FileExecResult {
-  error?: boolean;
-}
-
 interface DeviceList {
   devices: Record<string, string> | false;
+}
+
+interface ToggleAction {
+  onEnable: () => Promise<void>;
+  onDisable: () => Promise<void>;
 }
 
 interface TableRow {
   label: string;
   value: string | boolean;
-  action?: {
-    onEnable: () => Promise<void>;
-    onDisable: () => Promise<void>;
-  };
+  action?: ToggleAction;
 }
 
 interface TabConfig {
@@ -34,7 +32,8 @@ interface TableConfig {
 }
 
 class DroidNet {
-  private deviceId: string | null = null;
+  private __deviceId: string | null = null;
+  private __deviceConnected: boolean | null = null;
   public title: string = _(
     `<p><strong><span style="margin-right: 5px;"><img src="/luci-static/resources/svg/droidnet.svg" style="height: 1em;width: auto;vertical-align: -0.15em;"></img></span><span style="color: rgb(102, 153, 51);">Droid</span> <span style="color: rgb(250, 197, 28);">Net</span></strong></p>`,
   );
@@ -45,31 +44,32 @@ class DroidNet {
     E("div", { class: "cbi-map-descr" }, _(this.description)),
   ];
 
-  private toArray(cmd: string | string[]): string[] {
+  private __toArray(cmd: string | string[]): string[] {
     return Array.isArray(cmd) ? cmd : [String(cmd)];
   }
 
-  async getDeviceId(): Promise<string | null> {
-    if (this.deviceId === null) {
-      await uci.load("droidnet");
-      this.deviceId = uci.get("droidnet", "device", "id");
-    }
-    return this.deviceId;
-  }
-
-  private async _adbExec(
+  private async __exec(
     command: string | string[],
     callback?: (stdout: string) => any,
     { asSu = false }: { asSu?: boolean } = {},
-  ): Promise<ExecResult | any> {
+  ): Promise<fs.FileExecResult> {
     try {
       const id = await this.getDeviceId();
       if (!id) {
-        return { error: true, stderr: "No device ID configured", stdout: "" };
+        return { code: 1, stderr: "No device ID configured", stdout: "" };
       }
+
+      if (!(await this.isDeviceConnected())) {
+        return {
+          code: 1,
+          stderr: "Device not connected or not found",
+          stdout: "",
+        };
+      }
+
       const shellArgs = asSu
-        ? ["-s", id, "shell", "su", "-c", this.toArray(command).join(" ")]
-        : ["-s", id, "shell", ...this.toArray(command)];
+        ? ["-s", id, "shell", "su", "-c", this.__toArray(command).join(" ")]
+        : ["-s", id, "shell", ...this.__toArray(command)];
 
       const result = await fs.exec("adb", shellArgs);
       const hadError =
@@ -77,18 +77,18 @@ class DroidNet {
         (result.stderr && result.stderr.trim().length > 0);
 
       if (hadError) {
-        return { ...result, error: true };
+        return { ...result };
       }
 
-      if (!callback) return { ...result, error: false };
+      if (!callback) return { ...result };
       const cbOut = await callback(result.stdout || "");
       return cbOut;
     } catch (error) {
-      return { error: true, stderr: String(error), stdout: "" };
+      return { code: 1, stderr: String(error), stdout: "" };
     }
   }
 
-  private createButton(
+  private __createButton(
     section: LuCI.form.NamedSection,
     id: string,
     title: string,
@@ -120,18 +120,40 @@ class DroidNet {
     return o;
   }
 
+  async getDeviceId(): Promise<string | null> {
+    if (this.__deviceId === null) {
+      await uci.load("droidnet");
+      this.__deviceId = uci.get("droidnet", "device", "id");
+    }
+    return this.__deviceId;
+  }
+
+  async isDeviceConnected(): Promise<boolean> {
+    if (this.__deviceConnected === null) {
+      const id = await this.getDeviceId();
+      if (!id) {
+        this.__deviceConnected = false;
+        return false;
+      }
+      const deviceCheck = await fs.exec("adb", ["devices"]);
+      this.__deviceConnected =
+        deviceCheck.code === 0 && (deviceCheck.stdout?.includes(id) || false);
+    }
+    return this.__deviceConnected;
+  }
+
   async exec(
     command: string | string[],
     callback?: (stdout: string) => any,
-  ): Promise<ExecResult | any> {
-    return this._adbExec(command, callback, { asSu: false });
+  ): Promise<fs.FileExecResult> {
+    return this.__exec(command, callback, { asSu: false });
   }
 
   async suexec(
     command: string | string[],
     callback?: (stdout: string) => any,
-  ): Promise<ExecResult | any> {
-    return this._adbExec(command, callback, { asSu: true });
+  ): Promise<fs.FileExecResult> {
+    return this.__exec(command, callback, { asSu: true });
   }
 
   async selectDevices(): Promise<DeviceList> {
@@ -257,7 +279,7 @@ class DroidNet {
         (model: string) => model === "unauthorized",
       );
 
-    this.createButton(
+    this.__createButton(
       s,
       "save",
       _("Action"),
@@ -271,7 +293,7 @@ class DroidNet {
       shouldDisable,
     );
 
-    this.createButton(
+    this.__createButton(
       s,
       "reload",
       _("ADB Daemon"),
@@ -286,7 +308,7 @@ class DroidNet {
     return m.render();
   }
 
-  async reloadAdbd(): Promise<ExecResult> {
+  async reloadAdbd(): Promise<fs.FileExecResult> {
     return await fs.exec("adb", ["kill-server"]);
   }
 
@@ -528,9 +550,109 @@ class DroidNet {
 
     return E("div", {}, [tabMenu, ...contentSections]);
   }
+
+  addNotification(
+    title: string,
+    message: string,
+    type: "info" | "warning" | "danger" = "info",
+  ): void {
+    const icons = {
+      info: "ℹ️",
+      warning: "⚠️",
+      danger: "❌",
+    };
+
+    const titleWithIcon = E("span", {}, [
+      E(
+        "span",
+        { style: "margin-right: 0.5em;margin-left: 0.5em;" },
+        icons[type],
+      ),
+      E("strong", {}, _(title)),
+    ]);
+
+    const bodyContent = E("div", { style: "margin-top: 4px;" }, [
+      E("p", { style: "margin: 0; line-height: 1.4;" }, _(message)),
+    ]);
+
+    ui.addNotification(titleWithIcon, bodyContent, type);
+  }
+
+  private async __executeToggleAction(
+    service: string,
+    action: string,
+    cmd: string[],
+  ): Promise<void> {
+    this.modalLoading(`${action} ${service}...`);
+    const execute = await this.exec(cmd);
+
+    if (!execute.stderr) {
+      const message = `${service} has been ${action.toLowerCase()}.`;
+      this.modalSuccess(message);
+      this.writeLog(_(message));
+    } else {
+      const errorMessage = execute.stderr || "An unknown error occurred.";
+      this.modalError(
+        `Failed to ${action.toLowerCase()} ${service}.`,
+        String(errorMessage),
+      );
+      this.writeLog(
+        _(`Failed to ${action.toLowerCase()} ${service}: ${errorMessage}`),
+      );
+    }
+  }
+
+  createToggleAction(
+    service: string,
+    enableCmd: string[],
+    disableCmd: string[],
+  ): ToggleAction {
+    const capitalizedService = service
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+
+    return {
+      onEnable: async () => {
+        this.confirmAction(
+          capitalizedService,
+          `Are you sure you want to turn off ${service}?`,
+          () =>
+            this.__executeToggleAction(
+              capitalizedService,
+              "Turning off",
+              disableCmd,
+            ),
+        );
+      },
+      onDisable: async () => {
+        this.confirmAction(
+          capitalizedService,
+          `Are you sure you want to turn on ${service}?`,
+          () =>
+            this.__executeToggleAction(
+              capitalizedService,
+              "Turning on",
+              enableCmd,
+            ),
+        );
+      },
+    };
+  }
+
+  renderPage(sections: (HTMLElement[] | null)[]): HTMLElement {
+    return E("div", { class: "cbi-map" }, [
+      E(this.header),
+      ...sections
+        .filter(Boolean)
+        .flat()
+        .map((section) => E("div", { class: "cbi-section" }, section)),
+    ]);
+  }
 }
 
 type DroidNetType = DroidNet;
+declare const droidnet: ReturnType<() => DroidNet>;
 
 const instance = new DroidNet();
 const proto = Object.getPrototypeOf(instance);
