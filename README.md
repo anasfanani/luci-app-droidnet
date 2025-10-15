@@ -95,3 +95,9 @@ View all incoming messages received by Android modem, including sender informati
   <img src="https://github.com/animegasan/luci-app-droidmodem/assets/14136053/8816329b-f8eb-47a0-a292-bb6bf8073f4d">
  </p>
 </details>
+
+## Development
+
+```sh
+curl -fsSL https://bun.com/install | bash
+```
