@@ -174,6 +174,82 @@ return view.extend({
 				o.value(pathID, data.tunnelService[pathID]);
 			});
 		};
+
+
+
+		s = m.section(form.NamedSection, 'httping', 'droidnet', _('Httping Service'),
+			_('Monitor network performance on android modem to ensure optimal connectivity stability.'));
+		o = s.option(form.DummyValue, 'dummy', _('Status'));
+		o.rawhtml = true;
+		o.cfgvalue = function(section_id) {
+			var span = '<b><span style="color:%s">%s</span></b>';
+			var renderHTML = data.status ?
+				String.format(span, 'green', _('Running')) :
+				String.format(span, 'red', _('Not Running'));
+			return renderHTML;
+		};
+		o = s.option(form.Flag, 'enable', _('Enable'));
+		o.rmempty = false;
+
+		o = s.option(form.Value, 'http_url', _('URL'),
+			_('The IP-based URL to connect to. It\'s recommended to use a plain IP address for better compatibility and skip DNS resolution.'));
+		o.placeholder = _('http://104.17.3.81/cdn-cgi/trace');
+		o.rmempty = false;
+
+		o = s.option(form.Value, 'http_timeout', _('Max Timeout to Connect'),
+			_('The maximum amount of time allowed for establishing a connection to the URL.'));
+		o.placeholder = _('4');
+		o.rmempty = false;
+
+		o = s.option(form.Value, 'http_status_expected', _('Expected HTTP Status'),
+			_('The expected HTTP response status. A different status indicates an error or unexpected result.'));
+		o.placeholder = _('200');
+		o.rmempty = false;
+
+		o = s.option(form.Value, 'http_max_retries', _('Max Retries'),
+			_('The number of times to retry connecting if a timeout or connection failure occurs.'));
+		o.placeholder = _('5');
+		o.rmempty = false;
+
+		o = s.option(form.Value, 'http_delay_success', _('Delay After Successful Connection'),
+			_('Wait this long before the next connection attempt if the previous attempt was successful.'));
+		o.placeholder = _('7');
+		o.rmempty = false;
+
+		o = s.option(form.Value, 'http_delay_failed', _('Delay After Failed Connection'),
+			_('Wait this long before retrying if the previous connection attempt failed.'));
+		o.placeholder = _('0');
+		o.rmempty = false;
+
+		o = s.option(form.Value, 'change_ip_delay', _('Change IP Delay'),
+			_('Delay before sending a request to change the device\'s IP. Useful for older/slower devices.'));
+		o.placeholder = _('1');
+		o.rmempty = false;
+
+		o = s.option(form.Value, 'change_ip_check_delay', _('Change IP Check Delay'),
+			_('Delay before checking if the IP address has successfully changed. Ensures the new IP is different from the previous one.'));
+		o.placeholder = _('1');
+		o.rmempty = false;
+
+		o = s.option(form.Value, 'change_ip_check_max_retries', _('Change IP Check Max Retries'),
+			_('If the IP hasn’t changed after this many retries, it will re-trigger the IP change mechanism (e.g., toggle airplane mode again).'));
+		o.placeholder = _('0');
+		o.rmempty = false;
+
+		o = s.option(form.Flag, 'force_ping', _('Force ping'),
+			_('Forces the connection attempt even if no ADB (Android Debug Bridge) devices are connected or if there\'s a known error.'));
+		o.rmempty = false;
+
+		o = s.option(form.Value, 'deep_failed_trigger', _('Deep Failed Trigger'),
+			_('If the connection fails this many times consecutively, it triggers a longer sleep period to prevent aggressive retrying.'));
+		o.placeholder = _('25');
+		o.rmempty = false;
+
+		o = s.option(form.Value, 'deep_failed_sleep_time', _('Deep Failed Sleep Time'),
+			_('Sleep duration after hitting the deep failure threshold, giving time for issues (e.g., SIM card data subscription expired) to resolve.'));
+		o.placeholder = _('60');
+		o.rmempty = false;
+
 		return m.render();
 	}
 });

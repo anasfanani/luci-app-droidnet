@@ -1,20 +1,24 @@
 {
-	"luci-app-droidnet": {
-		"description": "Grant access to luci-app-droidnet",
-		"read": {
-			"file": {
-				"/var/log/droidnet.log": [ "read" ],
-				"/usr/bin/adb": [ "exec" ],
-				"/usr/bin/pgrep": [ "exec" ]
-			},
-			"uci": [ "droidnet" ]
-		},
-		"write": {
-			"file": {
-				"/var/log/droidnet.log": [ "write" ],
-				"/tmp/upload.apk": [ "write" ]
-			},
-			"uci": [ "droidnet" ]
-		}
-	}
+  "luci-app-droidnet": {
+    "description": "Grant access to luci-app-droidnet",
+    "read": {
+      "cgi-io": ["exec"],
+      "file": {
+        "/var/log/droidnet.log": ["read"],
+        "/usr/bin/adb": ["exec"],
+        "/usr/bin/env": ["exec"],
+        "/usr/bin/pgrep": ["exec"],
+        "/usr/share/droidnet/httping": ["exec"],
+        "/usr/bin/tail": ["exec"]
+      },
+      "uci": ["droidnet"]
+    },
+    "write": {
+      "file": {
+        "/var/log/droidnet.log": ["write"],
+        "/tmp/upload.apk": ["write"]
+      },
+      "uci": ["droidnet"]
+    }
+  }
 }

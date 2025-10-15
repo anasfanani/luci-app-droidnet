@@ -10,12 +10,50 @@ STOP=10
 NAME=droidnet
 LOG_FILE=/var/log/droidnet.log
 MONITORING_SERVICE=/usr/share/droidnet/monitoring
+HTTPING_SERVICE=/usr/share/droidnet/httping
 
 start_service() {
-	echo "$(date +"%a, %b %d, %I:%M %p") - Activating DroidNet service." >> $LOG_FILE
 	config_load $NAME
+	config_get httping_enabled httping enabled
+	if [ "$httping_enabled"="1" ];then
+		procd_open_instance
+		echo "$(date +"%a, %b %d, %I:%M %p") - Httping is enabled." >> $LOG_FILE
+		# echo "$(date +"%a, %b %d, %I:%M %p") - ADB: $ADB_DEVICE" >> $LOG_FILE
+		set -a
+		config_get HTTP_URL httping http_url
+		config_get HTTP_TIMEOUT httping http_timeout
+		config_get HTTP_STATUS_EXPECTED httping http_status_expected
+		config_get HTTP_MAX_RETRIES httping http_max_retries
+		config_get HTTP_DELAY_SUCCESS httping http_delay_success
+		config_get HTTP_DELAY_FAILED httping http_delay_failed
+		config_get CHANGE_IP_DELAY httping change_ip_delay
+		config_get CHANGE_IP_CHECK_DELAY httping change_ip_check_delay
+		config_get CHANGE_IP_CHECK_MAX_RETRIES httping change_ip_check_max_retries
+		config_get ADB_DEVICE device id
+		config_get FORCE_PING httping force_ping
+		config_get DEEP_FAILED_TRIGGER httping deep_failed_trigger
+		config_get DEEP_FAILED_SLEEP_TIME httping deep_failed_sleep_time
+		set +a
+		procd_set_param env HTTP_URL=$HTTP_URL \
+			HTTP_TIMEOUT=$HTTP_TIMEOUT \
+			HTTP_STATUS_EXPECTED=$HTTP_STATUS_EXPECTED \
+			HTTP_MAX_RETRIES=$HTTP_MAX_RETRIES \
+			HTTP_DELAY_SUCCESS=$HTTP_DELAY_SUCCESS \
+			HTTP_DELAY_FAILED=$HTTP_DELAY_FAILED \
+			CHANGE_IP_DELAY=$CHANGE_IP_DELAY \
+			CHANGE_IP_CHECK_DELAY=$CHANGE_IP_CHECK_DELAY \
+			CHANGE_IP_CHECK_MAX_RETRIES=$CHANGE_IP_CHECK_MAX_RETRIES \
+			ADB_DEVICE=$ADB_DEVICE \
+			FORCE_PING=$FORCE_PING \
+			DEEP_FAILED_TRIGGER=$DEEP_FAILED_TRIGGER \
+			DEEP_FAILED_SLEEP_TIME=$DEEP_FAILED_SLEEP_TIME
+		procd_set_param command /bin/sh $HTTPING_SERVICE -nc -f
+		procd_set_param stderr 1
+		procd_close_instance
+	fi
 	config_get enable monitoring enable
 	if [ $enable = 1 ]; then
+		echo "$(date +"%a, %b %d, %I:%M %p") - Activating DroidNet service." >> $LOG_FILE
 		screen -dmS droidnet $MONITORING_SERVICE start
 	fi
 }
@@ -26,11 +64,14 @@ start_service() {
 # 	$MONITORING_SERVICE stop
 # }
 stop_service() {
-	echo "$(date +"%a, %b %d, %I:%M %p") - Deactivating DroidNet service." >> $LOG_FILE
-	echo "$(date +"%a, %b %d, %I:%M %p") - Monitoring service: Stopping service." >> $LOG_FILE
-	session=$(screen -ls | awk '/droidnet/ {print $1}')
-	screen -X -S $session quit
-	screen -wipe
+	echo "Stopping";
+	if session=$(screen -ls | awk '/droidnet/ {print $1}') && ! $session; then
+		echo "$(date +"%a, %b %d, %I:%M %p") - Deactivating DroidNet service." >> $LOG_FILE
+		echo "$(date +"%a, %b %d, %I:%M %p") - Monitoring service: Stopping service." >> $LOG_FILE
+		screen -X -S $session quit
+		screen -wipe 2>/dev/null
+	fi
+	# $HTTPING_SERVICE -bgk
 }
 
 reload_service() {

@@ -1,0 +1,539 @@
+#!/bin/sh
+true << EOF
+Copyright (c) 2024 Anas Fanani <anasfanani.com>
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+EOF
+
+export PATH="$PATH:/usr/bin:/sbin:/system/bin:/data/data/com.termux/files/usr/bin"
+export HOME="/root"
+
+# ---Configuration---
+# http_url="" # http://104.17.3.81/cdn-cgi/trace
+# http_timeout="2"
+# http_status_expected="200"
+# http_max_retries="5"
+# http_delay_success="1"
+# http_delay_failed="0"
+# change_ip_delay="1"
+# change_ip_check_delay="1"
+# change_ip_check_max_retries="10"
+# adb_device=""
+# force_ping=false
+# deep_failed_trigger=25
+# deep_failed_sleep_time=60
+http_url="${HTTP_URL:-http://104.17.3.81/cdn-cgi/trace}"
+http_timeout="${HTTP_TIMEOUT:-2}"
+http_status_expected="${HTTP_STATUS_EXPECTED:-200}"
+http_max_retries="${HTTP_MAX_RETRIES:-5}"
+http_delay_success="${HTTP_DELAY_SUCCESS:-1}"
+http_delay_failed="${HTTP_DELAY_FAILED:-0}"
+change_ip_delay="${CHANGE_IP_DELAY:-1}"
+change_ip_check_delay="${CHANGE_IP_CHECK_DELAY:-1}"
+change_ip_check_max_retries="${CHANGE_IP_CHECK_MAX_RETRIES:-10}"
+adb_device="${ADB_DEVICE:-}"
+force_ping="${FORCE_PING:-true}"
+deep_failed_trigger="${DEEP_FAILED_TRIGGER:-25}"
+deep_failed_sleep_time="${DEEP_FAILED_SLEEP_TIME:-60}"
+# ---Configuration---
+
+normal="\033[0m"
+red="\033[1;31m"
+green="\033[1;32m"
+yellow="\033[1;33m"
+blue="\033[1;34m"
+logfile="/var/log/droidnet.log"
+log() {
+  # Selects the text color according to the parameters
+  case $1 in
+    Info) color="${green}" ;;
+    Error) color="${red}" ;;
+    Warning) color="${yellow}" ;;
+    *) color="${blue}" ;;
+  esac
+  info="${blue}$(date +"%I:%M:%S %p")${normal} [${color}$1${normal}]"
+  message="${color}$2${normal}"
+  if [ -t 1 ]; then
+    printf "%b" "${info}\t: ${message}\n"
+  else
+    echo "${info} : ${message}" >> ${logfile} 2>&1
+  fi
+}
+
+_curl="/data/local/tmp/curl"
+execute(){
+    if [ -n "$adb_device" ]; then
+        adb -s "$adb_device" shell "$@" 2>&1
+        return $?
+    else
+        "$@" 2>&1
+        return $?
+    fi
+}
+_checking(){
+    [ -z "${adb_device}" ] && [ -z "${ANDROID_ROOT}" ] && log Error "ADB Device not set, please use flag ${yellow}-s <specific device> ${red}!" && exit 1
+    if [ -n "$adb_device" ]; then
+        
+        if ! _adb_check=$(adb devices 2>&1); then log Error "$_adb_check"; exit 1; fi
+        if ! echo "$_adb_check" | grep "$adb_device" | grep "device" > /dev/null; then log Error "Device not found or unauthorized."; exit 1; fi
+    fi
+    ___check_curl=$(execute $_curl -V | grep "libcurl")
+    if [ -n "$___check_curl" ]; then
+        return 0
+    fi
+    set -- "/data/local/tmp/curl" "/system/bin/curl" "/data/data/com.termux/files/usr/bin/curl" "/bin/curl" "/usr/bin/curl" "/sbin/curl"
+    for curl_path in "$@"; do
+        if ____check_curl=$(execute "$curl_path" -V | grep "libcurl"); then
+            if [ -n "$____check_curl" ]; then
+                sed -i -E "s|^_curl=\".*\"|_curl=\"$curl_path\"|" "$0"
+                log Info "Curl changed from ${yellow}$_curl ${green}to ${yellow}$curl_path"
+                _curl="$curl_path"
+                return 0
+            fi
+        fi
+    done
+    set --
+    
+    case $(execute uname -m) in
+        "aarch64") __arch="aarch64" ;;
+        "armv7l"|"armv8l") __arch="armv7" ;;
+        "i686") __arch="i686" ;;
+        "x86_64") __arch="amd64" ;;
+        *) log Warning "Unsupported architecture: $(execute uname -m)" >&2; exit 1 ;;
+    esac
+    latest_version="$(wget --no-check-certificate -qO- "https://api.github.com/repos/stunnel/static-curl/releases" | grep "tag_name" | grep -oE "[0-9.]*" | head -1 2>&1)"
+    if [ -n "$latest_version" ]; then
+        __download_link="https://github.com/stunnel/static-curl/releases/download/${latest_version}/curl-linux-${__arch}-${latest_version}.tar.xz"
+        log Info "Latest curl version: $latest_version"
+        log Info "Downloading file ${yellow}${__download_link}"
+        wget --no-check-certificate -q "$__download_link"
+        __download_file_name="$(basename "${__download_link}")"
+        if [ -f "$__download_file_name" ];then
+            log Info "File downloaded, extracting.."
+            if __untar=$(tar -xJf "$__download_file_name" 2>&1); then
+                log Info "Extract success, pushing file to device..."
+                if __adb_push=$(adb -s "$adb_device" push curl /data/local/tmp/curl 2>&1); then
+                    log Info "Pushing success, verify..."
+                    __verify=$(adb -s "$adb_device" shell /data/local/tmp/curl -V | grep "$latest_version" 2>&1)
+                    if [ -n "$__verify" ]; then
+                        log Info "Success, curl version : $__verify"
+                        rm "$__download_file_name"
+                        _curl="/data/local/tmp/curl"
+                    else
+                        log Error "Could not verify curl on device, curl error"
+                        exit 1
+                    fi
+                else
+                    log Error "Pushing failed: ${__adb_push}, you need move file curl to /data/local/tmp/curl"
+                    exit 1
+                fi
+            else
+                log Error "Extract failed: ${__untar}."
+                exit 1
+            fi
+        fi
+    else
+        log Error "Could not get latest curl version"
+        [ -n "$adb_device" ] || [ -d "/system/bin/" ] && log Info "Download from ${yellow}https://github.com/stunnel/static-curl/releases/latest${green} for your arch (${yellow}linux-${__arch}${green}) and extract it to ${yellow}/data/local/tmp/curl${green} on device" && exit 1
+        log Info "Download from ${yellow}https://github.com/stunnel/static-curl/releases/latest${green} for your arch (${yellow}linux-${__arch}${green}) and extract it to ${yellow}/usr/bin/curl${green} on device"
+        log Info "Or you can download curl from your distro with ${yellow}apt install curl"
+        exit 1
+    fi
+}
+
+airplane_on(){
+    #execute cmd connectivity airplane-mode enable
+    execute su -c settings put global airplane_mode_on 1
+    execute su -c am broadcast -a android.intent.action.AIRPLANE_MODE
+    return $?
+}
+airplane_off(){
+    # execute cmd connectivity airplane-mode disable
+    execute su -c settings put global airplane_mode_on 0
+    execute su -c am broadcast -a android.intent.action.AIRPLANE_MODE
+    return $?
+}
+get_ip(){
+    execute ip route | grep "rmnet" | awk '{print $NF}'
+    return $?
+}
+
+refresh_ip(){
+    log Info "Toggle airplane mode to get new IP."
+    _count_change_ip=$((_count_change_ip+1))
+    __count_airplane_check=0
+    if __old_ip=$(get_ip 2>&1); then
+        if ! _switch_airplane_on=$(airplane_on); then
+            log Error "Could not switch airplane mode on: ${_switch_airplane_on}."
+            exit 1
+        fi
+        sleep "$change_ip_delay"
+        if ! _switch_airplane_off=$(airplane_off); then
+            log Error "Could not switch airplane mode off: ${_switch_airplane_off}."
+            exit 1
+        fi
+        if read -r up rest </proc/uptime; then
+            __start_time="${up%.*}${up#*.}"
+        else
+            __start_time=$(date '+%s %N' | awk '{printf "%d%03d\n", $1, $2/1000000}')
+        fi
+
+        while true; do
+            if [ "$__count_airplane_check" -gt "$change_ip_check_max_retries" ]; then
+                log Warning "Airplane mode can't get new IP, force airplane mode again."
+                _count_change_ip_failed=$((_count_change_ip_failed+1))
+                refresh_ip
+                return $?
+            fi
+            __new_ip=$(get_ip 2>&1)
+            if [ -n "$__new_ip" ]; then
+                if read -r up rest </proc/uptime; then
+                    __end_time="${up%.*}${up#*.}"
+                else
+                    __end_time=$(date '+%s %N' | awk '{printf "%d%03d\n", $1, $2/1000000}')
+                fi
+                _change_ip_response_time=$(( 10*(__end_time - __start_time) ))
+                _count_change_ip_response_time=$((_count_change_ip_response_time + _change_ip_response_time ))
+                _count_change_ip_success=$((_count_change_ip_success+1))
+                if [ "$__new_ip" = "$__old_ip" ]; then
+                    log Warning "Got new IP : $__new_ip in ${_change_ip_response_time}ms, but new IP still same with old IP."
+                    refresh_ip
+                    return $?
+                else
+                    log Info "Got new IP : $__new_ip in ${_change_ip_response_time}ms."
+                    return 0
+                fi
+            else
+                log Info "Waiting to get new IP ..."
+            fi
+            __count_airplane_check=$((__count_airplane_check+1))
+            sleep "$change_ip_check_delay"
+        done
+    else
+        if [ "$(execute cmd connectivity airplane-mode)" = "enabled" ]; then
+            log Warning "Airplane mode enabled by you ... ${__old_ip}"
+            airplane_off
+            sleep "3" # average got new IP is 3000ms/3second
+            return $?
+        else
+            log Error "Could not get current IP, error message: $__old_ip.";
+            exit 1
+        fi
+    fi
+}
+
+ping_curl(){
+    _execute=$(execute  "$_curl" -w 'response_code: %{response_code}\ntime_total: %{time_total}\nremote_ip: %{remote_ip}\n' -Ik --connect-timeout "$http_timeout" --max-time "$http_timeout" "$1" 2>&1)
+    response_code=$(echo "$_execute" | awk '/^response_code/{print $2}')
+    time_total=$(echo "$_execute" | awk '/^time_total/{printf "%.0f", $2*1000}')
+    remote_ip=$(echo "$_execute" | awk '/^remote_ip/{print $2}')
+    _count=$((_count+1))
+    if [ -n "$response_code" ]; then
+        if [ "$response_code" -eq "$http_status_expected" ]; then
+            log Info "$response_code from $1 ($remote_ip): time=${time_total}ms seq=$_count"
+            _count_success_response_time=$((_count_success_response_time + time_total))
+            _count_success=$((_count_success+1))
+            __count_failed_attempts=0
+            sleep "$http_delay_success"
+            return 0
+        else
+            __count_failed_attempts=$((__count_failed_attempts+1))
+            if [ "$response_code" -eq "000" ]; then
+                if [ $_count -eq 1 ]  && ! "$force_ping"; then
+                    log Warning "$response_code from $1 ($remote_ip): time=${time_total}ms seq=$_count"
+                    log Error "First connection error, verify URL is available !"
+                    log Info "TIP: Retry with flag ${yellow}-f${green} / ${yellow}--force${green} to force ping this URL."
+                    exit 1
+                fi
+                _count_timeout=$((_count_timeout+1))
+                log Warning "$response_code from $1 ($remote_ip): time=${time_total}ms seq=$_count retry=$__count_failed_attempts"
+            else
+                if [ $_count -eq 1 ]  && ! "$force_ping"; then
+                    log Warning "$response_code from $1 ($remote_ip): time=${time_total}ms seq=$_count"
+                    log Error "Response not match, default response should $http_status_expected !"
+                    log Info "TIP: Retry with flag ${yellow}-f${green} / ${yellow}--force${green} to force ping this URL."
+                    exit 1
+                fi
+                _count_warning=$((_count_warning+1))
+                log Warning "$response_code from $1 ($remote_ip): time=${time_total}ms seq=$_count retry=$__count_failed_attempts"
+            fi
+            if [ "$__count_failed_attempts" -gt "$deep_failed_trigger" ] && [ "$__count_failed_attempts" -gt "$((deep_failed_trigger+__deep_failed_next_trigger))"  ]; then
+                __deep_failed_next_trigger=$((deep_failed_trigger+__deep_failed_next_trigger))
+                log Warning "Too many retries, deep sleeping $deep_failed_sleep_time second..."
+                sleep "$deep_failed_sleep_time"
+            fi
+            if [ "$__count_failed_attempts" -gt "$http_max_retries" ]; then
+                refresh_ip
+                return $?
+            fi
+            sleep "$http_delay_failed"
+        fi
+    else
+        log Error "Ping error: $_execute"
+        exit 1
+    fi
+}
+_clean_up() {
+  echo
+  if [ $_count -gt 1 ]; then
+    log Info "${yellow}Ping statistics for $http_url${normal}"
+    log Info "${yellow}${_count}${green} ping executed, ${yellow}${_count_success}${green} ping success, ${yellow}${_count_timeout}${green} ping timeout, ${yellow}${_count_warning}${green} ping warning"
+    log Info "${yellow}$(((_count_success * 100) / _count))%${normal} ${green}success, ${yellow}$(((_count_timeout * 100) / _count))%${normal} ${green}timeout, ${yellow}$(((_count_warning * 100) / _count))%${normal} ${green}warning$([ $_count_success -ne 0 ] && echo ", average success time${normal} ${yellow}$((_count_success_response_time / _count_success))ms${normal}")"
+    log Info "${yellow}Change IP statistics${normal}"
+    log Info "${yellow}${_count_change_ip}${normal} ${green}change IP requested, ${normal}${yellow}${_count_change_ip_success} ${green}success, ${normal}${yellow}${_count_change_ip_failed} ${green}failed$([ $_count_change_ip_success -ne 0 ] && echo ", average success time ${normal}${yellow}$((_count_change_ip_response_time / _count_change_ip_success))ms${normal}" )"
+  fi
+  trap - EXIT; exit 0
+}
+_current_args="$*"
+_script_name=$(basename "$(readlink -f "$0")")
+background_start(){
+    _current_args="$(echo "${_current_args}" | sed 's/-bg//')"
+    _current_args="$(echo "${_current_args}" | sed 's/--background//')"
+    _current_args="${_current_args} -nc -f"
+    set -- -d "_current_args"
+    _pids="$(pgrep -fla "$_script_name" | grep -v $$ | grep -vE "\-bg|--background")"
+    if [ -n "$_pids" ]; then
+        echo "$_pids" | while IFS= read -r line; do
+            pid=$(echo "$line" | awk '{print $1}')
+            command=$(echo "$line" | awk '{$1=""; print $0}')
+            log Info "Already started with PID: ${yellow}${pid}${green}, use parameter ${yellow}-bgl${green} to see logs."
+            log Info "  Command: ${command}"
+        done
+    else
+        log Info "Current Configuration:"
+        log Info "  URL: ${http_url}"
+        log Info "  Timeout: ${http_timeout}"
+        log Info "  Expected HTTP Status: ${http_status_expected}"
+        log Info "  Max HTTP Retries: ${http_max_retries}"
+        log Info "  HTTP Delay on Success: ${http_delay_success}"
+        log Info "  HTTP Delay on Failure: ${http_delay_failed}"
+        log Info "  Change IP Delay: ${change_ip_delay}"
+        log Info "  Change IP Check Delay: ${change_ip_check_delay}"
+        log Info "  Max Change IP Check Retries: ${change_ip_check_max_retries}"
+        [ -n "${adb_device}" ] && log Info "  ADB Device: ${adb_device}"
+        [ -z "${adb_device}" ] && [ -z "${ANDROID_ROOT}" ] && log Error "ADB Device not set !" && exit 1
+        log Info "  Deep Failed Trigger: ${deep_failed_trigger}"
+        log Info "  Deep Failed Sleep Time: ${deep_failed_sleep_time}"
+        nohup sh $0 $_current_args >> $logfile 2>&1 &
+        PID=$!
+        check_log_for_success() {
+            fifo="/tmp/logpipe_$$"
+            mkfifo "$fifo"
+
+            # Jalankan tail ke FIFO di background
+            tail -f "$logfile" > "$fifo" &
+            tail_pid=$!
+
+            while read line; do
+                echo "$line" | grep -q "${http_status_expected} from ${http_url}"
+                if [ $? -eq 0 ]; then
+                    log Info "Process started successfully with PID: $PID"
+                    kill $tail_pid
+                    break
+                fi
+
+                if ! kill -0 "$PID" 2>/dev/null; then
+                    log Error "Process with PID: $PID has terminated without success."
+                    kill -15 $tail_pid
+                    break
+                fi
+            done < "$fifo"
+
+            wait $tail_pid 2>/dev/null
+            rm -f "$fifo"
+        }
+
+        check_log_for_success
+        log Info "Exit."
+    fi
+    exit 0
+}
+xxxxxxxxxxxxxzbackground_kill(){
+    
+    _pids="$(pgrep -fla "$_script_name" | grep -v $$ | grep -vE "\-bgk|--background-kill")"
+    if [ -n "$_pids" ]; then
+        echo "$_pids" | while IFS= read -r line; do
+            pid=$(echo "$line" | awk '{print $1}')
+            command=$(echo "$line" | awk '{$1=""; print $0}')
+            log Info "Killing PID: $pid, Command: $command"
+            kill -15 "$pid"
+        done
+        log Info "All process killed."
+    else
+        log Info "No background process detected."
+    fi
+    exit 0
+}
+background_kill() {
+    log Info "Killing"
+    log Info "  Script name: $_script_name"
+    log Info "  Script path: $(readlink -f $0)"
+    _pids="$(pgrep -fla "$_script_name" | grep -v $$ | grep -vE "\-bgk|--background-kill")"
+    log Info "  PIDs: $_pids"
+    if [ -n "$_pids" ]; then
+        echo "$_pids" | while IFS= read -r line; do
+            pid=$(echo "$line" | awk '{print $1}')
+            command=$(echo "$line" | awk '{$1=""; print $0}')
+            log Info "Sending SIGTERM to PID: $pid, Command: $command"
+            kill -15 "$pid"
+            
+            for i in {1..3}; do
+                sleep 1
+                if ! ps | grep "$pid" | grep -v 'grep' > /dev/null; then
+                    log Info "PID: $pid terminated gracefully."
+                    break
+                fi
+            done
+            
+            if ps | grep "$pid" | grep -v 'grep' > /dev/null; then
+                log Warning "PID: $pid did not terminate, sending SIGKILL"
+                kill -9 "$pid"
+            fi
+        done
+        log Info "All processes handled."
+    else
+        log Info "No background process detected."
+    fi
+    exit 0
+}
+background_log(){
+    tail  -f "$logfile"
+}
+help_usage() {
+    printf "%b" "Simple http ping curl by t.me/systembinsh\n\n"
+    printf "%b" "Usage: $0 [options...] <url>\n"
+    printf "%b" " -ht,    --http-timeout <int>                   \t\t HTTP Timeout (default: $http_timeout)\n"
+    printf "%b" " -hse,   --http-status-expected <int>           \t\t Expected HTTP response code (default: $http_status_expected)\n"
+    printf "%b" " -hmr,   --http-max-retries <int>               \t\t HTTP Max Retries (default: $http_max_retries)\n"
+    printf "%b" " -hds,   --http-delay-success <int>             \t\t HTTP Delay Success (default: $http_delay_success)\n"
+    printf "%b" " -hdf,   --http-delay-failed <int>              \t\t HTTP Delay Failed (default: $http_delay_failed)\n"
+    printf "%b" " -cid,   --change-ip-delay <int>                \t\t Change IP Delay (default: $change_ip_delay)\n"
+    printf "%b" " -cicd,  --change-ip-check-delay <int>          \t\t Change IP Check Delay (default: $change_ip_check_delay)\n"
+    printf "%b" " -cicmr, --change-ip-check-max-retries <int>    \t\t Change IP Check Max Retries (default: $change_ip_check_max_retries)\n"
+    printf "%b" " -s,     --adb-s <device-id>                    \t\t Run with adb device id (default: no)\n"
+    printf "%b" " -nc,    --no-color                             \t\t Disable colored output\n"
+    printf "%b" " -f,     --force                                \t\t Disable first time error exception\n"
+    printf "%b" " -dft,   --deep-failed-trigger                  \t\t Minimum failed to trigger deep sleep (default: $deep_failed_trigger)\n"
+    printf "%b" " -dfst,  --deep-failed-sleep-time               \t\t Sleep duration for deep sleep (default: $deep_failed_sleep_time)\n"
+    printf "%b" " -f,     --force                                \t\t Disable first time error exception\n"
+    printf "%b" " -bg,    --background                           \t\t Run this script in backgroud\n"
+    printf "%b" " -bgk,   --background-kill                      \t\t Kill running script in background\n"
+    printf "%b" " -h,     --help                                 \t\t Show this message\n"
+    exit 1
+}
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -ht|--http-timeout)
+            http_timeout="$2"
+            shift 2
+            ;;
+        -hse|--http-status-expected)
+            http_status_expected="$2"
+            shift 2
+            ;;
+        -hmr|--http-max-retries)
+            http_max_retries="$2"
+            shift 2
+            ;;
+        -hds|--http-delay-success)
+            http_delay_success="$2"
+            shift 2
+            ;;
+        -hdf|--http-delay-failed)
+            http_delay_failed="$2"
+            shift 2
+            ;;
+        -cid|--change-ip-delay)
+            change_ip_delay="$2"
+            shift 2
+            ;;
+        -cicd|--change-ip-check-delay)
+            change_ip_check_delay="$2"
+            shift 2
+            ;;
+        -cicmr|--change-ip-check-max-retries)
+            change_ip_check_max_retries="$2"
+            shift 2
+            ;;
+        -s|--adb-s)
+            adb_device="$2"
+            shift 2
+            ;;
+        -nc|--no-color)
+            red= && green= && yellow= && blue= && normal=
+            shift
+            ;;
+        -f|--f)
+            force_ping=true
+            shift
+            ;;
+        -dft|--deep-failed-trigger)
+            deep_failed_trigger="$2"
+            shift 2
+            ;;
+        -dfst|--deep-failed-sleep-time)
+            deep_failed_sleep_time="$2"
+            shift 2
+            ;;
+        -h|--help)
+            help_usage
+            ;;
+        -bg|--background)
+            background_start
+            ;;
+        -bgk|--background-kill)
+            background_kill
+            
+            ;;
+        -bgl|--background-log)
+            background_log
+            ;;
+        -*)
+            echo "Unknown option: $1"
+            help_usage
+            ;;
+        *)
+            http_url="$1"
+            shift
+            ;;
+    esac
+done
+if [ -z "$http_url" ]; then
+    printf "%b" "$0: try '$0 --help' for more information\n"
+    exit 1
+fi
+
+_checking
+_count=0
+_count_success=0
+_count_timeout=0
+_count_warning=0
+_count_airplane=0
+_count_success_response_time=0
+_count_change_ip=0
+_count_change_ip_success=0
+_count_change_ip_failed=0
+_count_change_ip_response_time=0
+trap _clean_up EXIT INT HUP QUIT TERM
+log Info "${yellow}Starting ping $http_url from $(get_ip)${normal}"
+[ -n "$adb_device" ] && log Info "${yellow}Running with adb device $adb_device${normal}"
+while true; do
+    ping_curl "$http_url" 2>&1
+done
