@@ -6,6 +6,7 @@
     "build": "tsc",
     "watch": "tsc --watch",
     "dev": "tsc --watch",
+    "fmt": "bun x tsc --noEmit && prettier --write .",
     "prepare": "husky"
   },
   "devDependencies": {

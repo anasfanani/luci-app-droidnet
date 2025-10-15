@@ -4,9 +4,9 @@ on:
   workflow_dispatch: {}
   push:
     branches:
-      - 'master'
+      - "master"
     paths:
-      - 'luci-app-droidnet/Makefile'
+      - "luci-app-droidnet/Makefile"
 env:
   TZ: Asia/Jakarta
 
@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@main
         with:
           fetch-depth: 0
-          ref: 'master'
+          ref: "master"
 
       - name: Check version
         id: check_version
@@ -46,7 +46,6 @@ jobs:
         with:
           name: luci-app-droidnet
           tag_name: ${{steps.check_version.outputs.latest_version}}
-
 
   job_build:
     name: Build OpenWRT

@@ -10,12 +10,7 @@
     "module": "ESNext",
     "target": "ESNext",
     "types": [],
-    "lib": [
-			"dom",
-			"dom.iterable",
-      "esnext",
-      "es2015.promise",
-		],
+    "lib": ["dom", "dom.iterable", "esnext", "es2015.promise"],
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
@@ -52,8 +47,5 @@
     "forceConsistentCasingInFileNames": true,
     "removeComments": true
   },
-  "include": [
-    "src/**/*.ts",
-    "node_modules/@kuoruan/luci-types/index.d.ts"
-  ]
+  "include": ["src/**/*.ts", "node_modules/@kuoruan/luci-types/index.d.ts"]
 }

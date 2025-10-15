@@ -20,15 +20,18 @@
 DroidModem is an application designed specifically for managing and optimizing network settings on Android modems. With advanced features, DroidModem allows users to have full control over their network connectivity and modem performance, ensuring a better user experience and more stable connections.
 
 ## 📥 | Install via Terminal
+
 ```
 curl -s https://raw.githubusercontent.com/animegasan/luci-app-droidmodem/master/install | sh
 ```
 
 ## 📱 | Supported Devices
+
 - Android version 10 or greater
 - Rooted Android for version 10 and lower
 
 ## 🎯 | Recommended Magisk Modules
+
 <table>
   <thead align="center">
     <tr border: none;>
@@ -57,11 +60,15 @@ curl -s https://raw.githubusercontent.com/animegasan/luci-app-droidmodem/master/
 </table>
 
 ## ✨ | Features
+
 ### 📊 | Monitoring Service
+
 Tracks network activity on Android modem, automatically restarts networks including tunnel services such as Neko, OpenClash, Passwall, and V2Ray based on predefined configurations. Supports ping via methods such as HTTP, HTTPS, TCP, and ICMP. Continuous monitoring can maintain optimal network connectivity, reducing risk of disruption and downtime.
 
 ### ℹ️ | Information Service
+
 Provides comprehensive information about various aspects of Android modem, ensuring access to important details about device performance and connectivity. This includes device details such as model, manufacturer, and operating system version, battery information such as current charge level and battery health, insights about wireless connectivity such as Wi-Fi networks, and information about cellular connectivity such as network provider.
+
 <details><summary>Screenshoot</summary>
  <p>
   <img src="https://github.com/animegasan/luci-app-droidmodem/assets/14136053/5a1129a5-1106-4e69-8222-848228e43e6b">
@@ -69,7 +76,9 @@ Provides comprehensive information about various aspects of Android modem, ensur
 </details>
 
 ### 📶 | Mobile Network
+
 Displays IP address of Android modem, status of wireless connection, mobile data, and airplane mode. Ypu can manually enable or disable wireless connection, mobile data, and airplane mode as needed.
+
 <details><summary>Screenshoot</summary>
  <p>
   <img src="https://github.com/animegasan/luci-app-droidmodem/assets/14136053/d9451e7a-9117-45b2-8944-9eab5cf97da0">
@@ -77,17 +86,19 @@ Displays IP address of Android modem, status of wireless connection, mobile data
 </details>
 
 ### ⚡ | Power Options and Application Manager
+
 - Power Options<br>
-Gives full control over power operations of Android modem, allowing management of different power modes from one easily accessible place. You can shut down device, restart it, reboot device to enter fastboot mode, and reboot device to enter recovery mode.
+  Gives full control over power operations of Android modem, allowing management of different power modes from one easily accessible place. You can shut down device, restart it, reboot device to enter fastboot mode, and reboot device to enter recovery mode.
 - Application Manager<br>
 Manage applications installed on Android modem, adding necessary applications to enhance functionality or support specific needs and removing unnecessary applications for optimal device performance.
-<details><summary>Screenshoot</summary>
- <p>
-  <img src="https://github.com/animegasan/luci-app-droidmodem/assets/14136053/8ae4f4e4-1e87-4462-9fb1-11c879bcc4d4">
- </p>
-</details>
+   <details><summary>Screenshoot</summary>
+    <p>
+     <img src="https://github.com/animegasan/luci-app-droidmodem/assets/14136053/8ae4f4e4-1e87-4462-9fb1-11c879bcc4d4">
+    </p>
+   </details>
 
 ### 📩 | Inbox Messages
+
 View all incoming messages received by Android modem, including sender information, message content, and reception date. Useful for monitoring important messages without need for a separate device. Using [ShellMS](https://github.com/try2codesecure/ShellMS) for efficient messaging, leveraging its capabilities to enhance communication directly from the development environment.
 
 <details><summary>Screenshoot</summary>
