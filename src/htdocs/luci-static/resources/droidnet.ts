@@ -4,6 +4,7 @@
 "require ui";
 "require form";
 "require baseclass";
+"require rpc";
 
 interface DeviceList {
   devices: Record<string, string> | false;
@@ -43,6 +44,24 @@ class DroidNet {
     E("h2", { class: "section-title" }, this.title),
     E("div", { class: "cbi-map-descr" }, _(this.description)),
   ];
+
+  private __callRCList = rpc.declare({
+    object: "rc",
+    method: "list",
+    params: ["name"],
+    expect: {
+      "": {},
+    },
+  });
+
+  private __callRCInit = rpc.declare({
+    object: "rc",
+    method: "init",
+    params: ["name", "action"],
+    expect: {
+      "": {},
+    },
+  });
 
   private __toArray(cmd: string | string[]): string[] {
     return Array.isArray(cmd) ? cmd : [String(cmd)];
@@ -648,6 +667,22 @@ class DroidNet {
         .flat()
         .map((section) => E("div", { class: "cbi-section" }, section)),
     ]);
+  }
+
+  async serviceStatus(): Promise<boolean> {
+    return (await this.__callRCList("droidnet"))?.droidnet?.running || false;
+  }
+
+  serviceReload(): Promise<any> {
+    return this.__callRCInit("droidnet", "reload");
+  }
+
+  serviceRestart(): Promise<any> {
+    return this.__callRCInit("droidnet", "restart");
+  }
+
+  serviceStop(): Promise<any> {
+    return this.__callRCInit("droidnet", "stop");
   }
 }
 
