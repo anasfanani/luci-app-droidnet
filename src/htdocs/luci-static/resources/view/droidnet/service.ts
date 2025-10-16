@@ -59,7 +59,7 @@ async function downloadUADData(): Promise<UADData> {
     // Use wget to download
     const result = await fs.exec("/usr/bin/wget", [
       "-O",
-      "/tmp/cache/uad_lists.json",
+      "/tmp/cache/droidnet_uad_lists.json",
       url,
     ]);
     if (result.code !== 0) {
@@ -67,7 +67,10 @@ async function downloadUADData(): Promise<UADData> {
     }
 
     // Use fs.read_direct() for large files
-    const uadData = await fs.read_direct("/tmp/cache/uad_lists.json", "json");
+    const uadData = await fs.read_direct(
+      "/tmp/cache/droidnet_uad_lists.json",
+      "json",
+    );
     return uadData as UADData;
   } catch (error) {
     console.error("Failed to download UAD data:", error);
@@ -83,7 +86,7 @@ async function loadUADData(): Promise<UADData | null> {
   try {
     // Try to load from cache first using fs.read_direct() for large files
     uadData = (await fs.read_direct(
-      "/tmp/cache/uad_lists.json",
+      "/tmp/cache/droidnet_uad_lists.json",
       "json",
     )) as UADData;
     return uadData;
