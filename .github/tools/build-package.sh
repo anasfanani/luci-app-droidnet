@@ -2,10 +2,22 @@
 set -euo pipefail
 
 # Check and install dependencies only if needed
-if ! command -v make &> /dev/null || ! dpkg -l | grep -q build-essential; then
-    echo "Installing dependencies..."
-    sudo apt-get update -qq
-    sudo apt-get install -qq build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses5-dev libssl-dev rsync unzip zlib1g-dev file wget
+REQUIRED_PKG=("build-essential" "clang" "flex" "bison" "g++" "gawk" "gcc-multilib" "g++-multilib" "gettext" "git" "libncurses-dev" "libssl-dev" "rsync" "unzip" "zlib1g-dev" "file" "wget")
+MISSING_PKG=()
+
+for pkg in "${REQUIRED_PKG[@]}"; do
+    if ! dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
+        MISSING_PKG+=("$pkg")
+    fi
+done
+
+if [ ${#MISSING_PKG[@]} -ne 0 ]; then
+    echo "Installing missing dependencies: ${MISSING_PKG[*]}"
+    export DEBIAN_FRONTEND=noninteractive
+    sudo apt-get update -qq || true
+    sudo apt-get install -y -qq "${MISSING_PKG[@]}" || {
+        echo "Warning: Some packages failed to install, continuing anyway..."
+    }
 fi
 
 # Setup build directory in /tmp
@@ -79,3 +91,10 @@ make download -j"$(nproc)"
 make package/luci-app-droidnet/{clean,compile} -j"$(nproc)"
 
 echo "Build complete. IPK files are in $BUILD_DIR/sdk/bin/packages/x86_64/base/"
+
+# Copy IPK file to build root directory
+IPK_FILE=$(find "$BUILD_DIR/sdk/bin/packages/x86_64/base/" -name "luci-app-droidnet_*.ipk" | head -1)
+if [ -n "$IPK_FILE" ]; then
+    cp "$IPK_FILE" "$BUILD_DIR/"
+    echo "IPK file copied to: $BUILD_DIR/$(basename "$IPK_FILE")"
+fi
