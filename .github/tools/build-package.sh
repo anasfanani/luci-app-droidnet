@@ -95,6 +95,6 @@ echo "Build complete. IPK files are in $BUILD_DIR/sdk/bin/packages/x86_64/base/"
 # Copy IPK file to build root directory
 IPK_FILE=$(find "$BUILD_DIR/sdk/bin/packages/x86_64/base/" -name "luci-app-droidnet_*.ipk" | head -1)
 if [ -n "$IPK_FILE" ]; then
-    cp "$IPK_FILE" "$BUILD_DIR/"
+    cp -f "$IPK_FILE" "$BUILD_DIR/"
     echo "IPK file copied to: $BUILD_DIR/$(basename "$IPK_FILE")"
 fi
