@@ -4,12 +4,13 @@
     "read": {
       "cgi-io": ["exec"],
       "file": {
-        "/var/log/droidnet.log": ["read"],
         "/usr/bin/adb": ["exec"],
         "/usr/bin/env": ["exec"],
-        "/usr/bin/pgrep": ["exec"],
+        "/usr/bin/tail": ["exec"],
+        "/usr/bin/wget": ["exec"],
+        "/bin/mkdir": ["exec"],
         "/usr/share/droidnet/httping": ["exec"],
-        "/usr/bin/tail": ["exec"]
+        "/var/log/droidnet.log": ["read"]
       },
       "uci": ["droidnet"]
     },
