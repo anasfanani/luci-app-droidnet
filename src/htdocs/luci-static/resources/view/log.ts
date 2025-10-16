@@ -14,6 +14,32 @@ interface LogData {
   log_section?: boolean;
 }
 
+function saveLogSettings(): void {
+  const settings = {
+    filter:
+      (document.getElementById("log-filter") as HTMLSelectElement)?.value ||
+      "all",
+    direction:
+      (document.getElementById("log-direction") as HTMLSelectElement)?.value ||
+      "down",
+    lines:
+      (document.getElementById("log-lines") as HTMLSelectElement)?.value ||
+      "20",
+  };
+  localStorage.setItem("droidnet-log-settings", JSON.stringify(settings));
+}
+
+function loadLogSettings(): any {
+  const saved = localStorage.getItem("droidnet-log-settings");
+  return saved
+    ? JSON.parse(saved)
+    : {
+        filter: "all",
+        direction: "down",
+        lines: "20",
+      };
+}
+
 async function loadLogData(): Promise<LogData> {
   if (!(await droidnet.getDeviceId())) {
     return { deviceNotSet: true };
@@ -27,28 +53,73 @@ async function loadLogData(): Promise<LogData> {
 }
 
 function renderLogControls(): HTMLElement[] {
+  const savedSettings = loadLogSettings();
+
   return [
     E(
       "label",
       { for: "log-filter", style: "margin-right: 8px;" },
       _("Filter by service") + " : ",
     ),
-    E("select", { id: "log-filter", style: "margin: 8px 8px 8px 0;" }, [
-      E("option", { value: "all", selected: "selected" }, _("All")),
-      E("option", { value: "Application" }, _("Application")),
-      E("option", { value: "Monitoring" }, _("Monitoring")),
-      E("option", { value: "Network" }, _("Network")),
-      E("option", { value: "Power" }, _("Power")),
-    ]),
+    E(
+      "select",
+      {
+        id: "log-filter",
+        style: "margin: 8px 8px 8px 0;",
+        change: function () {
+          saveLogSettings();
+        },
+      },
+      [
+        E("option", { value: "all" }, _("All")),
+        E("option", { value: "Application" }, _("Application")),
+        E("option", { value: "Monitoring" }, _("Monitoring")),
+        E("option", { value: "Network" }, _("Network")),
+        E("option", { value: "Power" }, _("Power")),
+      ],
+    ),
     E(
       "label",
       { for: "log-direction", style: "margin-right: 8px;" },
       _("Log direction") + " : ",
     ),
-    E("select", { id: "log-direction", style: "margin: 8px 8px 8px 0;" }, [
-      E("option", { value: "down", selected: "selected" }, _("Down")),
-      E("option", { value: "up" }, _("Up")),
-    ]),
+    E(
+      "select",
+      {
+        id: "log-direction",
+        style: "margin: 8px 8px 8px 0;",
+        change: function () {
+          saveLogSettings();
+        },
+      },
+      [
+        E("option", { value: "down" }, _("Down")),
+        E("option", { value: "up" }, _("Up")),
+      ],
+    ),
+    E(
+      "label",
+      { for: "log-lines", style: "margin-right: 8px;" },
+      _("Lines") + " : ",
+    ),
+    E(
+      "select",
+      {
+        id: "log-lines",
+        style: "margin: 8px 8px 8px 0;",
+        change: function () {
+          saveLogSettings();
+        },
+      },
+      [
+        E("option", { value: "10" }, "10"),
+        E("option", { value: "20" }, "20"),
+        E("option", { value: "50" }, "50"),
+        E("option", { value: "100" }, "100"),
+        E("option", { value: "200" }, "200"),
+        E("option", { value: "500" }, "500"),
+      ],
+    ),
     E(
       "div",
       {
@@ -118,8 +189,11 @@ function renderLogViewer(): HTMLElement {
 
 function startLogPolling(): void {
   poll.add(function () {
+    const lines =
+      (document.getElementById("log-lines") as HTMLSelectElement)?.value ||
+      "20";
     return fs
-      .exec("/usr/bin/tail", ["/var/log/droidnet.log"])
+      .exec("/usr/bin/tail", ["-n", lines, "/var/log/droidnet.log"])
       .then(function (res) {
         const out = res && res.stdout ? res.stdout.trim() : "";
         const err = res && res.stderr ? res.stderr.trim() : "";
@@ -191,8 +265,6 @@ return view.extend({
       return droidnet.selectDeviceForm();
     }
 
-    startLogPolling();
-
     const sections = [
       [
         E("div", { class: "cbi-control" }, renderLogControls()),
@@ -200,6 +272,29 @@ return view.extend({
       ],
     ];
 
-    return droidnet.renderPage(sections);
+    const page = droidnet.renderPage(sections);
+
+    // Auto-restore saved settings after render
+    setTimeout(() => {
+      const savedSettings = loadLogSettings();
+
+      const filterSelect = document.getElementById(
+        "log-filter",
+      ) as HTMLSelectElement;
+      const directionSelect = document.getElementById(
+        "log-direction",
+      ) as HTMLSelectElement;
+      const linesSelect = document.getElementById(
+        "log-lines",
+      ) as HTMLSelectElement;
+
+      if (filterSelect) filterSelect.value = savedSettings.filter;
+      if (directionSelect) directionSelect.value = savedSettings.direction;
+      if (linesSelect) linesSelect.value = savedSettings.lines;
+
+      startLogPolling();
+    }, 100);
+
+    return page;
   },
 });

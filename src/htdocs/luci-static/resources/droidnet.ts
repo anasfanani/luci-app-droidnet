@@ -601,23 +601,31 @@ class DroidNet {
     service: string,
     action: string,
     cmd: string[],
+    validator?: (result: any) => boolean,
   ): Promise<void> {
     this.modalLoading(`${action} ${service}...`);
     const execute = await this.exec(cmd);
 
-    if (!execute.stderr) {
+    const isSuccess = validator
+      ? validator(execute)
+      : execute.code === 0 && !execute.stderr;
+
+    if (isSuccess) {
       const message = `${service} has been ${action.toLowerCase()}.`;
       this.modalSuccess(message);
       this.writeLog(_(message));
     } else {
-      const errorMessage = execute.stderr || "An unknown error occurred.";
+      const errorMessage =
+        execute.stderr || execute.stdout || "An unknown error occurred.";
+      const specificError = String(errorMessage).includes("Security exception")
+        ? `Permission denied: Cannot ${action.toLowerCase()} ${service} (system restriction)`
+        : `Failed to ${action.toLowerCase()} ${service}: ${errorMessage}`;
+
       this.modalError(
         `Failed to ${action.toLowerCase()} ${service}.`,
-        String(errorMessage),
+        specificError,
       );
-      this.writeLog(
-        _(`Failed to ${action.toLowerCase()} ${service}: ${errorMessage}`),
-      );
+      this.writeLog(_(specificError));
     }
   }
 
@@ -625,6 +633,7 @@ class DroidNet {
     service: string,
     enableCmd: string[],
     disableCmd: string[],
+    validator?: (result: any) => boolean,
   ): ToggleAction {
     const capitalizedService = service
       .split(" ")
@@ -641,6 +650,7 @@ class DroidNet {
               capitalizedService,
               "Turning off",
               disableCmd,
+              validator,
             ),
         );
       },
@@ -653,6 +663,7 @@ class DroidNet {
               capitalizedService,
               "Turning on",
               enableCmd,
+              validator,
             ),
         );
       },
