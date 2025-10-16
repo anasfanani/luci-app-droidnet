@@ -4,7 +4,7 @@
   "description": "LuCI support for Android Modem",
   "scripts": {
     "build": "node build.mjs",
-    "build:package": "./.github/tools/build-package.sh",
+    "build:package": "bun run build && ./.github/tools/build-package.sh",
     "version-bump": "./.github/tools/version-bump.sh",
     "watch": "tsc --watch",
     "dev": "tsc --watch",
