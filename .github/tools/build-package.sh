@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # Check and install dependencies only if needed
 if ! command -v make &> /dev/null || ! dpkg -l | grep -q build-essential; then
@@ -9,14 +9,15 @@ if ! command -v make &> /dev/null || ! dpkg -l | grep -q build-essential; then
 fi
 
 # Setup build directory in /tmp
-BUILD_DIR="/tmp/luci-app-droidnet-build"
-mkdir -p $BUILD_DIR
+BUILD_DIR="${TMPDIR:-/tmp}/luci-app-droidnet-build"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+mkdir -p "$BUILD_DIR"
 
-# Create symlink in current directory for easy access
-rm -f build
-ln -sf $BUILD_DIR build
+# Create symlink in repo root for easy access
+rm -f "$(dirname "$0")/../../build"
+ln -sf "$BUILD_DIR" "$(dirname "$0")/../../build"
 
-cd $BUILD_DIR
+cd "$BUILD_DIR"
 
 # Download and setup OpenWrt SDK only if not exists
 if [ ! -d "sdk" ]; then
@@ -28,7 +29,7 @@ if [ ! -d "sdk" ]; then
         wget $SDK_URL
     fi
     echo "Extracting OpenWrt SDK..."
-    mkdir -p sdk && tar -xJf $SDK_FILE -C ./sdk --strip-components=1
+    mkdir -p sdk && tar -xJf "$SDK_FILE" -C ./sdk --strip-components=1
 fi
 
 cd sdk
@@ -41,10 +42,9 @@ src-git luci https://git.openwrt.org/project/luci.git;openwrt-23.05
 src-git routing https://git.openwrt.org/feed/routing.git;openwrt-23.05
 EOF
 
-# Copy package (always update to latest)
+# Copy package from dist (always update to latest)
 rm -rf package/luci-app-droidnet
-cp -r /home/admin/workspaces/luci-app-droidnet/ package/luci-app-droidnet
-chmod +x package/luci-app-droidnet/root/etc/init.d/droidnet package/luci-app-droidnet/root/usr/share/droidnet/monitoring
+cp -r "$REPO_ROOT/dist" package/luci-app-droidnet
 
 # Update feeds only if feeds directory doesn't exist
 if [ ! -d "feeds" ]; then
@@ -55,7 +55,7 @@ if [ ! -d "feeds" ]; then
     echo "CONFIG_LUCI_JSMIN=n" >> .config
     echo "CONFIG_LUCI_CSSTIDY=n" >> .config
     ./scripts/feeds install -d n luci-app-droidnet
-    make download -j$(nproc)
+    make download -j"$(nproc)"
 fi
 
 ./scripts/feeds install luci-app-droidnet
@@ -73,9 +73,9 @@ CONFIG_PACKAGE_luci-app-droidnet=m
 EOF
 
 make defconfig
-make download -j$(nproc)
+make download -j"$(nproc)"
 
 # Build package
-make package/luci-app-droidnet/{clean,compile} -j$(nproc)
+make package/luci-app-droidnet/{clean,compile} -j"$(nproc)"
 
 echo "Build complete. IPK files are in $BUILD_DIR/sdk/bin/packages/x86_64/base/"

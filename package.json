@@ -3,7 +3,8 @@
   "version": "1.1.0",
   "description": "LuCI support for Android Modem",
   "scripts": {
-    "build": "tsc",
+    "build": "node build.mjs",
+    "build:package": "./.github/tools/build-package.sh",
     "watch": "tsc --watch",
     "dev": "tsc --watch",
     "fmt": "bun x tsc --noEmit && prettier --write .",
