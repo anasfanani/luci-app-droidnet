@@ -5,6 +5,7 @@
   "scripts": {
     "build": "node build.mjs",
     "build:package": "./.github/tools/build-package.sh",
+    "version-bump": "./.github/tools/version-bump.sh",
     "watch": "tsc --watch",
     "dev": "tsc --watch",
     "fmt": "bun x tsc --noEmit && prettier --write .",
