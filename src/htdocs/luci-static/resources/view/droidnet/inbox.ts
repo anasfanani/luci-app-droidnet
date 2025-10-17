@@ -92,7 +92,6 @@ let inboxCurrentPage = 1;
 
 async function loadInboxData(): Promise<InboxData> {
   await uci.load("droidnet");
-  const device = uci.get("droidnet", "device", "id");
   const display = parseInt(
     uci.get("droidnet", "device", "display_msg") || "10",
   );

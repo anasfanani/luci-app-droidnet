@@ -10,6 +10,7 @@
         "/usr/bin/wget": ["exec"],
         "/bin/mkdir": ["exec"],
         "/usr/share/droidnet/httping": ["exec"],
+        "/usr/share/droidnet/helper": ["exec"],
         "/var/log/droidnet.log": ["read"],
         "/tmp/cache/droidnet_uad_lists.json": ["read"]
       },

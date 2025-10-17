@@ -237,9 +237,6 @@ async function getPackagesByFilter(filter: string): Promise<AppPackage[]> {
 }
 
 function getFilteredPackages(packages: AppPackage[]): AppPackage[] {
-  const filter =
-    (document.getElementById("app-filter") as HTMLSelectElement)?.value ||
-    "all";
   const search =
     (document.getElementById("app-search") as HTMLInputElement)?.value || "";
 
@@ -553,7 +550,7 @@ async function executePowerAction(
 ): Promise<void> {
   UIRenderer.modalLoading(`${action}...`);
   await droidnet.exec(command);
-  droidnet.writeLog(_(message));
+  droidnet.log(_(message));
 
   setTimeout(() => {
     UIRenderer.modalSuccess(`${action} completed`, message);
@@ -591,7 +588,7 @@ async function removeApplication(packageName: string): Promise<void> {
       "Application removed",
       `Application ${packageName} has been successfully removed.`,
     );
-    droidnet.writeLog(
+    droidnet.log(
       _("Removing %s application successfully.").format(packageName),
     );
     setTimeout(() => window.location.reload(), 2000);
@@ -604,7 +601,7 @@ async function removeApplication(packageName: string): Promise<void> {
         E("em", { style: "color: red;" }, error),
       ]),
     );
-    droidnet.writeLog(
+    droidnet.log(
       _("Failed to remove %s application: %s").format(packageName, error),
     );
   }
@@ -820,13 +817,13 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
                   ["pm", "disable", "--user", "0", pkg.name],
                   (cmd: string[]) => droidnet.exec(cmd),
                   {
-                    onSuccess: (message, result) => {
+                    onSuccess: (message, _result) => {
                       UIRenderer.modalSuccess(message);
-                      droidnet.writeLog(message);
+                      droidnet.log(message);
                     },
-                    onFailed: (error, result) => {
+                    onFailed: (error, _result) => {
                       UIRenderer.modalError("Package operation failed", error);
-                      droidnet.writeLog(error);
+                      droidnet.log(error);
                     },
                     validator: (result) =>
                       result.code === 0 &&
@@ -850,13 +847,13 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
                   ["pm", "suspend", "--user", "0", pkg.name],
                   (cmd: string[]) => droidnet.exec(cmd),
                   {
-                    onSuccess: (message, result) => {
+                    onSuccess: (message, _result) => {
                       UIRenderer.modalSuccess(message);
-                      droidnet.writeLog(message);
+                      droidnet.log(message);
                     },
-                    onFailed: (error, result) => {
+                    onFailed: (error, _result) => {
                       UIRenderer.modalError("Package operation failed", error);
-                      droidnet.writeLog(error);
+                      droidnet.log(error);
                     },
                     validator: (result) =>
                       result.code === 0 &&
@@ -1195,7 +1192,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
                             "Installation completed",
                             `Application ${result.name} has been successfully installed.`,
                           );
-                          droidnet.writeLog(
+                          droidnet.log(
                             _(
                               "Application %s has been successfully installed.",
                             ).format(result.name),
@@ -1213,7 +1210,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
                               E("em", { style: "color: red;" }, installResult),
                             ]),
                           );
-                          droidnet.writeLog(
+                          droidnet.log(
                             _("Failed to install %s application: %s").format(
                               result.name,
                               installResult,

@@ -202,23 +202,27 @@ class DroidNet {
     return await fs.exec("adb", ["kill-server"]);
   }
 
-  writeLog(message: string): void {
+  log(message: string, location?: string): void {
     const logFile = "/var/log/droidnet.log";
-    fs.read(logFile).then((result: string) => {
-      const service = _("Network service");
-      const date = new Date().toLocaleDateString(undefined, {
-        weekday: "short",
-        month: "short",
-        day: "2-digit",
-      });
-      const time = new Date().toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      const notif = `${date}, ${time} - ${service}: ${message}`;
-      const newData = result.trim() + "\n" + notif;
-      return fs.write(logFile, newData);
+
+    // Get service from URL path or provided location
+    const currentLocation = location || L.location();
+    const pathParts = currentLocation.split("/");
+    const lastPart = pathParts[pathParts.length - 1] || "unknown";
+    const service = lastPart.charAt(0).toUpperCase() + lastPart.slice(1);
+
+    const date = new Date().toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "2-digit",
     });
+    const time = new Date().toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const notif = `${date}, ${time} - ${service}: ${message}\n`;
+
+    fs.exec("/usr/share/droidnet/helper", ["log", notif, logFile]);
   }
 
   async serviceStatus(): Promise<boolean> {

@@ -47,8 +47,6 @@ async function loadLogData(): Promise<LogData> {
 }
 
 function renderLogControls(): HTMLElement[] {
-  const savedSettings = loadLogSettings();
-
   return [
     E(
       "label",

@@ -1,0 +1,42 @@
+#!/bin/sh
+
+show_help() {
+    cat << EOF
+Helper - Basic utility tools
+
+Usage: helper <command> [options]
+
+Commands:
+    log <content> <file>    Append content to file
+    -h, --help             Show this help message
+
+Examples:
+    helper log "Hello World" /var/log/droidnet.log
+    helper -h
+
+EOF
+}
+
+log() {
+    if [ $# -ne 2 ]; then
+        echo "Usage: helper log <content> <file>"
+        exit 1
+    fi
+    printf "%s" "$1" >> "$2"
+}
+
+# Main script logic
+case "$1" in
+    -h|--help)
+        show_help
+        ;;
+    log)
+        shift
+        log "$@"
+        ;;
+    *)
+        echo "Unknown command: $1"
+        echo "Use 'helper -h' for help"
+        exit 1
+        ;;
+esac

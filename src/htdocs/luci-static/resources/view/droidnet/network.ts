@@ -184,13 +184,13 @@ function renderMobileNetwork(data: NetworkData): HTMLElement[] {
     ["svc", "wifi", "disable"],
     (cmd: string[]) => droidnet.exec(cmd),
     {
-      onSuccess: (message, result) => {
+      onSuccess: (message, _result) => {
         UIRenderer.modalSuccess(message);
-        droidnet.writeLog(message);
+        droidnet.log(message);
       },
-      onFailed: (error, result) => {
+      onFailed: (error, _result) => {
         UIRenderer.modalError("Operation failed", error);
-        droidnet.writeLog(error);
+        droidnet.log(error);
       },
       validator: (result) => result.code === 0,
     },
@@ -201,13 +201,13 @@ function renderMobileNetwork(data: NetworkData): HTMLElement[] {
     ["svc", "data", "disable"],
     (cmd: string[]) => droidnet.exec(cmd),
     {
-      onSuccess: (message, result) => {
+      onSuccess: (message, _result) => {
         UIRenderer.modalSuccess(message);
-        droidnet.writeLog(message);
+        droidnet.log(message);
       },
-      onFailed: (error, result) => {
+      onFailed: (error, _result) => {
         UIRenderer.modalError("Operation failed", error);
-        droidnet.writeLog(error);
+        droidnet.log(error);
       },
       validator: (result) => result.code === 0,
     },
@@ -218,13 +218,13 @@ function renderMobileNetwork(data: NetworkData): HTMLElement[] {
     ["cmd", "connectivity", "airplane-mode", "disable"],
     (cmd: string[]) => droidnet.exec(cmd),
     {
-      onSuccess: (message, result) => {
+      onSuccess: (message, _result) => {
         UIRenderer.modalSuccess(message);
-        droidnet.writeLog(message);
+        droidnet.log(message);
       },
-      onFailed: (error, result) => {
+      onFailed: (error, _result) => {
         UIRenderer.modalError("Operation failed", error);
-        droidnet.writeLog(error);
+        droidnet.log(error);
       },
       validator: (result) => result.code === 0,
     },
@@ -233,15 +233,19 @@ function renderMobileNetwork(data: NetworkData): HTMLElement[] {
   return [
     UIRenderer.renderTitle("Mobile Network"),
     UIRenderer.renderTable([
-      { label: "IP address", value: data.src || "-" },
-      { label: "Gateway", value: data.via || "-" },
-      { label: "Device", value: data.dev || "-" },
-      { label: "Routing table", value: data.table || "-" },
-      { label: "Wireless", value: data.wifi || false, action: wifiAction },
-      { label: "Mobile data", value: data.data || false, action: dataAction },
+      { label: "IP address", value: data["src"] || "-" },
+      { label: "Gateway", value: data["via"] || "-" },
+      { label: "Device", value: data["dev"] || "-" },
+      { label: "Routing table", value: data["table"] || "-" },
+      { label: "Wireless", value: data["wifi"] || false, action: wifiAction },
+      {
+        label: "Mobile data",
+        value: data["data"] || false,
+        action: dataAction,
+      },
       {
         label: "Airplane mode",
-        value: data.airplane || false,
+        value: data["airplane"] || false,
         action: airplaneAction,
       },
     ]),
@@ -251,7 +255,7 @@ function renderMobileNetwork(data: NetworkData): HTMLElement[] {
 async function renderWirelessInfo(
   data: NetworkData,
 ): Promise<HTMLElement[] | null> {
-  if (!data.wifi) return null;
+  if (!data["wifi"]) return null;
 
   const wirelessInfo = await droidnet.exec([
     'dumpsys wifi | grep "mWifiInfo SSID"',
@@ -262,13 +266,15 @@ async function renderWirelessInfo(
     return [
       UIRenderer.renderTitle("Wireless Information"),
       UIRenderer.renderTable([
-        { label: "SSID", value: wifiInfo.ssid || "-" },
-        { label: "BSSID", value: wifiInfo.bssid || "-" },
-        { label: "MAC address", value: wifiInfo.mac || "-" },
-        { label: "RSSI", value: wifiInfo.rssi || "-" },
-        { label: "Link speed", value: wifiInfo.speed || "-" },
-        { label: "Frequency", value: wifiInfo.frequency || "-" },
-        ...(wifiInfo.type ? [{ label: "Type", value: wifiInfo.type }] : []),
+        { label: "SSID", value: wifiInfo["ssid"] || "-" },
+        { label: "BSSID", value: wifiInfo["bssid"] || "-" },
+        { label: "MAC address", value: wifiInfo["mac"] || "-" },
+        { label: "RSSI", value: wifiInfo["rssi"] || "-" },
+        { label: "Link speed", value: wifiInfo["speed"] || "-" },
+        { label: "Frequency", value: wifiInfo["frequency"] || "-" },
+        ...(wifiInfo["type"]
+          ? [{ label: "Type", value: wifiInfo["type"] }]
+          : []),
       ]),
     ];
   }
@@ -277,19 +283,19 @@ async function renderWirelessInfo(
 
 function renderCellularInfo(data: NetworkData): HTMLElement[] | null {
   const createSimTab = (simIndex: number, simName: string) => {
-    if (!data.operator?.[simIndex]) return null;
+    if (!data["operator"]?.[simIndex]) return null;
 
     return {
       tabId: `sim${simIndex + 1}`,
       tabTitle: simName,
       tabContent: UIRenderer.renderTable([
-        { label: "Operator name", value: data.operator?.[simIndex] || "-" },
-        { label: "Network type", value: data.signal?.[simIndex] || "-" },
-        { label: "Roaming mode", value: data.roaming?.[simIndex] || "-" },
-        { label: "MCC", value: data.mcc?.[simIndex] || "-" },
-        { label: "IMEI", value: data.imei_sim01 || "-" },
-        { label: "Driver", value: data.driver || "-" },
-        { label: "Baseband", value: data.baseband || "-" },
+        { label: "Operator name", value: data["operator"]?.[simIndex] || "-" },
+        { label: "Network type", value: data["signal"]?.[simIndex] || "-" },
+        { label: "Roaming mode", value: data["roaming"]?.[simIndex] || "-" },
+        { label: "MCC", value: data["mcc"]?.[simIndex] || "-" },
+        { label: "IMEI", value: data["imei_sim01"] || "-" },
+        { label: "Driver", value: data["driver"] || "-" },
+        { label: "Baseband", value: data["baseband"] || "-" },
       ]),
     };
   };
@@ -307,9 +313,9 @@ function renderCellularInfo(data: NetworkData): HTMLElement[] | null {
 }
 
 function renderApnInfo(data: NetworkData): HTMLElement[] | null {
-  if (!data.apn || Object.keys(data.apn).length === 0) return null;
+  if (!data["apn"] || Object.keys(data["apn"]).length === 0) return null;
 
-  const apn = data.apn;
+  const apn = data["apn"];
   return [
     UIRenderer.renderTitle("APN Information"),
     UIRenderer.renderTable(

@@ -241,7 +241,7 @@ const UIRenderer = baseclass.extend({
       ...sections
         .filter(Boolean)
         .flat()
-        .map((section) => E("div", { class: "cbi-section" }, section)),
+        .map((_section) => E("div", { class: "cbi-section" }, _section)),
     ]);
   },
 
@@ -446,7 +446,7 @@ const UIRenderer = baseclass.extend({
         },
       );
 
-      o.validate = function (section: any, value: string): string | boolean {
+      o.validate = function (_section: any, value: string): string | boolean {
         deviceSelected = value;
         const isUnauthorized: boolean =
           devices.devices !== false &&
@@ -523,7 +523,7 @@ const UIRenderer = baseclass.extend({
         click: callback,
       };
       if (disabled) {
-        attrs.disabled = disabled;
+        attrs["disabled"] = disabled;
       }
       return E("input", attrs);
     };
