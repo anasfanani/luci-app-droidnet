@@ -1,0 +1,129 @@
+import * as cheerio from "cheerio";
+
+// Parser registry - maps page titles to their specific parsers
+const parsers: Record<string, ($: cheerio.CheerioAPI) => Record<string, any>> =
+  {
+    Device: parseDevicePage,
+    Network: parseNetworkPage,
+    // Add more parsers as needed
+  };
+
+// Main parser function - dynamically selects parser based on title
+export function parsePage(title: string, $: cheerio.CheerioAPI) {
+  const parser = parsers[title];
+  if (parser) {
+    console.debug(`Using specific parser for ${title} page`);
+    return parser($);
+  } else {
+    console.debug(
+      `No specific parser for ${title} page, using basic validation`,
+    );
+    return {
+      title: $("title").text(),
+      hasContent: $("body").text().length > 0,
+    };
+  }
+}
+
+// Device page parser
+function parseDevicePage($: cheerio.CheerioAPI) {
+  const deviceInfo: Record<string, string> = {};
+  const batteryInfo: Record<string, string> = {};
+
+  // Parse device info (first table)
+  $("table")
+    .eq(0)
+    .find("tr")
+    .each((i, row) => {
+      const cells = $(row).find("td");
+      if (cells.length >= 4) {
+        const key1 = $(cells[0]).find("b").text().trim();
+        const value1 = $(cells[1]).text().trim();
+        const key2 = $(cells[2]).find("b").text().trim();
+        const value2 = $(cells[3]).text().trim();
+
+        if (key1) deviceInfo[key1] = value1;
+        if (key2) deviceInfo[key2] = value2;
+      }
+    });
+
+  // Parse battery info (second table)
+  $("table")
+    .eq(1)
+    .find("tr")
+    .each((i, row) => {
+      const cells = $(row).find("td");
+      if (cells.length >= 2) {
+        const key = $(cells[0]).find("b").text().trim();
+        const value = $(cells[1]).text().trim();
+        if (key) batteryInfo[key] = value;
+      }
+    });
+
+  return { deviceInfo, batteryInfo };
+}
+
+// Network page parser
+function parseNetworkPage($: cheerio.CheerioAPI) {
+  const networkInfo: Record<string, string> = {};
+  const cellularInfo: Record<string, string> = {};
+  const simInfo: Record<string, string> = {};
+  const apnInfo: Record<string, string> = {};
+
+  // Parse mobile network (first table)
+  $("table")
+    .eq(0)
+    .find("tr")
+    .each((i, row) => {
+      const cells = $(row).find("td");
+      if (cells.length >= 2) {
+        const key = $(cells[0]).find("b").text().trim();
+        const value = $(cells[1]).text().trim();
+        if (key) networkInfo[key] = value;
+      }
+    });
+
+  // Parse cellular info (second table)
+  $("table")
+    .eq(1)
+    .find("tr")
+    .each((i, row) => {
+      const cells = $(row).find("td");
+      if (cells.length >= 2) {
+        const key = $(cells[0]).find("b").text().trim();
+        const value = $(cells[1]).text().trim();
+        if (key) cellularInfo[key] = value;
+      }
+    });
+
+  // Parse SIM info
+  $("#sim1 table")
+    .find("tr")
+    .each((i, row) => {
+      const cells = $(row).find("td");
+      if (cells.length >= 2) {
+        const key = $(cells[0]).find("b").text().trim();
+        const value = $(cells[1]).text().trim();
+        if (key) simInfo[key] = value;
+      }
+    });
+
+  // Parse APN info (last table)
+  $("table")
+    .last()
+    .find("tr")
+    .each((i, row) => {
+      const cells = $(row).find("td");
+      if (cells.length >= 4) {
+        const key1 = $(cells[0]).find("b").text().trim();
+        const value1 = $(cells[1]).text().trim();
+        const key2 = $(cells[2]).find("b").text().trim();
+        const value2 = $(cells[3]).text().trim();
+
+        if (key1) apnInfo[key1] = value1;
+        if (key2) apnInfo[key2] = value2;
+      }
+    });
+
+  return { networkInfo, cellularInfo, simInfo, apnInfo };
+}
