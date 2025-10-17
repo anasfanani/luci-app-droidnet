@@ -1310,7 +1310,7 @@ return view.extend({
 
   load: loadServiceData,
 
-  render: function (data: ServiceData): HTMLElement {
+  render: async function (data: ServiceData): Promise<HTMLElement> {
     if (data.deviceNotSet) {
       const devices = await droidnet.selectDevices();
 
