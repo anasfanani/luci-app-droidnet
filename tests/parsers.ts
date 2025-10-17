@@ -5,7 +5,10 @@ const parsers: Record<string, ($: cheerio.CheerioAPI) => Record<string, any>> =
   {
     Device: parseDevicePage,
     Network: parseNetworkPage,
-    // Add more parsers as needed
+    Service: parseServicePage,
+    Inbox: parseInboxPage,
+    Logs: parseLogsPage,
+    Setting: parseSettingPage,
   };
 
 // Main parser function - dynamically selects parser based on title
@@ -126,4 +129,106 @@ function parseNetworkPage($: cheerio.CheerioAPI) {
     });
 
   return { networkInfo, cellularInfo, simInfo, apnInfo };
+}
+
+// Service page parser
+function parseServicePage($: cheerio.CheerioAPI) {
+  const powerOptions: string[] = [];
+  const appManager = { totalApps: 0, installedApps: [], systemApps: [] };
+
+  // Parse power options buttons - only the first 4 buttons in the power section
+  $('h3:contains("Power Options")')
+    .parent()
+    .nextAll(".cbi-section")
+    .first()
+    .find("button")
+    .each((i, btn) => {
+      const buttonText = $(btn).text().trim();
+      if (buttonText && i < 4) {
+        // Only first 4 buttons are power options
+        powerOptions.push(buttonText);
+      }
+    });
+
+  return { powerOptions, appManager };
+}
+
+// Inbox page parser
+function parseInboxPage($: cheerio.CheerioAPI) {
+  const stats: Record<string, number> = {};
+  const filters: Record<string, string[]> = {};
+
+  // Parse message stats from description
+  const statsText = $(".cbi-section-descr").first().text();
+  const statsMatch = statsText.match(
+    /(\d+) messages, (\d+) unread, (\d+) conversations, (\d+) SIM cards/,
+  );
+  if (statsMatch) {
+    stats["totalMessages"] = parseInt(statsMatch[1]);
+    stats["unreadMessages"] = parseInt(statsMatch[2]);
+    stats["conversations"] = parseInt(statsMatch[3]);
+    stats["simCards"] = parseInt(statsMatch[4]);
+  }
+
+  // Parse filter options
+  $("select").each((i, select) => {
+    const id = $(select).attr("id");
+    if (id) {
+      const options: string[] = [];
+      $(select)
+        .find("option")
+        .each((j, option) => {
+          options.push($(option).text().trim());
+        });
+      filters[id] = options;
+    }
+  });
+
+  return { stats, filters };
+}
+
+// Logs page parser
+function parseLogsPage($: cheerio.CheerioAPI) {
+  const controls: Record<string, string[]> = {};
+
+  // Parse log controls
+  $("select").each((i, select) => {
+    const id = $(select).attr("id");
+    if (id) {
+      const options: string[] = [];
+      $(select)
+        .find("option")
+        .each((j, option) => {
+          options.push($(option).text().trim());
+        });
+      controls[id] = options;
+    }
+  });
+
+  // Check if log content exists
+  const hasLogContent = $("#syslog").length > 0;
+
+  return { controls, hasLogContent };
+}
+
+// Setting page parser
+function parseSettingPage($: cheerio.CheerioAPI) {
+  const settings: Record<string, string> = {};
+
+  // Parse form fields
+  $(".cbi-value").each((i, value) => {
+    const label = $(value).find(".cbi-value-title").text().trim();
+    const field = $(value).find("select, input, textarea").first();
+
+    if (label && field.length > 0) {
+      if (field.is("select")) {
+        const selectedOption = field.find("option:selected").text().trim();
+        settings[label] = selectedOption;
+      } else {
+        settings[label] = (field.val() as string) || "";
+      }
+    }
+  });
+
+  return { settings };
 }
