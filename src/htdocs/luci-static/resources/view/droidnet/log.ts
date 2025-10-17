@@ -8,6 +8,7 @@
 "require ui";
 "require poll";
 "require droidnet";
+"require tools/ui-renderer as UIRenderer";
 
 interface LogData {
   deviceNotSet?: boolean;
@@ -199,7 +200,7 @@ function startLogPolling(): void {
         const err = res && res.stderr ? res.stderr.trim() : "";
 
         if (err || !out) {
-          droidnet.addNotification(
+          UIRenderer.addNotification(
             "Error: Read log file!",
             "Unable to read the interface info from /var/log/droidnet.log." +
               (err ? ` (${err})` : ""),
@@ -233,7 +234,7 @@ function startLogPolling(): void {
         syslog.textContent = data;
       })
       .catch(function (error) {
-        droidnet.addNotification(
+        UIRenderer.addNotification(
           "Error: Read log file!",
           "An error occurred while reading the file: " + String(error),
           "danger",
@@ -252,17 +253,63 @@ return view.extend({
 
   render: async function (data: LogData): Promise<HTMLElement> {
     if (data.deviceNotSet) {
-      return droidnet.selectDeviceForm();
+      const devices = await droidnet.selectDevices();
+
+      const deviceForm = await UIRenderer.createDeviceSelectionForm({
+        devices: devices,
+        title: "Device Selection",
+        description: "Select your Android device from the list below",
+        onSave: async (deviceId: string) => {
+          uci.set("droidnet", "device", "id", deviceId);
+          uci.save();
+          window.location.reload();
+        },
+        onReload: async () => {
+          await droidnet.reloadAdbd();
+          window.location.reload();
+        },
+        onValidate: (deviceId: string) => {
+          const isUnauthorized =
+            devices.devices !== false &&
+            devices.devices[deviceId] === "unauthorized";
+          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
+        },
+      });
+
+      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
     }
 
     if (data.log_section) {
-      droidnet.addNotification(
+      UIRenderer.addNotification(
         "Device Not Connected",
         "Your Android device appears to be disconnected. Please check the USB connection and ensure ADB debugging is enabled.",
         "warning",
       );
 
-      return droidnet.selectDeviceForm();
+      const devices = await droidnet.selectDevices();
+
+      const deviceForm = await UIRenderer.createDeviceSelectionForm({
+        devices: devices,
+        title: "Device Selection",
+        description: "Select your Android device from the list below",
+        onSave: async (deviceId: string) => {
+          uci.set("droidnet", "device", "id", deviceId);
+          uci.save();
+          window.location.reload();
+        },
+        onReload: async () => {
+          await droidnet.reloadAdbd();
+          window.location.reload();
+        },
+        onValidate: (deviceId: string) => {
+          const isUnauthorized =
+            devices.devices !== false &&
+            devices.devices[deviceId] === "unauthorized";
+          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
+        },
+      });
+
+      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
     }
 
     const sections = [
@@ -272,7 +319,7 @@ return view.extend({
       ],
     ];
 
-    const page = droidnet.renderPage(sections);
+    const page = UIRenderer.renderPage(sections, droidnet.header);
 
     // Auto-restore saved settings after render
     setTimeout(() => {

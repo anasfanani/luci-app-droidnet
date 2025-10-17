@@ -8,6 +8,7 @@
 "require fs";
 "require ui";
 "require droidnet";
+"require tools/ui-renderer as UIRenderer";
 
 interface ServiceData {
   deviceNotSet?: boolean;
@@ -94,7 +95,7 @@ async function loadUADData(): Promise<UADData | null> {
     // If cache doesn't exist, create single download promise
     uadDownloadPromise = (async () => {
       console.log("UAD cache not found, downloading...");
-      droidnet.addNotification(
+      UIRenderer.addNotification(
         _("UAD Database"),
         _("UAD cache not found, downloading package definitions..."),
         "info",
@@ -102,7 +103,7 @@ async function loadUADData(): Promise<UADData | null> {
 
       try {
         uadData = await downloadUADData();
-        droidnet.addNotification(
+        UIRenderer.addNotification(
           _("UAD Database"),
           _("UAD package definitions downloaded successfully."),
           "info",
@@ -111,7 +112,7 @@ async function loadUADData(): Promise<UADData | null> {
       } catch (downloadError) {
         console.error("Failed to download UAD data:", downloadError);
         uadDownloadFailed = true; // Mark as failed to prevent retries
-        droidnet.addNotification(
+        UIRenderer.addNotification(
           _("UAD Download Failed"),
           _(
             "Failed to download UAD database: %s. Package information will be limited.",
@@ -558,12 +559,12 @@ async function executePowerAction(
   message: string,
   delay: number = 10000,
 ): Promise<void> {
-  droidnet.modalLoading(`${action}...`);
+  UIRenderer.modalLoading(`${action}...`);
   await droidnet.exec(command);
   droidnet.writeLog(_(message));
 
   setTimeout(() => {
-    droidnet.modalSuccess(`${action} completed`, message);
+    UIRenderer.modalSuccess(`${action} completed`, message);
   }, delay);
 }
 
@@ -574,7 +575,7 @@ function createPowerAction(
   delay?: number,
 ) {
   return async () => {
-    droidnet.confirmAction(
+    UIRenderer.confirmAction(
       title,
       `Are you sure you want to ${title.toLowerCase()}?`,
       () => executePowerAction(title, command, message, delay),
@@ -583,7 +584,7 @@ function createPowerAction(
 }
 
 async function removeApplication(packageName: string): Promise<void> {
-  droidnet.modalLoading(`Removing ${packageName}...`);
+  UIRenderer.modalLoading(`Removing ${packageName}...`);
   const result = await droidnet.exec([
     "pm",
     "uninstall",
@@ -594,7 +595,7 @@ async function removeApplication(packageName: string): Promise<void> {
   ]);
 
   if (result.stdout?.trim() === "Success") {
-    droidnet.modalSuccess(
+    UIRenderer.modalSuccess(
       "Application removed",
       `Application ${packageName} has been successfully removed.`,
     );
@@ -604,7 +605,7 @@ async function removeApplication(packageName: string): Promise<void> {
     setTimeout(() => window.location.reload(), 2000);
   } else {
     const error = result.stderr || result.stdout || "Unknown error";
-    droidnet.modalError(
+    UIRenderer.modalError(
       "Package removal failed",
       E("div", [
         E("p", _("Failed to remove %s application.").format(packageName)),
@@ -656,7 +657,7 @@ function renderPowerOptions(): HTMLElement[] {
   ];
 
   return [
-    droidnet.renderTitle("Power Options"),
+    UIRenderer.renderTitle("Power Options"),
     E(
       "div",
       { class: "cbi-section-descr" },
@@ -821,13 +822,24 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
               class: "btn cbi-button cbi-button-neutral",
               style: "font-size: 11px; padding: 2px 6px; margin-right: 5px;",
               click: () => {
-                const toggleAction = droidnet.createToggleAction(
+                const toggleAction = UIRenderer.createToggleAction(
                   `package ${pkg.name}`,
                   ["pm", "enable", "--user", "0", pkg.name],
                   ["pm", "disable", "--user", "0", pkg.name],
-                  (result) =>
-                    result.code === 0 &&
-                    !result.stdout?.includes("Security exception"),
+                  (cmd: string[]) => droidnet.exec(cmd),
+                  {
+                    onSuccess: (message, result) => {
+                      UIRenderer.modalSuccess(message);
+                      droidnet.writeLog(message);
+                    },
+                    onFailed: (error, result) => {
+                      UIRenderer.modalError("Package operation failed", error);
+                      droidnet.writeLog(error);
+                    },
+                    validator: (result) =>
+                      result.code === 0 &&
+                      !result.stdout?.includes("Security exception"),
+                  },
                 );
                 toggleAction.onEnable(); // Calls disable
               },
@@ -840,13 +852,24 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
               class: "btn cbi-button cbi-button-neutral",
               style: "font-size: 11px; padding: 2px 6px; margin-right: 5px;",
               click: () => {
-                const toggleAction = droidnet.createToggleAction(
+                const toggleAction = UIRenderer.createToggleAction(
                   `package ${pkg.name}`,
                   ["pm", "unsuspend", "--user", "0", pkg.name],
                   ["pm", "suspend", "--user", "0", pkg.name],
-                  (result) =>
-                    result.code === 0 &&
-                    !result.stdout?.includes("Security exception"),
+                  (cmd: string[]) => droidnet.exec(cmd),
+                  {
+                    onSuccess: (message, result) => {
+                      UIRenderer.modalSuccess(message);
+                      droidnet.writeLog(message);
+                    },
+                    onFailed: (error, result) => {
+                      UIRenderer.modalError("Package operation failed", error);
+                      droidnet.writeLog(error);
+                    },
+                    validator: (result) =>
+                      result.code === 0 &&
+                      !result.stdout?.includes("Security exception"),
+                  },
                 );
                 toggleAction.onEnable(); // Calls suspend
               },
@@ -866,7 +889,7 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
                       )
                     : "";
 
-                droidnet.confirmAction(
+                UIRenderer.confirmAction(
                   `Remove application ${pkg.name}`,
                   _("Are you sure you want to remove this application?") +
                     warning,
@@ -932,7 +955,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
   const storage = data.storage;
 
   return [
-    droidnet.renderTitle("Application Manager"),
+    UIRenderer.renderTitle("Application Manager"),
     E(
       "div",
       { class: "cbi-section-descr" },
@@ -1083,7 +1106,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
                     await downloadUADData();
 
                     ui.hideModal();
-                    droidnet.addNotification(
+                    UIRenderer.addNotification(
                       _("UAD Database Updated"),
                       _(
                         "Package definitions have been refreshed successfully.",
@@ -1093,7 +1116,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
                     location.reload(); // Reload to show updated data
                   } catch (error) {
                     ui.hideModal();
-                    droidnet.addNotification(
+                    UIRenderer.addNotification(
                       _("UAD Update Failed"),
                       _(
                         "Failed to download UAD database: %s. Please check network connectivity and permissions.",
@@ -1117,9 +1140,9 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
               class: "btn cbi-button cbi-button-save",
               style: "margin-right: 10px",
               click: () => {
-                droidnet.modalLoading("Updating application list...");
+                UIRenderer.modalLoading("Updating application list...");
                 setTimeout(() => {
-                  droidnet.modalSuccess(
+                  UIRenderer.modalSuccess(
                     "Update completed",
                     "Application list has been successfully updated.",
                   );
@@ -1152,7 +1175,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
                       : "",
                   ].filter(Boolean);
 
-                  droidnet.confirmAction(
+                  UIRenderer.confirmAction(
                     "Install application",
                     E("div", [
                       E(
@@ -1164,7 +1187,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
                       fileInfo.length > 0 ? E("ul", fileInfo) : "",
                     ]),
                     async () => {
-                      droidnet.modalLoading("Installing application...");
+                      UIRenderer.modalLoading("Installing application...");
                       try {
                         const deviceId = await droidnet.getDeviceId();
                         if (!deviceId) throw new Error("Device not found");
@@ -1176,7 +1199,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
                         ]);
 
                         if (installResult.trim() === "Success") {
-                          droidnet.modalSuccess(
+                          UIRenderer.modalSuccess(
                             "Installation completed",
                             `Application ${result.name} has been successfully installed.`,
                           );
@@ -1186,7 +1209,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
                             ).format(result.name),
                           );
                         } else {
-                          droidnet.modalError(
+                          UIRenderer.modalError(
                             "Installation failed",
                             E("div", [
                               E(
@@ -1212,7 +1235,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
                   );
                 } catch (error) {
                   if (String(error) !== "Upload has been cancelled") {
-                    droidnet.modalError(
+                    UIRenderer.modalError(
                       "Upload failed",
                       E("div", [
                         E("p", _("Failed to upload application.")),
@@ -1289,21 +1312,67 @@ return view.extend({
 
   render: function (data: ServiceData): HTMLElement {
     if (data.deviceNotSet) {
-      return droidnet.selectDeviceForm();
+      const devices = await droidnet.selectDevices();
+
+      const deviceForm = await UIRenderer.createDeviceSelectionForm({
+        devices: devices,
+        title: "Device Selection",
+        description: "Select your Android device from the list below",
+        onSave: async (deviceId: string) => {
+          uci.set("droidnet", "device", "id", deviceId);
+          uci.save();
+          window.location.reload();
+        },
+        onReload: async () => {
+          await droidnet.reloadAdbd();
+          window.location.reload();
+        },
+        onValidate: (deviceId: string) => {
+          const isUnauthorized =
+            devices.devices !== false &&
+            devices.devices[deviceId] === "unauthorized";
+          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
+        },
+      });
+
+      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
     }
 
     if (data.service_section) {
-      droidnet.addNotification(
+      UIRenderer.addNotification(
         "Error: Device conflict!",
         "Please check your settings, the configured device and ADB devices are conflicting.",
         "danger",
       );
 
-      return droidnet.selectDeviceForm();
+      const devices = await droidnet.selectDevices();
+
+      const deviceForm = await UIRenderer.createDeviceSelectionForm({
+        devices: devices,
+        title: "Device Selection",
+        description: "Select your Android device from the list below",
+        onSave: async (deviceId: string) => {
+          uci.set("droidnet", "device", "id", deviceId);
+          uci.save();
+          window.location.reload();
+        },
+        onReload: async () => {
+          await droidnet.reloadAdbd();
+          window.location.reload();
+        },
+        onValidate: (deviceId: string) => {
+          const isUnauthorized =
+            devices.devices !== false &&
+            devices.devices[deviceId] === "unauthorized";
+          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
+        },
+      });
+
+      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
     }
 
     const sections = [renderPowerOptions(), renderApplicationManager(data)];
-    const page = droidnet.renderPage(sections);
+    const page = UIRenderer.renderPage(sections, droidnet.header);
 
     // Auto-restore saved settings after render
     setTimeout(async () => {

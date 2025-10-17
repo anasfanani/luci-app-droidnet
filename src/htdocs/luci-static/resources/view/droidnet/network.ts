@@ -6,6 +6,7 @@
 "require view";
 "require ui";
 "require droidnet";
+"require tools/ui-renderer as UIRenderer";
 
 interface NetworkData {
   deviceNotSet?: boolean;
@@ -184,25 +185,61 @@ function parseWirelessInfo(stdout: string) {
 }
 
 function renderMobileNetwork(data: NetworkData): HTMLElement[] {
-  const wifiAction = droidnet.createToggleAction(
+  const wifiAction = UIRenderer.createToggleAction(
     "wireless",
-    ["svc wifi enable"],
-    ["svc wifi disable"],
+    ["svc", "wifi", "enable"],
+    ["svc", "wifi", "disable"],
+    (cmd: string[]) => droidnet.exec(cmd),
+    {
+      onSuccess: (message, result) => {
+        UIRenderer.modalSuccess(message);
+        droidnet.writeLog(message);
+      },
+      onFailed: (error, result) => {
+        UIRenderer.modalError("Operation failed", error);
+        droidnet.writeLog(error);
+      },
+      validator: (result) => result.code === 0,
+    },
   );
-  const dataAction = droidnet.createToggleAction(
+  const dataAction = UIRenderer.createToggleAction(
     "mobile data",
-    ["svc data enable"],
-    ["svc data disable"],
+    ["svc", "data", "enable"],
+    ["svc", "data", "disable"],
+    (cmd: string[]) => droidnet.exec(cmd),
+    {
+      onSuccess: (message, result) => {
+        UIRenderer.modalSuccess(message);
+        droidnet.writeLog(message);
+      },
+      onFailed: (error, result) => {
+        UIRenderer.modalError("Operation failed", error);
+        droidnet.writeLog(error);
+      },
+      validator: (result) => result.code === 0,
+    },
   );
-  const airplaneAction = droidnet.createToggleAction(
+  const airplaneAction = UIRenderer.createToggleAction(
     "airplane mode",
-    ["cmd connectivity airplane-mode enable"],
-    ["cmd connectivity airplane-mode disable"],
+    ["cmd", "connectivity", "airplane-mode", "enable"],
+    ["cmd", "connectivity", "airplane-mode", "disable"],
+    (cmd: string[]) => droidnet.exec(cmd),
+    {
+      onSuccess: (message, result) => {
+        UIRenderer.modalSuccess(message);
+        droidnet.writeLog(message);
+      },
+      onFailed: (error, result) => {
+        UIRenderer.modalError("Operation failed", error);
+        droidnet.writeLog(error);
+      },
+      validator: (result) => result.code === 0,
+    },
   );
 
   return [
-    droidnet.renderTitle("Mobile Network"),
-    droidnet.renderTable([
+    UIRenderer.renderTitle("Mobile Network"),
+    UIRenderer.renderTable([
       { label: "IP address", value: data.src || "-" },
       { label: "Gateway", value: data.via || "-" },
       { label: "Device", value: data.dev || "-" },
@@ -230,8 +267,8 @@ async function renderWirelessInfo(
   if (wirelessInfo.stdout) {
     const wifiInfo = parseWirelessInfo(wirelessInfo.stdout);
     return [
-      droidnet.renderTitle("Wireless Information"),
-      droidnet.renderTable([
+      UIRenderer.renderTitle("Wireless Information"),
+      UIRenderer.renderTable([
         { label: "SSID", value: wifiInfo.ssid || "-" },
         { label: "BSSID", value: wifiInfo.bssid || "-" },
         { label: "MAC address", value: wifiInfo.mac || "-" },
@@ -252,7 +289,7 @@ function renderCellularInfo(data: NetworkData): HTMLElement[] | null {
     return {
       tabId: `sim${simIndex + 1}`,
       tabTitle: simName,
-      tabContent: droidnet.renderTable([
+      tabContent: UIRenderer.renderTable([
         { label: "Operator name", value: data.operator?.[simIndex] || "-" },
         { label: "Network type", value: data.signal?.[simIndex] || "-" },
         { label: "Roaming mode", value: data.roaming?.[simIndex] || "-" },
@@ -271,8 +308,8 @@ function renderCellularInfo(data: NetworkData): HTMLElement[] | null {
   if (tabs.length === 0) return null;
 
   return [
-    droidnet.renderTitle("Cellular Information"),
-    droidnet.renderTab(tabs),
+    UIRenderer.renderTitle("Cellular Information"),
+    UIRenderer.renderTab(tabs),
   ];
 }
 
@@ -281,8 +318,8 @@ function renderApnInfo(data: NetworkData): HTMLElement[] | null {
 
   const apn = data.apn;
   return [
-    droidnet.renderTitle("APN Information"),
-    droidnet.renderTable(
+    UIRenderer.renderTitle("APN Information"),
+    UIRenderer.renderTable(
       [
         { label: "Name", value: apn.name || "-" },
         { label: "APN", value: apn.apn || "-" },
@@ -319,17 +356,63 @@ return view.extend({
 
   render: async function (data: NetworkData): Promise<HTMLElement> {
     if (data.deviceNotSet) {
-      return droidnet.selectDeviceForm();
+      const devices = await droidnet.selectDevices();
+
+      const deviceForm = await UIRenderer.createDeviceSelectionForm({
+        devices: devices,
+        title: "Device Selection",
+        description: "Select your Android device from the list below",
+        onSave: async (deviceId: string) => {
+          uci.set("droidnet", "device", "id", deviceId);
+          uci.save();
+          window.location.reload();
+        },
+        onReload: async () => {
+          await droidnet.reloadAdbd();
+          window.location.reload();
+        },
+        onValidate: (deviceId: string) => {
+          const isUnauthorized =
+            devices.devices !== false &&
+            devices.devices[deviceId] === "unauthorized";
+          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
+        },
+      });
+
+      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
     }
 
     if (data.network_section) {
-      droidnet.addNotification(
+      UIRenderer.addNotification(
         "Device Not Connected",
         "Your Android device appears to be disconnected. Please check the USB connection and ensure ADB debugging is enabled.",
         "warning",
       );
 
-      return droidnet.selectDeviceForm();
+      const devices = await droidnet.selectDevices();
+
+      const deviceForm = await UIRenderer.createDeviceSelectionForm({
+        devices: devices,
+        title: "Device Selection",
+        description: "Select your Android device from the list below",
+        onSave: async (deviceId: string) => {
+          uci.set("droidnet", "device", "id", deviceId);
+          uci.save();
+          window.location.reload();
+        },
+        onReload: async () => {
+          await droidnet.reloadAdbd();
+          window.location.reload();
+        },
+        onValidate: (deviceId: string) => {
+          const isUnauthorized =
+            devices.devices !== false &&
+            devices.devices[deviceId] === "unauthorized";
+          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
+        },
+      });
+
+      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
     }
 
     const sections = await Promise.all([
@@ -339,6 +422,6 @@ return view.extend({
       renderApnInfo(data),
     ]);
 
-    return droidnet.renderPage(sections.filter(Boolean));
+    return UIRenderer.renderPage(sections.filter(Boolean), droidnet.header);
   },
 });

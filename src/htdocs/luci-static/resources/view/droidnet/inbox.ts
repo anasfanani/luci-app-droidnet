@@ -8,6 +8,7 @@
 "require fs";
 "require ui";
 "require droidnet";
+"require tools/ui-renderer as UIRenderer";
 
 interface InboxData {
   deviceNotSet?: boolean;
@@ -587,7 +588,7 @@ function renderInboxControls(
   const savedSettings = loadFilterSettings();
 
   return [
-    droidnet.renderTitle("Inbox Messages"),
+    UIRenderer.renderTitle("Inbox Messages"),
     E(
       "div",
       { class: "cbi-section-descr" },
@@ -810,21 +811,67 @@ return view.extend({
 
   render: async function (data: InboxData): Promise<HTMLElement> {
     if (data.deviceNotSet) {
-      return droidnet.selectDeviceForm();
+      const devices = await droidnet.selectDevices();
+
+      const deviceForm = await UIRenderer.createDeviceSelectionForm({
+        devices: devices,
+        title: "Device Selection",
+        description: "Select your Android device from the list below",
+        onSave: async (deviceId: string) => {
+          uci.set("droidnet", "device", "id", deviceId);
+          uci.save();
+          window.location.reload();
+        },
+        onReload: async () => {
+          await droidnet.reloadAdbd();
+          window.location.reload();
+        },
+        onValidate: (deviceId: string) => {
+          const isUnauthorized =
+            devices.devices !== false &&
+            devices.devices[deviceId] === "unauthorized";
+          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
+        },
+      });
+
+      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
     }
 
     if (data.inbox_section) {
-      droidnet.addNotification(
+      UIRenderer.addNotification(
         "Device Not Connected",
         "Your Android device appears to be disconnected. Please check the USB connection and ensure ADB debugging is enabled.",
         "warning",
       );
 
-      return droidnet.selectDeviceForm();
+      const devices = await droidnet.selectDevices();
+
+      const deviceForm = await UIRenderer.createDeviceSelectionForm({
+        devices: devices,
+        title: "Device Selection",
+        description: "Select your Android device from the list below",
+        onSave: async (deviceId: string) => {
+          uci.set("droidnet", "device", "id", deviceId);
+          uci.save();
+          window.location.reload();
+        },
+        onReload: async () => {
+          await droidnet.reloadAdbd();
+          window.location.reload();
+        },
+        onValidate: (deviceId: string) => {
+          const isUnauthorized =
+            devices.devices !== false &&
+            devices.devices[deviceId] === "unauthorized";
+          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
+        },
+      });
+
+      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
     }
 
     if (data.messages_section) {
-      droidnet.addNotification(
+      UIRenderer.addNotification(
         "Error: Device conflict!",
         "Please check your settings, the configured device and ADB devices are conflicting.",
         "danger",
@@ -843,11 +890,11 @@ return view.extend({
         ],
       ];
 
-      return droidnet.renderPage(sections);
+      return UIRenderer.renderPage(sections, droidnet.header);
     }
 
     if (data.messages_info) {
-      droidnet.addNotification(
+      UIRenderer.addNotification(
         "Error: Device not supported!",
         "Unable to read message because the device version cannot execute the command. Please ensure the device is rooted or has Android version 10 or above.",
         "danger",
@@ -855,7 +902,7 @@ return view.extend({
 
       const sections = [
         [
-          droidnet.renderTitle("Error Information"),
+          UIRenderer.renderTitle("Error Information"),
           E(
             "textarea",
             {
@@ -871,13 +918,13 @@ return view.extend({
         ],
       ];
 
-      return droidnet.renderPage(sections);
+      return UIRenderer.renderPage(sections, droidnet.header);
     }
 
     const sections = [
       renderInboxControls(data.messages || [], data.display || 10),
     ];
-    const page = droidnet.renderPage(sections);
+    const page = UIRenderer.renderPage(sections, droidnet.header);
 
     // Auto-apply saved filters after render
     setTimeout(() => {

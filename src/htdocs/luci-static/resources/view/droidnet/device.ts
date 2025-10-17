@@ -5,6 +5,7 @@
 "use strict";
 "require view";
 "require droidnet";
+"require tools/ui-renderer as UIRenderer";
 
 interface DeviceData {
   deviceNotSet?: boolean;
@@ -185,8 +186,8 @@ function renderDeviceInfo(data: DeviceData): HTMLElement[] {
   };
 
   return [
-    droidnet.renderTitle("Device Information"),
-    droidnet.renderTable(
+    UIRenderer.renderTitle("Device Information"),
+    UIRenderer.renderTable(
       [
         { label: "Device ID", value: data.device_id || "-" },
         {
@@ -222,8 +223,8 @@ function renderDeviceInfo(data: DeviceData): HTMLElement[] {
 
 function renderBatteryInfo(data: DeviceData): HTMLElement[] {
   return [
-    droidnet.renderTitle("Battery Information"),
-    droidnet.renderTable([
+    UIRenderer.renderTitle("Battery Information"),
+    UIRenderer.renderTable([
       { label: "Level", value: data.battery_level || "-" },
       { label: "Charge counter", value: data.battery_counter || "-" },
       { label: "Voltage", value: data.battery_voltage || "-" },
@@ -243,21 +244,67 @@ return view.extend({
 
   render: function (data: DeviceData): HTMLElement {
     if (data.deviceNotSet) {
-      return droidnet.selectDeviceForm();
+      const devices = await droidnet.selectDevices();
+
+      const deviceForm = await UIRenderer.createDeviceSelectionForm({
+        devices: devices,
+        title: "Device Selection",
+        description: "Select your Android device from the list below",
+        onSave: async (deviceId: string) => {
+          uci.set("droidnet", "device", "id", deviceId);
+          uci.save();
+          window.location.reload();
+        },
+        onReload: async () => {
+          await droidnet.reloadAdbd();
+          window.location.reload();
+        },
+        onValidate: (deviceId: string) => {
+          const isUnauthorized =
+            devices.devices !== false &&
+            devices.devices[deviceId] === "unauthorized";
+          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
+        },
+      });
+
+      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
     }
 
     if (data.device_section) {
-      droidnet.addNotification(
+      UIRenderer.addNotification(
         "Error: Device conflict!",
         "Please check your settings, the configured device and ADB devices are conflicting.",
         "danger",
       );
 
-      return droidnet.selectDeviceForm();
+      const devices = await droidnet.selectDevices();
+
+      const deviceForm = await UIRenderer.createDeviceSelectionForm({
+        devices: devices,
+        title: "Device Selection",
+        description: "Select your Android device from the list below",
+        onSave: async (deviceId: string) => {
+          uci.set("droidnet", "device", "id", deviceId);
+          uci.save();
+          window.location.reload();
+        },
+        onReload: async () => {
+          await droidnet.reloadAdbd();
+          window.location.reload();
+        },
+        onValidate: (deviceId: string) => {
+          const isUnauthorized =
+            devices.devices !== false &&
+            devices.devices[deviceId] === "unauthorized";
+          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
+        },
+      });
+
+      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
     }
 
     const sections = [renderDeviceInfo(data), renderBatteryInfo(data)];
 
-    return droidnet.renderPage(sections);
+    return UIRenderer.renderPage(sections, droidnet.header);
   },
 });
