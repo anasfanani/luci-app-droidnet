@@ -5,7 +5,9 @@
 "use strict";
 "require ui";
 "require form";
+"require uci";
 "require baseclass";
+"require droidnet";
 
 interface UITableRow {
   label: string;
@@ -45,10 +47,27 @@ interface DeviceFormOptions {
   description?: string;
   onSave: (deviceId: string) => Promise<void>;
   onReload: () => Promise<void>;
-  onValidate?: (deviceId: string) => boolean | string;
+}
+
+interface DeviceStatus {
+  deviceNotSet?: boolean;
+  deviceNotConnected?: boolean;
 }
 
 const UIRenderer = baseclass.extend({
+  title: _(
+    `<p><strong><span style="margin-right: 5px;"><img src="/luci-static/resources/svg/droidnet.svg" style="height: 1em;width: auto;vertical-align: -0.15em;"></img></span><span style="color: rgb(102, 153, 51);">Droid</span> <span style="color: rgb(250, 197, 28);">Net</span></strong></p>`,
+  ),
+
+  description: "Manage Android modem and optimize network settings.",
+
+  get header(): HTMLElement[] {
+    return [
+      E("h2", { class: "section-title" }, this.title),
+      E("div", { class: "cbi-map-descr" }, _(this.description)),
+    ];
+  },
+
   renderTable: function (
     rows: UITableRow[] = [],
     config: UITableConfig = {},
@@ -216,8 +235,9 @@ const UIRenderer = baseclass.extend({
     sections: (HTMLElement[] | null)[],
     header?: HTMLElement,
   ): HTMLElement {
+    const defaultHeader = header || this.header;
     return E("div", { class: "cbi-map" }, [
-      header ? E(header) : null,
+      defaultHeader ? E(defaultHeader) : null,
       ...sections
         .filter(Boolean)
         .flat()
@@ -347,6 +367,47 @@ const UIRenderer = baseclass.extend({
       E("h3", {}, _("Device Selection")),
       E("p", {}, _("Please configure your device settings.")),
     ]);
+  },
+
+  checkDeviceAndRender: async function (
+    data: DeviceStatus,
+  ): Promise<HTMLElement | null> {
+    if (data.deviceNotSet) {
+      return await this.renderDeviceSelectionPage();
+    }
+
+    if (data.deviceNotConnected) {
+      this.addNotification(
+        "Error: Device not connected!",
+        "Please check your device connection and try again.",
+        "danger",
+      );
+      return await this.renderDeviceSelectionPage();
+    }
+
+    return null; // No device issues, continue with normal flow
+  },
+
+  renderDeviceSelectionPage: async function (): Promise<HTMLElement> {
+    const devices = await droidnet.getDeviceLists();
+    const deviceForm = await this.createDeviceSelectionForm({
+      devices: devices,
+      title: "Device Selection",
+      description: "Select your Android device from the list below",
+      onSave: async (deviceId: string) => {
+        // Access global uci directly
+        uci.set("droidnet", "device", "id", deviceId);
+        uci.save();
+        window.location.reload();
+      },
+      onReload: async () => {
+        // Access global droidnet directly
+        await droidnet.reloadAdbd();
+        window.location.reload();
+      },
+    });
+
+    return this.renderPage([[deviceForm]]);
   },
 
   createDeviceSelectionForm: async function (

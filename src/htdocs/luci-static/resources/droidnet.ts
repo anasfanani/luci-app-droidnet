@@ -35,16 +35,6 @@ interface TableConfig {
 class DroidNet {
   private __deviceId: string | null = null;
   private __deviceConnected: boolean | null = null;
-  public title: string = _(
-    `<p><strong><span style="margin-right: 5px;"><img src="/luci-static/resources/svg/droidnet.svg" style="height: 1em;width: auto;vertical-align: -0.15em;"></img></span><span style="color: rgb(102, 153, 51);">Droid</span> <span style="color: rgb(250, 197, 28);">Net</span></strong></p>`,
-  );
-  public description: string =
-    "Manage Android modem and optimize network settings.";
-  public header: HTMLElement[] = [
-    E("h2", { class: "section-title" }, this.title),
-    E("div", { class: "cbi-map-descr" }, _(this.description)),
-  ];
-
   private __callRCList = rpc.declare({
     object: "rc",
     method: "list",
@@ -107,38 +97,6 @@ class DroidNet {
     }
   }
 
-  private __createButton(
-    section: LuCI.form.NamedSection,
-    id: string,
-    title: string,
-    text: string,
-    style: "positive" | "negative" | "neutral",
-    onclick: () => void | Promise<void>,
-    disabled?: boolean,
-  ): LuCI.form.Value {
-    const o = section.option(form.DummyValue, id, title);
-    o.inputstyle = style;
-    o.cfgvalue = function () {
-      return null;
-    };
-    o.write = function () {};
-    o.remove = function () {};
-    o.renderWidget = function () {
-      const buttonStyle = this.inputstyle || "neutral";
-      const attrs: Record<string, any> = {
-        type: "button",
-        class: `cbi-button cbi-button-${buttonStyle}`,
-        value: text,
-        click: onclick,
-      };
-      if (disabled) {
-        attrs.disabled = disabled;
-      }
-      return E("input", attrs);
-    };
-    return o;
-  }
-
   async getDeviceId(): Promise<string | null> {
     if (this.__deviceId === null) {
       await uci.load("droidnet");
@@ -175,7 +133,7 @@ class DroidNet {
     return this.__exec(command, callback, { asSu: true });
   }
 
-  async selectDevices(): Promise<DeviceList> {
+  async getDeviceLists(): Promise<DeviceList> {
     try {
       const result = await fs.exec("/usr/bin/env", [
         "HOME=/root",
@@ -223,108 +181,21 @@ class DroidNet {
     }
   }
 
-  async selectDeviceForm(): Promise<HTMLElement> {
-    const getDevices: DeviceList = await this.selectDevices();
-    // Mixed authorized and unauthorized devices
-    // const getDevices: DeviceList = {
-    //   devices: {
-    //     "ABC123DEF456": "SM_G973F",
-    //     "XYZ789GHI012": "unauthorized",
-    //     "DEF456ABC789": "Pixel_5",
-    //     "GHI012XYZ345": "unauthorized"
-    //   }
-    // };
-    // No devices detected
-    // const getDevices: DeviceList = {
-    //   devices: false
-    // };
+  load(loadFunction: () => Promise<any>): () => Promise<any> {
+    const self = this;
+    return async function (this: any) {
+      // Device validation guard
+      if (!(await self.getDeviceId())) {
+        return { deviceNotSet: true };
+      }
 
-    // All devices unauthorized
-    // const getDevices: DeviceList = {
-    //   devices: {
-    //     "ABC123DEF456": "unauthorized",
-    //     "XYZ789GHI012": "unauthorized"
-    //   }
-    // };
+      if (!(await self.isDeviceConnected())) {
+        return { deviceNotConnected: true };
+      }
 
-    console.log("Devices:", getDevices);
-
-    let m: LuCI.form.Map, s: LuCI.form.NamedSection, o: LuCI.form.Value;
-
-    m = new form.Map("droidnet", this.title, this.description);
-    s = m.section(
-      form.NamedSection,
-      "device",
-      "droidnet",
-      _("Device Selection"),
-    );
-    s.anonymous = true;
-    let deviceSelected: string;
-
-    if (getDevices.devices === false) {
-      o = s.option(form.DummyValue, "dummy", _("Device"));
-      o.default = _("No device detected.");
-    } else {
-      o = s.option(form.ListValue, "id", _("Select Device ID"));
-      Object.entries(getDevices.devices).forEach(
-        ([deviceID, deviceModel]: [string, string]) => {
-          o.value(deviceID, deviceID + " - " + deviceModel);
-        },
-      );
-      o.validate = function (section: any, value: string): string | boolean {
-        deviceSelected = value;
-        const isUnauthorized: boolean =
-          getDevices.devices !== false &&
-          getDevices.devices[value] === "unauthorized";
-
-        // Find and update save button
-        setTimeout(() => {
-          const saveBtn = document.querySelector(
-            'input[value="Save Setting"]',
-          ) as HTMLInputElement;
-          if (saveBtn) {
-            saveBtn.disabled = isUnauthorized;
-          }
-        }, 0);
-
-        return isUnauthorized ? `Device ${value} is unauthorized !` : true;
-      };
-      o.rmempty = false;
-    }
-
-    const shouldDisable: boolean =
-      getDevices.devices === false ||
-      Object.values(getDevices.devices).every(
-        (model: string) => model === "unauthorized",
-      );
-
-    this.__createButton(
-      s,
-      "save",
-      _("Action"),
-      _("Save Setting"),
-      "positive",
-      async (): Promise<void> => {
-        uci.set("droidnet", "device", "id", deviceSelected);
-        uci.save();
-        window.location.reload();
-      },
-      shouldDisable,
-    );
-
-    this.__createButton(
-      s,
-      "reload",
-      _("ADB Daemon"),
-      _("⟳ Reload ADB Daemon"),
-      "negative",
-      async (): Promise<void> => {
-        await this.reloadAdbd();
-        window.location.reload();
-      },
-    );
-
-    return m.render();
+      // Execute the actual load function
+      return await loadFunction.call(this);
+    };
   }
 
   async reloadAdbd(): Promise<fs.FileExecResult> {

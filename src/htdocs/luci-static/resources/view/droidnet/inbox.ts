@@ -91,14 +91,6 @@ function applyFilterSettings(settings: any): void {
 let inboxCurrentPage = 1;
 
 async function loadInboxData(): Promise<InboxData> {
-  if (!(await droidnet.getDeviceId())) {
-    return { deviceNotSet: true };
-  }
-
-  if (!(await droidnet.isDeviceConnected())) {
-    return { inbox_section: true };
-  }
-
   await uci.load("droidnet");
   const device = uci.get("droidnet", "device", "id");
   const display = parseInt(
@@ -807,68 +799,11 @@ return view.extend({
   handleSave: null,
   handleReset: null,
 
-  load: loadInboxData,
+  load: droidnet.load(loadInboxData),
 
   render: async function (data: InboxData): Promise<HTMLElement> {
-    if (data.deviceNotSet) {
-      const devices = await droidnet.selectDevices();
-
-      const deviceForm = await UIRenderer.createDeviceSelectionForm({
-        devices: devices,
-        title: "Device Selection",
-        description: "Select your Android device from the list below",
-        onSave: async (deviceId: string) => {
-          uci.set("droidnet", "device", "id", deviceId);
-          uci.save();
-          window.location.reload();
-        },
-        onReload: async () => {
-          await droidnet.reloadAdbd();
-          window.location.reload();
-        },
-        onValidate: (deviceId: string) => {
-          const isUnauthorized =
-            devices.devices !== false &&
-            devices.devices[deviceId] === "unauthorized";
-          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
-        },
-      });
-
-      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
-    }
-
-    if (data.inbox_section) {
-      UIRenderer.addNotification(
-        "Device Not Connected",
-        "Your Android device appears to be disconnected. Please check the USB connection and ensure ADB debugging is enabled.",
-        "warning",
-      );
-
-      const devices = await droidnet.selectDevices();
-
-      const deviceForm = await UIRenderer.createDeviceSelectionForm({
-        devices: devices,
-        title: "Device Selection",
-        description: "Select your Android device from the list below",
-        onSave: async (deviceId: string) => {
-          uci.set("droidnet", "device", "id", deviceId);
-          uci.save();
-          window.location.reload();
-        },
-        onReload: async () => {
-          await droidnet.reloadAdbd();
-          window.location.reload();
-        },
-        onValidate: (deviceId: string) => {
-          const isUnauthorized =
-            devices.devices !== false &&
-            devices.devices[deviceId] === "unauthorized";
-          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
-        },
-      });
-
-      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
-    }
+    const deviceCheck = await UIRenderer.checkDeviceAndRender(data);
+    if (deviceCheck) return deviceCheck;
 
     if (data.messages_section) {
       UIRenderer.addNotification(
@@ -890,7 +825,7 @@ return view.extend({
         ],
       ];
 
-      return UIRenderer.renderPage(sections, droidnet.header);
+      return UIRenderer.renderPage(sections);
     }
 
     if (data.messages_info) {
@@ -918,13 +853,13 @@ return view.extend({
         ],
       ];
 
-      return UIRenderer.renderPage(sections, droidnet.header);
+      return UIRenderer.renderPage(sections);
     }
 
     const sections = [
       renderInboxControls(data.messages || [], data.display || 10),
     ];
-    const page = UIRenderer.renderPage(sections, droidnet.header);
+    const page = UIRenderer.renderPage(sections);
 
     // Auto-apply saved filters after render
     setTimeout(() => {

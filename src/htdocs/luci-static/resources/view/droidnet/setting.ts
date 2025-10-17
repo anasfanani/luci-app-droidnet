@@ -20,18 +20,10 @@ interface SettingData {
 }
 
 async function loadSettingData(): Promise<SettingData> {
-  if (!(await droidnet.getDeviceId())) {
-    return { deviceNotSet: true };
-  }
-
-  if (!(await droidnet.isDeviceConnected())) {
-    return { setting_section: true };
-  }
-
   await uci.load("droidnet");
 
   const [deviceData, tunnelService, status] = await Promise.all([
-    droidnet.selectDevices(),
+    droidnet.getDeviceLists(),
     loadTunnelServices(),
     droidnet.serviceStatus(),
   ]);
@@ -393,68 +385,11 @@ function renderHttpingSection(m: LuCI.form.Map, data: SettingData): void {
 
 // @ts-ignore
 return view.extend({
-  load: loadSettingData,
+  load: droidnet.load(loadSettingData),
 
   render: async function (data: SettingData): Promise<HTMLElement> {
-    if (data.deviceNotSet) {
-      const devices = await droidnet.selectDevices();
-
-      const deviceForm = await UIRenderer.createDeviceSelectionForm({
-        devices: devices,
-        title: "Device Selection",
-        description: "Select your Android device from the list below",
-        onSave: async (deviceId: string) => {
-          uci.set("droidnet", "device", "id", deviceId);
-          uci.save();
-          window.location.reload();
-        },
-        onReload: async () => {
-          await droidnet.reloadAdbd();
-          window.location.reload();
-        },
-        onValidate: (deviceId: string) => {
-          const isUnauthorized =
-            devices.devices !== false &&
-            devices.devices[deviceId] === "unauthorized";
-          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
-        },
-      });
-
-      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
-    }
-
-    if (data.setting_section) {
-      UIRenderer.addNotification(
-        "Device Not Connected",
-        "Your Android device appears to be disconnected. Please check the USB connection and ensure ADB debugging is enabled.",
-        "warning",
-      );
-
-      const devices = await droidnet.selectDevices();
-
-      const deviceForm = await UIRenderer.createDeviceSelectionForm({
-        devices: devices,
-        title: "Device Selection",
-        description: "Select your Android device from the list below",
-        onSave: async (deviceId: string) => {
-          uci.set("droidnet", "device", "id", deviceId);
-          uci.save();
-          window.location.reload();
-        },
-        onReload: async () => {
-          await droidnet.reloadAdbd();
-          window.location.reload();
-        },
-        onValidate: (deviceId: string) => {
-          const isUnauthorized =
-            devices.devices !== false &&
-            devices.devices[deviceId] === "unauthorized";
-          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
-        },
-      });
-
-      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
-    }
+    const deviceCheck = await UIRenderer.checkDeviceAndRender(data);
+    if (deviceCheck) return deviceCheck;
 
     const m = new form.Map("droidnet");
 
@@ -462,6 +397,6 @@ return view.extend({
     renderMonitoringSection(m, data);
     renderHttpingSection(m, data);
 
-    return UIRenderer.renderPage([[await m.render()]], droidnet.header);
+    return UIRenderer.renderPage([[await m.render()]]);
   },
 });

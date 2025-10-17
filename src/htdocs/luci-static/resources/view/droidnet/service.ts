@@ -470,14 +470,6 @@ let currentFilter = "";
 const apkFile = "/tmp/upload.apk";
 
 async function loadServiceData(): Promise<ServiceData> {
-  if (!(await droidnet.getDeviceId())) {
-    return { deviceNotSet: true };
-  }
-
-  if (!(await droidnet.isDeviceConnected())) {
-    return { service_section: true };
-  }
-
   await uci.load("droidnet");
   const display = uci.get("droidnet", "device", "display_app") || 10;
 
@@ -1308,71 +1300,14 @@ return view.extend({
   handleSave: null,
   handleReset: null,
 
-  load: loadServiceData,
+  load: droidnet.load(loadServiceData),
 
   render: async function (data: ServiceData): Promise<HTMLElement> {
-    if (data.deviceNotSet) {
-      const devices = await droidnet.selectDevices();
-
-      const deviceForm = await UIRenderer.createDeviceSelectionForm({
-        devices: devices,
-        title: "Device Selection",
-        description: "Select your Android device from the list below",
-        onSave: async (deviceId: string) => {
-          uci.set("droidnet", "device", "id", deviceId);
-          uci.save();
-          window.location.reload();
-        },
-        onReload: async () => {
-          await droidnet.reloadAdbd();
-          window.location.reload();
-        },
-        onValidate: (deviceId: string) => {
-          const isUnauthorized =
-            devices.devices !== false &&
-            devices.devices[deviceId] === "unauthorized";
-          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
-        },
-      });
-
-      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
-    }
-
-    if (data.service_section) {
-      UIRenderer.addNotification(
-        "Error: Device conflict!",
-        "Please check your settings, the configured device and ADB devices are conflicting.",
-        "danger",
-      );
-
-      const devices = await droidnet.selectDevices();
-
-      const deviceForm = await UIRenderer.createDeviceSelectionForm({
-        devices: devices,
-        title: "Device Selection",
-        description: "Select your Android device from the list below",
-        onSave: async (deviceId: string) => {
-          uci.set("droidnet", "device", "id", deviceId);
-          uci.save();
-          window.location.reload();
-        },
-        onReload: async () => {
-          await droidnet.reloadAdbd();
-          window.location.reload();
-        },
-        onValidate: (deviceId: string) => {
-          const isUnauthorized =
-            devices.devices !== false &&
-            devices.devices[deviceId] === "unauthorized";
-          return isUnauthorized ? `Device ${deviceId} is unauthorized!` : true;
-        },
-      });
-
-      return UIRenderer.renderPage([[deviceForm]], droidnet.header);
-    }
+    const deviceCheck = await UIRenderer.checkDeviceAndRender(data);
+    if (deviceCheck) return deviceCheck;
 
     const sections = [renderPowerOptions(), renderApplicationManager(data)];
-    const page = UIRenderer.renderPage(sections, droidnet.header);
+    const page = UIRenderer.renderPage(sections);
 
     // Auto-restore saved settings after render
     setTimeout(async () => {
