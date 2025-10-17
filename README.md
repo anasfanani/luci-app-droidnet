@@ -114,13 +114,17 @@ curl -fsSL https://bun.com/install | sudo bash
 source ~/.bashrc
 bun install
 ```
+
 ### Testing
 
 #### OpenWRT Host
+
 ```
 opkg install luci-mod-rpc
 ```
+
 #### Run Tests
+
 ```
 # Require NodeJS
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
