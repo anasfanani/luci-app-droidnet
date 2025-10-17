@@ -110,7 +110,25 @@ View all incoming messages received by Android modem, including sender informati
 ## Development
 
 ```sh
-curl -fsSL https://bun.com/install | bash
+curl -fsSL https://bun.com/install | sudo bash
 source ~/.bashrc
 bun install
+```
+### Testing
+
+#### OpenWRT Host
+```
+opkg install luci-mod-rpc
+```
+#### Run Tests
+```
+# Require NodeJS
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+source ~/.bashrc
+nvm install --lts
+
+
+
+npx playwright install --with-deps --only-shell
+npx playwright test
 ```
