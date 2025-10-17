@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { expect } from "@playwright/test";
+import * as cheerio from "cheerio";
 
 // Types
 export interface MenuConfig {
@@ -27,6 +28,35 @@ export async function saveDebugHtml(
   const filePath = path.join(htmlDir, filename);
   await fs.promises.writeFile(filePath, html);
   console.debug(`HTML saved to ${filePath}`);
+}
+
+export async function saveHtmlContent(html: string, filename: string) {
+  const contentDir = "test-results/content";
+  await fs.promises.mkdir(contentDir, { recursive: true });
+
+  const $ = cheerio.load(html);
+  const content = $("#maincontent .container #view .cbi-map").html();
+
+  if (content) {
+    // Try to use prettier if available, otherwise save as-is
+    let prettified = content;
+    try {
+      const prettier = require("prettier");
+      prettified = await prettier.format(content, {
+        parser: "html",
+        printWidth: 100,
+        tabWidth: 2,
+        useTabs: false,
+        htmlWhitespaceSensitivity: "ignore",
+      });
+    } catch (e) {
+      // Prettier not available, use raw content
+    }
+
+    const filePath = path.join(contentDir, filename);
+    await fs.promises.writeFile(filePath, prettified);
+    console.debug(`HTML content saved to ${filePath}`);
+  }
 }
 
 export async function saveParserResult(result: any, filename: string) {
@@ -84,5 +114,19 @@ export function getTestPages() {
     }
   }
 
-  return pages.sort((a, b) => a.order - b.order);
+  let filteredPages = pages.sort((a, b) => a.order - b.order);
+
+  // Filter pages based on TEST_PAGES environment variable
+  const testPages = process.env.TEST_PAGES;
+  if (testPages) {
+    const allowedPages = testPages.split(",").map((p) => p.trim());
+    filteredPages = filteredPages.filter((page) =>
+      allowedPages.includes(page.title),
+    );
+    console.debug(
+      `Running tests for: ${filteredPages.map((p) => p.title).join(", ")}`,
+    );
+  }
+
+  return filteredPages;
 }

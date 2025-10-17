@@ -130,5 +130,12 @@ nvm install --lts
 
 
 npx playwright install --with-deps --only-shell
-npx playwright test
+
+# Run all tests:
+npm run test:e2e
+
+# Run specific pages:
+TEST_PAGES="Device" npm run test:e2e
+TEST_PAGES="Device,Network" npm run test:e2e
+TEST_PAGES="Device,Network,Service" npm run test:e2e
 ```

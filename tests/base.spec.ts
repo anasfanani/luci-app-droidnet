@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import { parsePage } from "./parsers";
 import {
   saveDebugHtml,
+  saveHtmlContent,
   saveParserResult,
   loginWithJsonRpc,
   getTestPages,
@@ -57,6 +58,10 @@ test.describe("DroidNet Tests", () => {
 
       const html = await page.content();
       await saveDebugHtml(html, `${pageConfig.title.toLowerCase()}-page.html`);
+      await saveHtmlContent(
+        html,
+        `${pageConfig.title.toLowerCase()}-page.html`,
+      );
 
       const $ = cheerio.load(html);
       const result = parsePage(pageConfig.title, $);
