@@ -1,10 +1,11 @@
 {
   "name": "luci-app-droidnet",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "LuCI support for Android Modem",
   "scripts": {
     "build": "node build.mjs",
     "build:package": "bun run build && ./.github/tools/build-package.sh",
+    "livebuildtest": "bun run build && sshpass -p 'jancok123' scp -r dist/htdocs/luci-static/resources/* root@100.104.137.1:/www/luci-static/resources/ && npm run test:e2e",
     "version-bump": "./.github/tools/version-bump.sh",
     "watch": "tsc --watch",
     "dev": "tsc --watch",
