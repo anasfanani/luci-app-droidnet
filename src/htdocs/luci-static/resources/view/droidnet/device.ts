@@ -11,7 +11,24 @@
 interface DeviceData {
   deviceNotSet?: boolean;
   device_section?: boolean;
-  [key: string]: any;
+  device_id?: string;
+  device_brand?: string;
+  device_model?: string;
+  device_code?: string;
+  device_soc?: string;
+  device_cpu?: string;
+  device_version?: string;
+  device_sdk?: string;
+  device_security?: string;
+  device_uptime?: string;
+  device_uname?: { kernel: string; arch: string };
+  device_memory?: string;
+  battery_level?: string;
+  battery_voltage?: string;
+  battery_technology?: string;
+  battery_temperature?: string;
+  battery_counter?: string;
+  device_root?: boolean | { version: string; name: string };
 }
 
 async function loadDeviceData(): Promise<DeviceData> {
@@ -41,7 +58,9 @@ async function loadDeviceData(): Promise<DeviceData> {
   );
 }
 
-async function loadDeviceProperties(): Promise<Record<string, any>> {
+async function loadDeviceProperties(): Promise<
+  Record<string, string | string[]>
+> {
   const properties = {
     "ro.serialno": "device_id",
     "ro.product.brand": "device_brand",
@@ -55,7 +74,7 @@ async function loadDeviceProperties(): Promise<Record<string, any>> {
   };
 
   const result = await DroidNet.exec(["getprop"]);
-  const deviceInfo: Record<string, any> = {};
+  const deviceInfo: Record<string, string | string[]> = {};
   const lines = (result.stdout || "").split("\n");
 
   for (const line of lines) {
@@ -74,20 +93,22 @@ async function loadDeviceProperties(): Promise<Record<string, any>> {
   return deviceInfo;
 }
 
-async function loadUptimeInfo(): Promise<Record<string, any>> {
+async function loadUptimeInfo(): Promise<Record<string, string>> {
   const result = await DroidNet.exec(["uptime"]);
   const parts = (result.stdout || "").trim().split(/\s+/);
   const uptimeParts = parts.slice(0, 4);
   return { device_uptime: uptimeParts.join(" ").replace(/,$/, "") };
 }
 
-async function loadKernelInfo(): Promise<Record<string, any>> {
+async function loadKernelInfo(): Promise<
+  Record<string, { kernel: string; arch: string }>
+> {
   const result = await DroidNet.exec(["uname", "-a"]);
   const parts = (result.stdout || "").trim().split(/\s+/);
   return { device_uname: { kernel: parts[2] || "", arch: parts[12] || "" } };
 }
 
-async function loadMemoryInfo(): Promise<Record<string, any>> {
+async function loadMemoryInfo(): Promise<Record<string, string>> {
   const result = await DroidNet.exec(["cat", "/proc/meminfo"]);
   const parts = (result.stdout || "").trim().split(/\s+/);
   const kbValue = parseInt(parts[1] || "0") + parseInt(parts[4] || "0");
@@ -95,7 +116,7 @@ async function loadMemoryInfo(): Promise<Record<string, any>> {
   return { device_memory: gbValue.toFixed(0) + " GB" };
 }
 
-async function loadBatteryInfo(): Promise<Record<string, any>> {
+async function loadBatteryInfo(): Promise<Record<string, string>> {
   const properties = {
     level: "battery_level",
     voltage: "battery_voltage",
@@ -105,7 +126,7 @@ async function loadBatteryInfo(): Promise<Record<string, any>> {
   };
 
   const result = await DroidNet.exec(["dumpsys", "battery"]);
-  const batteryInfo: Record<string, any> = {};
+  const batteryInfo: Record<string, string> = {};
   const lines = (result.stdout || "").split("\n");
 
   for (const line of lines) {
@@ -134,7 +155,9 @@ async function loadBatteryInfo(): Promise<Record<string, any>> {
   return batteryInfo;
 }
 
-async function loadRootInfo(): Promise<Record<string, any>> {
+async function loadRootInfo(): Promise<
+  Record<string, boolean | { version: string; name: string }>
+> {
   const result = await DroidNet.exec(["su", "-v"]);
   const trimmed = (result.stdout || "").trim();
   if (
@@ -166,9 +189,12 @@ function renderDeviceInfo(data: DeviceData): HTMLElement[] {
   const capitalize = (str: string): string =>
     str.charAt(0).toUpperCase() + str.slice(1);
 
-  const formatRoot = (root: any): string => {
+  const formatRoot = (
+    root: boolean | { version: string; name: string } | undefined,
+  ): string => {
     if (root === false) return _("Non-root");
-    if (root) return _("Root with %s (%s)").format(root.name, root.version);
+    if (root && typeof root === "object")
+      return _("Root with %s (%s)").format(root.name, root.version);
     return "-";
   };
 

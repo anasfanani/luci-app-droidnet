@@ -18,13 +18,19 @@ interface NetworkSection {
   id: string;
   title: string;
   commands: NetworkCommand[];
-  renderer: (data: Record<string, any>) => Record<string, any>;
+  renderer: (
+    data: Record<string, CommandData>,
+  ) => Record<string, string[] | string>;
 }
 
 interface NetworkCommand {
   id: string;
   shell: string;
-  parser: (stdout: string) => any;
+  parser: (stdout: string) => CommandData;
+}
+
+interface CommandData {
+  stdout: string;
 }
 
 const NETWORK_CONFIG: NetworkConfig = {
@@ -60,11 +66,13 @@ const NETWORK_CONFIG: NetworkConfig = {
 };
 
 // Generic engine
-async function loadDataDriven(): Promise<Record<string, any>> {
-  const sectionData: Record<string, any> = {};
+async function loadDataDriven(): Promise<
+  Record<string, Record<string, CommandData>>
+> {
+  const sectionData: Record<string, Record<string, CommandData>> = {};
 
   for (const section of NETWORK_CONFIG.sections) {
-    const commandResults: Record<string, any> = {};
+    const commandResults: Record<string, CommandData> = {};
 
     for (const command of section.commands) {
       const result = await DroidNet.exec(command.shell.split(" "));
@@ -77,7 +85,9 @@ async function loadDataDriven(): Promise<Record<string, any>> {
   return sectionData;
 }
 
-function renderDataDriven(data: Record<string, any>): HTMLElement[] {
+function renderDataDriven(
+  data: Record<string, Record<string, CommandData>>,
+): HTMLElement[] {
   const results = NETWORK_CONFIG.sections
     .map((section) => {
       const sectionData = section.renderer(data[section.id] || {});
@@ -103,7 +113,9 @@ return view.extend({
 
   load: DroidNet.load(loadDataDriven),
 
-  render: async function (data: Record<string, any>): Promise<HTMLElement> {
+  render: async function (
+    data: Record<string, Record<string, CommandData>> & DeviceStatus,
+  ): Promise<HTMLElement> {
     const deviceCheck = await UIRenderer.checkDeviceAndRender(data);
     if (deviceCheck) return deviceCheck;
 

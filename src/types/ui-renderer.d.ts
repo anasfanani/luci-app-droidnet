@@ -21,10 +21,16 @@ declare global {
     onDisable: () => Promise<void>;
   }
 
+  interface CommandResult {
+    code: number;
+    stdout: string;
+    stderr: string;
+  }
+
   interface ToggleOptions {
-    onSuccess?: (message: string, result: any) => void;
-    onFailed?: (error: string, result: any) => void;
-    validator?: (result: any) => boolean;
+    onSuccess?: (message: string, result: CommandResult) => void;
+    onFailed?: (error: string, result: CommandResult) => void;
+    validator?: (result: CommandResult) => boolean;
   }
 
   interface DeviceFormOptions {
@@ -40,28 +46,6 @@ declare global {
     deviceNotConnected?: boolean;
   }
 
-  interface UITableRow {
-    label: string;
-    value: string | number | boolean;
-    action?: UIToggleAction;
-  }
-
-  interface UITableConfig {
-    col?: number;
-    colSizeMap?: Record<number, number[]>;
-  }
-
-  interface UITabConfig {
-    tabId: string;
-    tabTitle: string;
-    tabContent: HTMLElement;
-  }
-
-  interface UIToggleAction {
-    onEnable: () => Promise<void>;
-    onDisable: () => Promise<void>;
-  }
-
   interface FormElement {
     value: string;
     disabled?: boolean;
@@ -75,26 +59,6 @@ declare global {
     option?: (name: string, value: string) => void;
     default?: string;
     anonymous?: boolean;
-  }
-
-  interface CommandResult {
-    code: number;
-    stdout: string;
-    stderr: string;
-  }
-
-  interface ToggleOptions {
-    onSuccess?: (message: string, result: CommandResult) => void;
-    onFailed?: (error: string, result: CommandResult) => void;
-    validator?: (result: CommandResult) => boolean;
-  }
-
-  interface DeviceFormOptions {
-    devices: { devices: Record<string, string> | false };
-    title?: string;
-    description?: string;
-    onSave: (deviceId: string) => Promise<void>;
-    onReload: () => Promise<void>;
   }
 
   interface UIRendererInstance {

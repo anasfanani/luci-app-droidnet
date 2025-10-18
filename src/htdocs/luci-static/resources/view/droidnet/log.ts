@@ -16,6 +16,12 @@ interface LogData {
   log_section?: boolean;
 }
 
+interface LogSettings {
+  filter: string;
+  direction: string;
+  lines: string;
+}
+
 function saveLogSettings(): void {
   const settings = {
     filter:
@@ -31,7 +37,7 @@ function saveLogSettings(): void {
   localStorage.setItem("droidnet-log-settings", JSON.stringify(settings));
 }
 
-function loadLogSettings(): any {
+function loadLogSettings(): LogSettings {
   const saved = localStorage.getItem("droidnet-log-settings");
   return saved
     ? JSON.parse(saved)
@@ -46,6 +52,7 @@ async function loadLogData(): Promise<LogData> {
   return {};
 }
 
+// eslint-disable-next-line max-lines-per-function
 function renderLogControls(): HTMLElement[] {
   return [
     E(

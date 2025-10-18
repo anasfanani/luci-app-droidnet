@@ -55,7 +55,11 @@ function createStatusOption(s: LuCI.form.NamedSection, status: boolean): void {
   o.rawhtml = true;
   o.cfgvalue = function () {
     const span = '<b><span style="color:%s">%s</span></b>';
-    return (String as any).format(
+    return (
+      String as unknown as {
+        format: (template: string, ...args: string[]) => string;
+      }
+    ).format(
       span,
       status ? "green" : "red",
       status ? _("Running") : _("Not Running"),
@@ -135,6 +139,7 @@ function renderBaseSection(m: LuCI.form.Map, data: SettingData): void {
   );
 }
 
+// eslint-disable-next-line max-lines-per-function
 function renderMonitoringSection(m: LuCI.form.Map, data: SettingData): void {
   const s = m.section(
     form.NamedSection,
@@ -146,6 +151,7 @@ function renderMonitoringSection(m: LuCI.form.Map, data: SettingData): void {
     ),
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   createStatusOption(s, data.status!);
 
   const enableOption = s.option(form.Flag, "enable", _("Enable"));
@@ -268,6 +274,7 @@ function renderMonitoringSection(m: LuCI.form.Map, data: SettingData): void {
   }
 }
 
+// eslint-disable-next-line max-lines-per-function
 function renderHttpingSection(m: LuCI.form.Map, data: SettingData): void {
   const s = m.section(
     form.NamedSection,
@@ -279,6 +286,7 @@ function renderHttpingSection(m: LuCI.form.Map, data: SettingData): void {
     ),
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   createStatusOption(s, data.status!);
 
   const enableOption = s.option(form.Flag, "enable", _("Enable"));

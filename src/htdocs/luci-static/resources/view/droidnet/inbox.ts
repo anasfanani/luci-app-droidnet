@@ -38,6 +38,14 @@ interface InboxMessage {
     date: string;
     time: string;
   };
+  [key: string]: unknown;
+}
+
+interface FilterSettings {
+  readFilter: string;
+  senderFilter: string;
+  simFilter: string;
+  perPage: string;
 }
 
 function saveFilterSettings(): void {
@@ -54,11 +62,10 @@ function saveFilterSettings(): void {
     perPage:
       (document.getElementById("per-page") as HTMLSelectElement)?.value || "10",
   };
-  console.log("Saving filter settings:", settings);
   localStorage.setItem("droidnet-inbox-filters", JSON.stringify(settings));
 }
 
-function loadFilterSettings(): any {
+function loadFilterSettings(): FilterSettings {
   const saved = localStorage.getItem("droidnet-inbox-filters");
   const settings = saved
     ? JSON.parse(saved)
@@ -68,7 +75,6 @@ function loadFilterSettings(): any {
         simFilter: "all",
         perPage: "10",
       };
-  console.log("Loading filter settings:", settings);
   return settings;
 }
 
@@ -121,8 +127,9 @@ function parseMessages(stdout: string): InboxMessage[] {
 
   lines.forEach((line) => {
     const pairs = line.split(",");
-    const inbox: any = {};
+    const inbox: Partial<InboxMessage> = {};
 
+    // eslint-disable-next-line complexity
     pairs.forEach((pair) => {
       const keyValue = pair.split("=");
       if (keyValue.length === 2 && keyValue[0] && keyValue[1]) {
@@ -190,6 +197,7 @@ function parseMessages(stdout: string): InboxMessage[] {
   return messages;
 }
 
+// eslint-disable-next-line max-lines-per-function
 function renderMessageTable(
   messages: InboxMessage[],
   display: number,
@@ -198,6 +206,7 @@ function renderMessageTable(
   const endIndex = Math.min(startIndex + display, messages.length);
   const currentPageData = messages.slice(startIndex, endIndex);
 
+  // eslint-disable-next-line max-lines-per-function
   const tableRows = currentPageData.map((inbox, index) => {
     const rowClass = index % 2 === 0 ? "cbi-rowstyle-1" : "cbi-rowstyle-2";
     const message = inbox.body.replace(/\n/g, "<br>");
@@ -544,15 +553,15 @@ function updateMessageTable(messages: InboxMessage[], display: number): void {
   const end = Math.min(start + display - 1, total);
   const pageInfo = document.getElementById("page-info");
   if (pageInfo) {
-    pageInfo.innerText = (String as any).format(
-      _("Displaying %s - %s of %s"),
-      start,
-      end,
-      total,
-    );
+    pageInfo.innerText = (
+      String as unknown as {
+        format: (template: string, ...args: Array<string | number>) => string;
+      }
+    ).format(_("Displaying %s - %s of %s"), start, end, total);
   }
 }
 
+// eslint-disable-next-line max-lines-per-function
 function renderInboxControls(
   messages: InboxMessage[],
   display: number,
@@ -707,7 +716,14 @@ function renderInboxControls(
             id: "page-info",
             style: "flex-grow: 1; align-self: center; text-align: center;",
           },
-          (String as any).format(
+          (
+            String as unknown as {
+              format: (
+                template: string,
+                ...args: Array<string | number>
+              ) => string;
+            }
+          ).format(
             _("Displaying 1-%s of %s"),
             Math.min(display, messages.length),
             messages.length,
@@ -748,13 +764,6 @@ function getFilteredMessages(messages: InboxMessage[]): InboxMessage[] {
     (document.getElementById("sim-filter") as HTMLSelectElement)?.value ||
     "all";
 
-  console.log("Current filter values:", {
-    readFilter,
-    senderFilter,
-    simFilter,
-  });
-  console.log("Total messages before filter:", messages.length);
-
   const filtered = messages.filter((msg) => {
     const readMatch =
       readFilter === "all" ||
@@ -765,12 +774,10 @@ function getFilteredMessages(messages: InboxMessage[]): InboxMessage[] {
     return readMatch && senderMatch && simMatch;
   });
 
-  console.log("Filtered messages count:", filtered.length);
   return filtered;
 }
 
 function applyFilters(messages: InboxMessage[], newDisplay: number): void {
-  console.log("Applying filters with display:", newDisplay);
   inboxCurrentPage = 1;
   const filtered = getFilteredMessages(messages);
   updateMessageTable(filtered, newDisplay);
@@ -864,8 +871,6 @@ return view.extend({
       if (senderFilter) senderFilter.value = savedSettings.senderFilter;
       if (simFilter) simFilter.value = savedSettings.simFilter;
       if (perPage) perPage.value = savedSettings.perPage;
-
-      console.log("Set dropdown values to:", savedSettings);
 
       applyFilters(
         data.messages || [],

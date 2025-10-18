@@ -387,23 +387,27 @@ const UIRenderer = baseclass.extend({
       "device",
       "droidnet",
       _("Device Selection"),
-    );
-    (s as any).anonymous = true;
-
-    let o: any;
+    ) as form.NamedSection;
 
     if (devices.devices === false) {
-      o = s.option(form.DummyValue, "dummy", _("Device"));
+      const o = s.option(form.DummyValue, "dummy", _("Device"));
       o.default = _("No device detected.");
     } else {
-      o = s.option(form.ListValue, "id", _("Select Device ID"));
+      const o = s.option(
+        form.ListValue,
+        "id",
+        _("Select Device ID"),
+      ) as form.ListValue;
       Object.entries(devices.devices).forEach(
         ([deviceID, deviceModel]: [string, string]) => {
           o.value(deviceID, deviceID + " - " + deviceModel);
         },
       );
 
-      o.validate = function (_section: any, value: string): string | boolean {
+      o.validate = function (
+        _section: string,
+        value: string,
+      ): string | boolean {
         deviceSelected = value;
         const isUnauthorized: boolean =
           devices.devices !== false &&
@@ -456,38 +460,18 @@ const UIRenderer = baseclass.extend({
   },
 
   __createFormButton: function (
-    section: any,
+    section: form.AbstractSection,
     name: string,
     title: string,
     caption: string,
     type: "positive" | "negative",
     callback: () => Promise<void>,
-    disabled?: boolean,
-  ): any {
-    const o = section.option(form.DummyValue, name, title);
+    _disabled?: boolean,
+  ): form.ButtonValue {
+    const o = section.option(form.ButtonValue, name, title) as form.ButtonValue;
     o.inputstyle = type;
-    o.cfgvalue = function () {
-      return null;
-    };
-    o.write = function noopWrite() {
-      // Intentionally left blank.
-    };
-    o.remove = function noopRemove() {
-      // Intentionally left blank.
-    };
-    o.renderWidget = function () {
-      const buttonStyle = this.inputstyle || "neutral";
-      const attrs: Record<string, any> = {
-        type: "button",
-        class: `cbi-button cbi-button-${buttonStyle}`,
-        value: caption,
-        click: callback,
-      };
-      if (disabled) {
-        attrs["disabled"] = disabled;
-      }
-      return E("input", attrs);
-    };
+    o.inputtitle = caption;
+    o.onclick = callback;
     return o;
   },
 
@@ -495,7 +479,7 @@ const UIRenderer = baseclass.extend({
     service: string,
     enableCmd: string[],
     disableCmd: string[],
-    execFunction: (cmd: string[]) => Promise<any>,
+    execFunction: (cmd: string[]) => Promise<CommandResult>,
     options?: ToggleOptions,
   ): UIToggleAction {
     const capitalizedService = service

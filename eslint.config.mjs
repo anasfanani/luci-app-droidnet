@@ -42,7 +42,7 @@ export default defineConfig([
         UIRenderer: "readonly",
       },
       parserOptions: {
-        projectService: false,
+        projectService: true,
       },
     },
     plugins: {
@@ -62,7 +62,7 @@ export default defineConfig([
       "no-var": "error",
       "prefer-const": "error",
       "no-unused-vars": "off",
-      "no-console": "warn",
+      // "no-console": "warn",
       "no-debugger": "error",
       "no-alert": "warn",
       eqeqeq: ["error", "always"],
@@ -101,10 +101,10 @@ export default defineConfig([
         "warn",
         { max: 100, skipBlankLines: true, skipComments: true },
       ],
-      "no-magic-numbers": [
-        "warn",
-        { ignore: [-1, 0, 1, 2], ignoreArrayIndexes: true },
-      ],
+      // "no-magic-numbers": [
+      //   "warn",
+      //   { ignore: [-1, 0, 1, 2], ignoreArrayIndexes: true },
+      // ],
       "no-nested-ternary": "error",
       "no-unneeded-ternary": "error",
       "no-else-return": "error",

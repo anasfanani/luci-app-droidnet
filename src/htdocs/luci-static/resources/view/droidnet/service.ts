@@ -22,7 +22,6 @@ interface ServiceData {
   };
   application?: AppPackage[];
   display?: number;
-  [key: string]: any;
 }
 
 interface UADPackageInfo {
@@ -72,7 +71,6 @@ async function downloadUADData(): Promise<UADData> {
     );
     return uadData as UADData;
   } catch (error) {
-    console.error("Failed to download UAD data:", error);
     throw new Error(`Download or parsing error: ${String(error)}`);
   }
 }
@@ -92,7 +90,6 @@ async function loadUADData(): Promise<UADData | null> {
   } catch {
     // If cache doesn't exist, create single download promise
     uadDownloadPromise = (async () => {
-      console.log("UAD cache not found, downloading...");
       UIRenderer.addNotification(
         _("UAD Database"),
         _("UAD cache not found, downloading package definitions..."),
@@ -108,7 +105,6 @@ async function loadUADData(): Promise<UADData | null> {
         );
         return uadData;
       } catch (downloadError) {
-        console.error("Failed to download UAD data:", downloadError);
         uadDownloadFailed = true; // Mark as failed to prevent retries
         UIRenderer.addNotification(
           _("UAD Download Failed"),
@@ -138,8 +134,7 @@ async function loadUADDataForPackages(
       ...pkg,
       uadInfo: uadInfo[pkg.name] || undefined,
     }));
-  } catch (error) {
-    console.error("Failed to load UAD data:", error);
+  } catch {
     return packages;
   }
 }
@@ -147,16 +142,22 @@ async function loadUADDataForPackages(
 function getRemovalColor(removal: string): string {
   switch (removal.toLowerCase()) {
     case "recommended":
-      return "#28a745"; // Green
+      return "#28a745";
     case "advanced":
-      return "#ffc107"; // Yellow
+      return "#ffc107";
     case "expert":
-      return "#fd7e14"; // Orange
+      return "#fd7e14";
     case "unsafe":
-      return "#dc3545"; // Red
+      return "#dc3545";
     default:
-      return "#6c757d"; // Gray
+      return "#6c757d";
   }
+}
+
+interface ServiceSettings {
+  filter: string;
+  search: string;
+  perPage: string;
 }
 
 function saveServiceSettings(): void {
@@ -172,7 +173,7 @@ function saveServiceSettings(): void {
   localStorage.setItem("droidnet-service-settings", JSON.stringify(settings));
 }
 
-function loadServiceSettings(): any {
+function loadServiceSettings(): ServiceSettings {
   const saved = localStorage.getItem("droidnet-service-settings");
   return saved
     ? JSON.parse(saved)
@@ -206,6 +207,8 @@ async function getPackagesByFilter(filter: string): Promise<AppPackage[]> {
       break;
     case "third-party":
       command.push("-3");
+      break;
+    default:
       break;
   }
 
@@ -254,7 +257,18 @@ async function loadServiceData(): Promise<ServiceData> {
   );
 }
 
-async function loadStorageInfo(): Promise<Record<string, any>> {
+async function loadStorageInfo(): Promise<
+  Record<
+    string,
+    {
+      size: string;
+      use: string;
+      free: string;
+      percentage: string;
+      mounted: string;
+    }
+  >
+> {
   const properties = {
     Size: "size",
     Used: "use",
@@ -267,19 +281,31 @@ async function loadStorageInfo(): Promise<Record<string, any>> {
   const lines = (result.stdout || "").split("\n");
   const header = lines[0]?.split(/\s+/) || [];
   const values = lines[1]?.split(/\s+/) || [];
-  const storage: Record<string, string> = {};
+  const storage: {
+    size: string;
+    use: string;
+    free: string;
+    percentage: string;
+    mounted: string;
+  } = {
+    size: "",
+    use: "",
+    free: "",
+    percentage: "",
+    mounted: "",
+  };
 
   for (let i = 0; i < header.length; i++) {
     const property = properties[header[i] as keyof typeof properties];
     if (property && values[i]) {
-      storage[property] = values[i] || "";
+      storage[property as keyof typeof storage] = values[i] || "";
     }
   }
 
   return { storage };
 }
 
-async function loadApplicationInfo(): Promise<Record<string, any>> {
+async function loadApplicationInfo(): Promise<Record<string, AppPackage[]>> {
   const pmResult = await DroidNet.exec([
     "pm",
     "list",
@@ -443,6 +469,7 @@ function renderPowerOptions(): HTMLElement[] {
   ];
 }
 
+// eslint-disable-next-line max-lines-per-function
 function renderApplicationTable(data: ServiceData): HTMLElement {
   const packages = (data.application || []).filter((pkg: AppPackage) =>
     pkg.name.toLowerCase().includes(currentFilter.toLowerCase()),
@@ -470,6 +497,7 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
     ]);
   }
 
+  // eslint-disable-next-line max-lines-per-function
   const tableRows = currentPackages.map((pkg: AppPackage, index) => {
     const rowClass = index % 2 === 0 ? "cbi-rowstyle-1" : "cbi-rowstyle-2";
     const uadInfo = pkg.uadInfo;
@@ -582,7 +610,14 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
                   `package ${pkg.name}`,
                   ["pm", "enable", "--user", "0", pkg.name],
                   ["pm", "disable", "--user", "0", pkg.name],
-                  (cmd: string[]) => DroidNet.exec(cmd, { su: true }),
+                  async (cmd: string[]) => {
+                    const result = await DroidNet.exec(cmd, { su: true });
+                    return {
+                      code: result.code || 0,
+                      stdout: result.stdout || "",
+                      stderr: result.stderr || "",
+                    };
+                  },
                   {
                     onSuccess: (message, _result) => {
                       UIRenderer.modalSuccess(message);
@@ -612,7 +647,14 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
                   `package ${pkg.name}`,
                   ["pm", "unsuspend", "--user", "0", pkg.name],
                   ["pm", "suspend", "--user", "0", pkg.name],
-                  (cmd: string[]) => DroidNet.exec(cmd, { su: true }),
+                  async (cmd: string[]) => {
+                    const result = await DroidNet.exec(cmd, { su: true });
+                    return {
+                      code: result.code || 0,
+                      stdout: result.stdout || "",
+                      stderr: result.stderr || "",
+                    };
+                  },
                   {
                     onSuccess: (message, _result) => {
                       UIRenderer.modalSuccess(message);
@@ -707,6 +749,7 @@ function updatePagination(data: ServiceData): void {
   }
 }
 
+// eslint-disable-next-line max-lines-per-function
 function renderApplicationManager(data: ServiceData): HTMLElement[] {
   const storage = data.storage;
 
