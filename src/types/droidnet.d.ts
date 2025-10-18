@@ -26,7 +26,7 @@ declare global {
   }
 
   interface ExecOptions {
-    asSu?: boolean;
+    su?: boolean;
   }
 
   interface ExecResult {
@@ -49,14 +49,10 @@ declare global {
   interface DroidNetInstance {
     getDeviceId(): Promise<string | null>;
     isDeviceConnected(): Promise<boolean>;
-    exec<T = ExecResult>(
+    exec(
       command: string | string[],
-      callback?: (stdout: string) => T,
-    ): Promise<T>;
-    suexec<T = ExecResult>(
-      command: string | string[],
-      callback?: (stdout: string) => T,
-    ): Promise<T>;
+      options?: { su?: boolean },
+    ): Promise<ExecResult>;
     getDeviceLists(): Promise<DeviceList>;
     load<T>(loadFunction: () => Promise<T>): () => Promise<T | DeviceStatus>;
     reloadAdbd(): Promise<ExecResult>;

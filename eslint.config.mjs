@@ -2,7 +2,6 @@ import eslint from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 import tseslint from "typescript-eslint";
 
-import prettier from "eslint-plugin-prettier";
 import tsdoc from "eslint-plugin-tsdoc";
 import globals from "globals";
 
@@ -47,7 +46,6 @@ export default defineConfig([
       },
     },
     plugins: {
-      // prettier,
       tsdoc,
     },
     rules: {
@@ -122,7 +120,6 @@ export default defineConfig([
       "no-empty-function": "warn",
       "no-loop-func": "error",
       "tsdoc/syntax": "warn",
-      "prettier/prettier": "error",
     },
   },
 ]);

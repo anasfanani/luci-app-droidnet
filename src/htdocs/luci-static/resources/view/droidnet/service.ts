@@ -263,21 +263,20 @@ async function loadStorageInfo(): Promise<Record<string, any>> {
     Mounted: "mounted",
   };
 
-  return DroidNet.exec(["df", "sdcard", "-h"], (stdout: string) => {
-    const lines = stdout.split("\n");
-    const header = lines[0]?.split(/\s+/) || [];
-    const values = lines[1]?.split(/\s+/) || [];
-    const storage: Record<string, string> = {};
+  const result = await DroidNet.exec(["df", "sdcard", "-h"]);
+  const lines = (result.stdout || "").split("\n");
+  const header = lines[0]?.split(/\s+/) || [];
+  const values = lines[1]?.split(/\s+/) || [];
+  const storage: Record<string, string> = {};
 
-    for (let i = 0; i < header.length; i++) {
-      const property = properties[header[i] as keyof typeof properties];
-      if (property && values[i]) {
-        storage[property] = values[i] || "";
-      }
+  for (let i = 0; i < header.length; i++) {
+    const property = properties[header[i] as keyof typeof properties];
+    if (property && values[i]) {
+      storage[property] = values[i] || "";
     }
+  }
 
-    return { storage };
-  });
+  return { storage };
 }
 
 async function loadApplicationInfo(): Promise<Record<string, any>> {
@@ -321,7 +320,7 @@ async function executePowerAction(
   delay = 10000,
 ): Promise<void> {
   UIRenderer.modalLoading(`${action}...`);
-  await DroidNet.exec(command);
+  await DroidNet.exec(command, { su: true });
   DroidNet.log(_(message));
 
   setTimeout(() => {
@@ -346,14 +345,10 @@ function createPowerAction(
 
 async function removeApplication(packageName: string): Promise<void> {
   UIRenderer.modalLoading(`Removing ${packageName}...`);
-  const result = await DroidNet.exec([
-    "pm",
-    "uninstall",
-    "-k",
-    "--user",
-    "0",
-    packageName,
-  ]);
+  const result = await DroidNet.exec(
+    ["pm", "uninstall", "-k", "--user", "0", packageName],
+    { su: true },
+  );
 
   if (result.stdout?.trim() === "Success") {
     UIRenderer.modalSuccess(
@@ -587,7 +582,7 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
                   `package ${pkg.name}`,
                   ["pm", "enable", "--user", "0", pkg.name],
                   ["pm", "disable", "--user", "0", pkg.name],
-                  (cmd: string[]) => DroidNet.exec(cmd),
+                  (cmd: string[]) => DroidNet.exec(cmd, { su: true }),
                   {
                     onSuccess: (message, _result) => {
                       UIRenderer.modalSuccess(message);
@@ -617,7 +612,7 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
                   `package ${pkg.name}`,
                   ["pm", "unsuspend", "--user", "0", pkg.name],
                   ["pm", "suspend", "--user", "0", pkg.name],
-                  (cmd: string[]) => DroidNet.exec(cmd),
+                  (cmd: string[]) => DroidNet.exec(cmd, { su: true }),
                   {
                     onSuccess: (message, _result) => {
                       UIRenderer.modalSuccess(message);

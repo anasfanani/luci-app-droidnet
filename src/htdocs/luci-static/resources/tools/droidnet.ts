@@ -27,55 +27,6 @@ const DroidNet = baseclass.extend({
     },
   }),
 
-  __toArray: function (cmd: string | string[]): string[] {
-    return Array.isArray(cmd) ? cmd : [String(cmd)];
-  },
-
-  __exec: async function <T = fs.FileExecResult>(
-    command: string | string[],
-    callback?: (stdout: string) => T,
-    options: ExecOptions = {},
-  ): Promise<T extends undefined ? fs.FileExecResult : T> {
-    const { asSu = false } = options;
-    try {
-      const id = await this.getDeviceId();
-      if (!id) {
-        return {
-          code: 1,
-          stderr: "No device ID configured",
-          stdout: "",
-        } as any;
-      }
-
-      if (!(await this.isDeviceConnected())) {
-        return {
-          code: 1,
-          stderr: "Device not connected or not found",
-          stdout: "",
-        } as any;
-      }
-
-      const shellArgs = asSu
-        ? ["-s", id, "shell", "su", "-c", this.__toArray(command).join(" ")]
-        : ["-s", id, "shell", ...this.__toArray(command)];
-
-      const result = await fs.exec("adb", shellArgs);
-      const hadError =
-        (typeof result.code === "number" && result.code !== 0) ||
-        (result.stderr && result.stderr.trim().length > 0);
-
-      if (hadError) {
-        return { ...result } as any;
-      }
-
-      if (!callback) return { ...result } as any;
-      const cbOut = await callback(result.stdout || "");
-      return cbOut as any;
-    } catch (error) {
-      return { code: 1, stderr: String(error), stdout: "" } as any;
-    }
-  },
-
   getDeviceId: async function (): Promise<string | null> {
     if (this.__deviceId === null) {
       await uci.load("droidnet");
@@ -98,18 +49,40 @@ const DroidNet = baseclass.extend({
     return this.__deviceConnected;
   },
 
-  exec: async function <T = fs.FileExecResult>(
+  exec: async function (
     command: string | string[],
-    callback?: (stdout: string) => T,
-  ): Promise<T extends undefined ? fs.FileExecResult : T> {
-    return this.__exec(command, callback, { asSu: false });
-  },
+    options: ExecOptions = {},
+  ): Promise<fs.FileExecResult> {
+    const { su = false } = options;
+    try {
+      const id = await this.getDeviceId();
+      if (!id) {
+        return {
+          code: 1,
+          stderr: "No device ID configured",
+          stdout: "",
+        };
+      }
 
-  suexec: async function <T = fs.FileExecResult>(
-    command: string | string[],
-    callback?: (stdout: string) => T,
-  ): Promise<T extends undefined ? fs.FileExecResult : T> {
-    return this.__exec(command, callback, { asSu: true });
+      if (!(await this.isDeviceConnected())) {
+        return {
+          code: 1,
+          stderr: "Device not connected or not found",
+          stdout: "",
+        };
+      }
+      const toArray = function (cmd: string | string[]): string[] {
+        return Array.isArray(cmd) ? cmd : [String(cmd)];
+      };
+      const shellArgs = su
+        ? ["-s", id, "shell", "su", "-c", toArray(command).join(" ")]
+        : ["-s", id, "shell", ...toArray(command)];
+
+      const result = await fs.exec("adb", shellArgs);
+      return result;
+    } catch (error) {
+      return { code: 1, stderr: String(error), stdout: "" };
+    }
   },
 
   getDeviceLists: async function (): Promise<DeviceList> {
@@ -164,6 +137,7 @@ const DroidNet = baseclass.extend({
   load: function <T>(
     loadFunction: () => Promise<T>,
   ): () => Promise<T | DeviceStatus> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     return async function (): Promise<T | DeviceStatus> {
       if (!(await self.getDeviceId())) {

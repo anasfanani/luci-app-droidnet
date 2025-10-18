@@ -54,49 +54,45 @@ async function loadDeviceProperties(): Promise<Record<string, any>> {
     "ro.build.version.security_patch": "device_security",
   };
 
-  return DroidNet.exec(["getprop"], (stdout: string) => {
-    const deviceInfo: Record<string, any> = {};
-    const lines = stdout.split("\n");
+  const result = await DroidNet.exec(["getprop"]);
+  const deviceInfo: Record<string, any> = {};
+  const lines = (result.stdout || "").split("\n");
 
-    for (const line of lines) {
-      for (const property in properties) {
-        if (line.includes("[" + property + "]")) {
-          const value = line.split("]: [")[1]?.slice(0, -1).trim() || "";
-          const key = properties[property as keyof typeof properties];
-          deviceInfo[key] = value.includes(",")
-            ? value.split(",").map((item) => item.trim())
-            : value;
-          break;
-        }
+  for (const line of lines) {
+    for (const property in properties) {
+      if (line.includes("[" + property + "]")) {
+        const value = line.split("]: [")[1]?.slice(0, -1).trim() || "";
+        const key = properties[property as keyof typeof properties];
+        deviceInfo[key] = value.includes(",")
+          ? value.split(",").map((item) => item.trim())
+          : value;
+        break;
       }
     }
+  }
 
-    return deviceInfo;
-  });
+  return deviceInfo;
 }
 
 async function loadUptimeInfo(): Promise<Record<string, any>> {
-  return DroidNet.exec(["uptime"], (stdout: string) => {
-    const parts = stdout.trim().split(/\s+/);
-    const uptimeParts = parts.slice(0, 4);
-    return { device_uptime: uptimeParts.join(" ").replace(/,$/, "") };
-  });
+  const result = await DroidNet.exec(["uptime"]);
+  const parts = (result.stdout || "").trim().split(/\s+/);
+  const uptimeParts = parts.slice(0, 4);
+  return { device_uptime: uptimeParts.join(" ").replace(/,$/, "") };
 }
 
 async function loadKernelInfo(): Promise<Record<string, any>> {
-  return DroidNet.exec(["uname", "-a"], (stdout: string) => {
-    const parts = stdout.trim().split(/\s+/);
-    return { device_uname: { kernel: parts[2] || "", arch: parts[12] || "" } };
-  });
+  const result = await DroidNet.exec(["uname", "-a"]);
+  const parts = (result.stdout || "").trim().split(/\s+/);
+  return { device_uname: { kernel: parts[2] || "", arch: parts[12] || "" } };
 }
 
 async function loadMemoryInfo(): Promise<Record<string, any>> {
-  return DroidNet.exec(["cat", "/proc/meminfo"], (stdout: string) => {
-    const parts = stdout.trim().split(/\s+/);
-    const kbValue = parseInt(parts[1] || "0") + parseInt(parts[4] || "0");
-    const gbValue = kbValue / (1024 * 1024);
-    return { device_memory: gbValue.toFixed(0) + " GB" };
-  });
+  const result = await DroidNet.exec(["cat", "/proc/meminfo"]);
+  const parts = (result.stdout || "").trim().split(/\s+/);
+  const kbValue = parseInt(parts[1] || "0") + parseInt(parts[4] || "0");
+  const gbValue = kbValue / (1024 * 1024);
+  return { device_memory: gbValue.toFixed(0) + " GB" };
 }
 
 async function loadBatteryInfo(): Promise<Record<string, any>> {
@@ -108,56 +104,54 @@ async function loadBatteryInfo(): Promise<Record<string, any>> {
     "Charge counter": "battery_counter",
   };
 
-  return DroidNet.exec(["dumpsys", "battery"], (stdout: string) => {
-    const batteryInfo: Record<string, any> = {};
-    const lines = stdout.split("\n");
+  const result = await DroidNet.exec(["dumpsys", "battery"]);
+  const batteryInfo: Record<string, any> = {};
+  const lines = (result.stdout || "").split("\n");
 
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      for (const property in properties) {
-        if (trimmedLine.startsWith(property + ":")) {
-          const parts = trimmedLine.split(":");
-          let value = parts[1]?.trim() || "";
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    for (const property in properties) {
+      if (trimmedLine.startsWith(property + ":")) {
+        const parts = trimmedLine.split(":");
+        let value = parts[1]?.trim() || "";
 
-          if (property === "level") {
-            value = parseInt(value) + " %";
-          } else if (property === "voltage") {
-            value = (parseInt(value) / 1000).toFixed(2) + " V";
-          } else if (property === "temperature") {
-            value = parseInt(value) / 10 + " °C";
-          } else if (property === "Charge counter") {
-            value = parseInt(value) / 1000 + " μAh";
-          }
-
-          const key = properties[property as keyof typeof properties];
-          batteryInfo[key] = value;
+        if (property === "level") {
+          value = parseInt(value) + " %";
+        } else if (property === "voltage") {
+          value = (parseInt(value) / 1000).toFixed(2) + " V";
+        } else if (property === "temperature") {
+          value = parseInt(value) / 10 + " °C";
+        } else if (property === "Charge counter") {
+          value = parseInt(value) / 1000 + " μAh";
         }
+
+        const key = properties[property as keyof typeof properties];
+        batteryInfo[key] = value;
       }
     }
+  }
 
-    return batteryInfo;
-  });
+  return batteryInfo;
 }
 
 async function loadRootInfo(): Promise<Record<string, any>> {
-  return DroidNet.exec(["su", "-v"], (stdout: string) => {
-    const trimmed = stdout.trim();
-    if (
-      !trimmed ||
-      trimmed === "/system/bin/sh: su: not found" ||
-      trimmed === "/system/bin/sh: su: inaccessible or not found"
-    ) {
-      return { device_root: false };
-    }
+  const result = await DroidNet.exec(["su", "-v"]);
+  const trimmed = (result.stdout || "").trim();
+  if (
+    !trimmed ||
+    trimmed === "/system/bin/sh: su: not found" ||
+    trimmed === "/system/bin/sh: su: inaccessible or not found"
+  ) {
+    return { device_root: false };
+  }
 
-    const parts = trimmed.split(":");
-    return {
-      device_root: {
-        version: parts[0] || "",
-        name: parts[1] || "",
-      },
-    };
-  });
+  const parts = trimmed.split(":");
+  return {
+    device_root: {
+      version: parts[0] || "",
+      name: parts[1] || "",
+    },
+  };
 }
 
 function renderDeviceInfo(data: DeviceData): HTMLElement[] {

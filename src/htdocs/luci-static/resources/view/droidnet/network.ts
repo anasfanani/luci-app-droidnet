@@ -67,10 +67,8 @@ async function loadDataDriven(): Promise<Record<string, any>> {
     const commandResults: Record<string, any> = {};
 
     for (const command of section.commands) {
-      commandResults[command.id] = await DroidNet.exec(
-        command.shell.split(" "),
-        command.parser,
-      );
+      const result = await DroidNet.exec(command.shell.split(" "));
+      commandResults[command.id] = command.parser(result.stdout || "");
     }
 
     sectionData[section.id] = commandResults;
