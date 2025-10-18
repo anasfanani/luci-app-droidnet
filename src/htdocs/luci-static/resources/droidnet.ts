@@ -6,32 +6,6 @@
 "require baseclass";
 "require rpc";
 
-interface DeviceList {
-  devices: Record<string, string> | false;
-}
-
-interface ToggleAction {
-  onEnable: () => Promise<void>;
-  onDisable: () => Promise<void>;
-}
-
-interface TableRow {
-  label: string;
-  value: string | boolean;
-  action?: ToggleAction;
-}
-
-interface TabConfig {
-  tabId: string;
-  tabTitle: string;
-  tabContent: HTMLElement;
-}
-
-interface TableConfig {
-  col?: number;
-  colSizeMap?: Record<number, number[]>;
-}
-
 class DroidNet {
   private __deviceId: string | null = null;
   private __deviceConnected: boolean | null = null;
@@ -167,11 +141,12 @@ class DroidNet {
           const modelPart = parts.find((part: string) =>
             part.startsWith("model:"),
           );
-          const model = line.includes("unauthorized")
-            ? "unauthorized"
-            : modelPart
-              ? modelPart.substring(6)
-              : device;
+          let model = device;
+          if (line.includes("unauthorized")) {
+            model = "unauthorized";
+          } else if (modelPart) {
+            model = modelPart.substring(6);
+          }
           devices[device] = model;
         });
       }
@@ -182,6 +157,7 @@ class DroidNet {
   }
 
   load(loadFunction: () => Promise<any>): () => Promise<any> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     return async function (this: any) {
       // Device validation guard
@@ -242,9 +218,6 @@ class DroidNet {
   }
 }
 
-type DroidNetType = DroidNet;
-declare const droidnet: ReturnType<() => DroidNet>;
-
 const instance = new DroidNet();
 const proto = Object.getPrototypeOf(instance);
 const methods = Object.getOwnPropertyNames(proto)
@@ -256,13 +229,14 @@ const methods = Object.getOwnPropertyNames(proto)
   )
   .reduce(
     (obj, name) => {
-      obj[name] = (instance[name] as Function).bind(instance);
+      const method = instance[name] as (...args: unknown[]) => unknown;
+      obj[name] = method.bind(instance);
       return obj;
     },
     {} as Record<keyof DroidNet, any>,
   );
 
-// @ts-ignore
+// @ts-expect-error - LuCI baseclass expects a plain object map of methods.
 return baseclass.extend({
   ...instance,
   ...methods,

@@ -72,22 +72,6 @@ function loadFilterSettings(): any {
   return settings;
 }
 
-function applyFilterSettings(settings: any): void {
-  const readFilter = document.getElementById(
-    "read-filter",
-  ) as HTMLSelectElement;
-  const senderFilter = document.getElementById(
-    "sender-filter",
-  ) as HTMLSelectElement;
-  const simFilter = document.getElementById("sim-filter") as HTMLSelectElement;
-  const perPage = document.getElementById("per-page") as HTMLSelectElement;
-
-  if (readFilter) readFilter.value = settings.readFilter;
-  if (senderFilter) senderFilter.value = settings.senderFilter;
-  if (simFilter) simFilter.value = settings.simFilter;
-  if (perPage) perPage.value = settings.perPage;
-}
-
 let inboxCurrentPage = 1;
 
 async function loadInboxData(): Promise<InboxData> {
@@ -265,7 +249,7 @@ function renderMessageTable(
             {
               class: "btn cbi-button cbi-button-action",
               style: "margin-right: 5px;",
-              click: function () {
+              click: () => {
                 ui.showModal(inbox.address, [
                   E("div", { style: "margin-bottom: 10px;" }, [
                     E("strong", `From: ${inbox.address}`),
@@ -308,7 +292,7 @@ function renderMessageTable(
                 {
                   class: "btn cbi-button cbi-button-neutral",
                   style: "font-size: 11px; padding: 2px 6px;",
-                  click: async function () {
+                  click: async () => {
                     await droidnet.exec([
                       "content",
                       "update",
@@ -402,7 +386,7 @@ function renderMessageTable(
                           class: "btn cbi-button cbi-button-action",
                           style:
                             "font-size: 12px; padding: 4px 8px; margin-right: 5px;",
-                          click: function () {
+                          click: () => {
                             ui.showModal(inbox.address, [
                               E("div", { style: "margin-bottom: 10px;" }, [
                                 E("strong", `From: ${inbox.address}`),
@@ -453,7 +437,7 @@ function renderMessageTable(
                             {
                               class: "btn cbi-button cbi-button-neutral",
                               style: "font-size: 11px; padding: 4px 6px;",
-                              click: async function () {
+                              click: async () => {
                                 await droidnet.exec([
                                   "content",
                                   "update",
@@ -594,7 +578,7 @@ function renderInboxControls(
         {
           id: "read-filter",
           style: "margin-right: 15px;",
-          change: function () {
+          change: () => {
             saveFilterSettings();
             applyFilters(
               messages,
@@ -620,7 +604,7 @@ function renderInboxControls(
         {
           id: "sender-filter",
           style: "margin-right: 15px;",
-          change: function () {
+          change: () => {
             saveFilterSettings();
             applyFilters(
               messages,
@@ -643,7 +627,7 @@ function renderInboxControls(
         {
           id: "sim-filter",
           style: "margin-right: 15px;",
-          change: function () {
+          change: () => {
             saveFilterSettings();
             applyFilters(
               messages,
@@ -669,7 +653,7 @@ function renderInboxControls(
         {
           id: "per-page",
           style: "margin-right: 15px;",
-          change: function () {
+          change: () => {
             saveFilterSettings();
             applyFilters(
               messages,
@@ -705,7 +689,7 @@ function renderInboxControls(
             class: "btn cbi-button-neutral prev",
             style: "flex-basis: 20%; text-align: center;",
             disabled: true,
-            click: function () {
+            click: () => {
               inboxCurrentPage--;
               const newDisplay = parseInt(
                 (document.getElementById("per-page") as HTMLSelectElement)
@@ -734,7 +718,7 @@ function renderInboxControls(
           {
             class: "btn cbi-button-neutral next",
             style: "flex-basis: 20%; text-align: center;",
-            click: function () {
+            click: () => {
               inboxCurrentPage++;
               const newDisplay = parseInt(
                 (document.getElementById("per-page") as HTMLSelectElement)
@@ -792,7 +776,7 @@ function applyFilters(messages: InboxMessage[], newDisplay: number): void {
   updateMessageTable(filtered, newDisplay);
 }
 
-// @ts-ignore
+// @ts-expect-error - LuCI baseclass expects a plain object map of methods.
 return view.extend({
   handleSaveApply: null,
   handleSave: null,

@@ -9,51 +9,6 @@
 "require baseclass";
 "require droidnet";
 
-interface UITableRow {
-  label: string;
-  value: string | number | boolean;
-  action?: UIToggleAction;
-}
-
-interface UITableConfig {
-  col?: number;
-  colSizeMap?: Record<number, number[]>;
-}
-
-interface UITabConfig {
-  tabId: string;
-  tabTitle: string;
-  tabContent: HTMLElement;
-}
-
-interface UIToggleAction {
-  onEnable: () => Promise<void>;
-  onDisable: () => Promise<void>;
-}
-
-interface ToggleOptions {
-  onSuccess?: (message: string, result: any) => void;
-  onFailed?: (error: string, result: any) => void;
-  validator?: (result: any) => boolean;
-}
-
-interface DeviceList {
-  devices: Record<string, string> | false;
-}
-
-interface DeviceFormOptions {
-  devices: DeviceList;
-  title?: string;
-  description?: string;
-  onSave: (deviceId: string) => Promise<void>;
-  onReload: () => Promise<void>;
-}
-
-interface DeviceStatus {
-  deviceNotSet?: boolean;
-  deviceNotConnected?: boolean;
-}
-
 const UIRenderer = baseclass.extend({
   title: _(
     `<p><strong><span style="margin-right: 5px;"><img src="/luci-static/resources/svg/droidnet.svg" style="height: 1em;width: auto;vertical-align: -0.15em;"></img></span><span style="color: rgb(102, 153, 51);">Droid</span> <span style="color: rgb(250, 197, 28);">Net</span></strong></p>`,
@@ -171,7 +126,7 @@ const UIRenderer = baseclass.extend({
     return E("h3", { class: "section-title" }, _(title));
   },
 
-  renderTab: function (tabs: (UITabConfig | null)[] = []): HTMLElement {
+  renderTab: function (tabs: Array<UITabConfig | null> = []): HTMLElement {
     const filteredTabs = tabs.filter(
       (item): item is UITabConfig => item !== null && item !== undefined,
     );
@@ -201,12 +156,14 @@ const UIRenderer = baseclass.extend({
                     const contentElement = document.getElementById(
                       currentTab.tabId,
                     );
-                    if (tabElement)
+                    if (tabElement) {
                       tabElement.className =
                         i === index ? "cbi-tab" : "cbi-tab-disabled";
-                    if (contentElement)
+                    }
+                    if (contentElement) {
                       contentElement.style.display =
                         i === index ? "contents" : "none";
+                    }
                   });
                 },
               },
@@ -232,7 +189,7 @@ const UIRenderer = baseclass.extend({
   },
 
   renderPage: function (
-    sections: (HTMLElement[] | null)[],
+    sections: Array<HTMLElement[] | null>,
     header?: HTMLElement,
   ): HTMLElement {
     const defaultHeader = header || this.header;
@@ -348,16 +305,16 @@ const UIRenderer = baseclass.extend({
         },
         _("OK"),
       );
-    } else {
-      return E(
-        "button",
-        {
-          class: "btn",
-          click: ui.hideModal,
-        },
-        _("Cancel"),
-      );
     }
+
+    return E(
+      "button",
+      {
+        class: "btn",
+        click: ui.hideModal,
+      },
+      _("Cancel"),
+    );
   },
 
   selectDeviceForm: function (): HTMLElement {
@@ -512,8 +469,12 @@ const UIRenderer = baseclass.extend({
     o.cfgvalue = function () {
       return null;
     };
-    o.write = function () {};
-    o.remove = function () {};
+    o.write = function noopWrite() {
+      // Intentionally left blank.
+    };
+    o.remove = function noopRemove() {
+      // Intentionally left blank.
+    };
     o.renderWidget = function () {
       const buttonStyle = this.inputstyle || "neutral";
       const attrs: Record<string, any> = {
@@ -600,5 +561,5 @@ const UIRenderer = baseclass.extend({
   },
 });
 
-// @ts-ignore
+// @ts-expect-error - LuCI baseclass expects a plain object map of methods.
 return UIRenderer;

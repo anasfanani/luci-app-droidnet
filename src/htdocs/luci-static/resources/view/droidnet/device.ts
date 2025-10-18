@@ -230,7 +230,7 @@ function renderBatteryInfo(data: DeviceData): HTMLElement[] {
   ];
 }
 
-// @ts-ignore
+// @ts-expect-error - LuCI baseclass expects a plain object map of methods.
 return view.extend({
   handleSaveApply: null,
   handleSave: null,

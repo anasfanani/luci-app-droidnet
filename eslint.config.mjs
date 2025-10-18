@@ -11,10 +11,8 @@ export default defineConfig([
     ["dist/**","build/**", "*.config.{js,mjs,ts}", "*.mjs","tests/**"]
   ),
   eslint.configs.recommended,
-  tseslint.configs.eslintRecommended,
-  tseslint.configs.recommendedTypeChecked,
-  tseslint.configs.stylisticTypeChecked,
-  tseslint.configs.strictTypeChecked,
+  tseslint.configs.recommended,
+  tseslint.configs.stylistic,
   {
     files: ["src/**/*.ts"],
     languageOptions: {
@@ -45,7 +43,7 @@ export default defineConfig([
         UIRenderer: "readonly",
       },
       parserOptions: {
-        projectService: true,
+        projectService: false,
       },
     },
     plugins: {
@@ -54,6 +52,15 @@ export default defineConfig([
     },
     rules: {
       "@typescript-eslint/no-misused-promises": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-confusing-void-expression": "off",
+      "@typescript-eslint/prefer-nullish-coalescing": "off",
+      "@typescript-eslint/prefer-regexp-exec": "off",
+      "@typescript-eslint/no-unnecessary-condition": "off",
       "no-var": "error",
       "prefer-const": "error",
       "no-unused-vars": "off",

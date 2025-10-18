@@ -34,9 +34,7 @@ interface UADPackageInfo {
   removal: string;
 }
 
-interface UADData {
-  [packageName: string]: UADPackageInfo;
-}
+type UADData = Record<string, UADPackageInfo>;
 
 interface AppPackage {
   name: string;
@@ -91,7 +89,7 @@ async function loadUADData(): Promise<UADData | null> {
       "json",
     )) as UADData;
     return uadData;
-  } catch (error) {
+  } catch {
     // If cache doesn't exist, create single download promise
     uadDownloadPromise = (async () => {
       console.log("UAD cache not found, downloading...");
@@ -186,7 +184,7 @@ function loadServiceSettings(): any {
 }
 
 async function getPackagesByFilter(filter: string): Promise<AppPackage[]> {
-  let command = [
+  const command = [
     "pm",
     "list",
     "packages",
@@ -216,7 +214,7 @@ async function getPackagesByFilter(filter: string): Promise<AppPackage[]> {
   const packages: AppPackage[] = [];
   const lines = (pmResult.stdout || "").trim().split("\n");
 
-  lines.forEach((line) => {
+  lines.forEach((line: string) => {
     const trimmed = line.trim();
     if (trimmed.startsWith("package:")) {
       const match = trimmed.match(
@@ -234,232 +232,6 @@ async function getPackagesByFilter(filter: string): Promise<AppPackage[]> {
   });
 
   return packages;
-}
-
-function getFilteredPackages(packages: AppPackage[]): AppPackage[] {
-  const search =
-    (document.getElementById("app-search") as HTMLInputElement)?.value || "";
-
-  let filtered = packages;
-
-  if (search) {
-    filtered = filtered.filter((pkg) =>
-      pkg.name.toLowerCase().includes(search.toLowerCase()),
-    );
-  }
-
-  return filtered;
-}
-
-function applyAppFilters(packages: AppPackage[], newDisplay: number): void {
-  currentPage = 1;
-  const filter =
-    (document.getElementById("app-filter") as HTMLSelectElement)?.value ||
-    "all";
-
-  if (filter === "all") {
-    const filtered = getFilteredPackages(packages);
-    updateAppTable(filtered, newDisplay);
-  } else {
-    // Load packages with specific filter
-    getPackagesByFilter(filter).then((filteredPackages) => {
-      const searchFiltered = getFilteredPackages(filteredPackages);
-      updateAppTable(searchFiltered, newDisplay);
-    });
-  }
-}
-
-function updateAppTable(packages: AppPackage[], display: number): void {
-  const container = document.querySelector(".table-container") as HTMLElement;
-  const prev = document.querySelector(".prev") as HTMLButtonElement;
-  const next = document.querySelector(".next") as HTMLButtonElement;
-
-  if (container) {
-    container.innerHTML = "";
-    const table = renderAppTable(packages, display);
-    container.appendChild(table);
-  }
-
-  const total = packages.length;
-  const pages = Math.ceil(total / display);
-
-  if (pages <= 1) {
-    if (prev) prev.disabled = true;
-    if (next) next.disabled = true;
-  } else if (currentPage <= 1) {
-    if (prev) prev.disabled = true;
-    if (next) next.disabled = false;
-  } else if (currentPage >= pages) {
-    if (prev) prev.disabled = false;
-    if (next) next.disabled = true;
-  } else {
-    if (prev) prev.disabled = false;
-    if (next) next.disabled = false;
-  }
-
-  const start = (currentPage - 1) * display + 1;
-  const end = Math.min(start + display - 1, total);
-  const pageInfo = document.getElementById("page-info");
-  if (pageInfo) {
-    pageInfo.textContent = (String as any).format(
-      _("Displaying %s - %s of %s"),
-      start,
-      end,
-      total,
-    );
-  }
-}
-
-function renderAppTable(packages: AppPackage[], display: number): HTMLElement {
-  const startIndex = (currentPage - 1) * display;
-  const endIndex = Math.min(startIndex + display, packages.length);
-  const currentPageData = packages.slice(startIndex, endIndex);
-
-  const tableRows = currentPageData.map((pkg, index) => {
-    const rowClass = index % 2 === 0 ? "cbi-rowstyle-1" : "cbi-rowstyle-2";
-    const uadInfo = pkg.uadInfo;
-
-    return E("tr", { class: "tr " + rowClass }, [
-      E(
-        "td",
-        { class: "td", style: "width: 40%;" },
-        [
-          E("div", pkg.name),
-          uadInfo
-            ? E(
-                "small",
-                { style: "color: #666; display: block;" },
-                uadInfo.description.split("\n")[0],
-              )
-            : null,
-        ].filter(Boolean),
-      ),
-      E(
-        "td",
-        { class: "td", style: "width: 10%; text-align: center;" },
-        pkg.versionCode,
-      ),
-      E(
-        "td",
-        { class: "td", style: "width: 8%; text-align: center;" },
-        pkg.uid,
-      ),
-      E(
-        "td",
-        { class: "td", style: "width: 12%; text-align: center;" },
-        uadInfo
-          ? E(
-              "span",
-              {
-                style: `background: ${getRemovalColor(uadInfo.removal)}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;`,
-              },
-              uadInfo.removal,
-            )
-          : E("span", { style: "color: #999; font-size: 11px;" }, "Unknown"),
-      ),
-      E(
-        "td",
-        { class: "td", style: "width: 30%; text-align: center;" },
-        [
-          uadInfo
-            ? E(
-                "button",
-                {
-                  class: "btn cbi-button cbi-button-neutral",
-                  style:
-                    "font-size: 11px; padding: 2px 6px; margin-right: 5px;",
-                  click: function () {
-                    ui.showModal(
-                      _("Package Information"),
-                      [
-                        E("div", { style: "margin-bottom: 10px;" }, [
-                          E("strong", pkg.name),
-                          E("br"),
-                          E(
-                            "span",
-                            `Version: ${pkg.versionCode} | UID: ${pkg.uid}`,
-                          ),
-                          E("br"),
-                          E(
-                            "span",
-                            {
-                              style: `color: ${getRemovalColor(uadInfo.removal)};`,
-                            },
-                            `Removal: ${uadInfo.removal}`,
-                          ),
-                        ]),
-                        E("div", {
-                          style:
-                            "border-top: 1px solid #ccc; padding-top: 10px;",
-                        }),
-                        E("p", uadInfo.description.replace(/\n/g, "<br>")),
-                        uadInfo.dependencies.length > 0
-                          ? E("div", [
-                              E("strong", "Dependencies: "),
-                              E("span", uadInfo.dependencies.join(", ")),
-                            ])
-                          : null,
-                        E("div", { class: "right" }, [
-                          E(
-                            "button",
-                            { class: "btn", click: ui.hideModal },
-                            _("OK"),
-                          ),
-                        ]),
-                      ].filter(Boolean),
-                    );
-                  },
-                },
-                _("Info"),
-              )
-            : null,
-          E(
-            "button",
-            {
-              class: "btn cbi-button cbi-button-remove",
-              style: "font-size: 11px; padding: 2px 6px;",
-              click: async function () {
-                const warning =
-                  uadInfo && uadInfo.removal === "Unsafe"
-                    ? _(
-                        "\n⚠️ WARNING: This package is marked as UNSAFE to remove and may cause system instability!",
-                      )
-                    : "";
-
-                if (
-                  confirm(
-                    _("Are you sure you want to uninstall %s?%s").format(
-                      pkg.name,
-                      warning,
-                    ),
-                  )
-                ) {
-                  try {
-                    await droidnet.exec(["pm", "uninstall", pkg.name]);
-                    location.reload();
-                  } catch (error) {
-                    alert(_("Failed to uninstall package: %s").format(error));
-                  }
-                }
-              },
-            },
-            _("Uninstall"),
-          ),
-        ].filter(Boolean),
-      ),
-    ]);
-  });
-
-  return E("table", { class: "table cbi-section-table" }, [
-    E("tr", { class: "tr table-titles" }, [
-      E("th", { class: "th", style: "width: 40%;" }, _("Package Name")),
-      E("th", { class: "th", style: "width: 10%;" }, _("Version")),
-      E("th", { class: "th", style: "width: 8%;" }, _("UID")),
-      E("th", { class: "th", style: "width: 12%;" }, _("UAD Status")),
-      E("th", { class: "th", style: "width: 30%;" }, _("Actions")),
-    ]),
-    ...tableRows,
-  ]);
 }
 
 let currentPage = 1;
@@ -522,7 +294,7 @@ async function loadApplicationInfo(): Promise<Record<string, any>> {
   const packages: AppPackage[] = [];
   const lines = (pmResult.stdout || "").trim().split("\n");
 
-  lines.forEach((line) => {
+  lines.forEach((line: string) => {
     const trimmed = line.trim();
     if (trimmed.startsWith("package:")) {
       const match = trimmed.match(
@@ -546,7 +318,7 @@ async function executePowerAction(
   action: string,
   command: string[],
   message: string,
-  delay: number = 10000,
+  delay = 10000,
 ): Promise<void> {
   UIRenderer.modalLoading(`${action}...`);
   await droidnet.exec(command);
@@ -1291,7 +1063,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
   ];
 }
 
-// @ts-ignore
+// @ts-expect-error - LuCI baseclass expects a plain object map of methods.
 return view.extend({
   handleSaveApply: null,
   handleSave: null,

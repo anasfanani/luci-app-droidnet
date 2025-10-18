@@ -383,7 +383,7 @@ function renderHttpingSection(m: LuCI.form.Map, data: SettingData): void {
   forcePingOption.rmempty = false;
 }
 
-// @ts-ignore
+// @ts-expect-error - LuCI baseclass expects a plain object map of methods.
 return view.extend({
   load: droidnet.load(loadSettingData),
 

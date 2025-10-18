@@ -58,7 +58,7 @@ function renderLogControls(): HTMLElement[] {
       {
         id: "log-filter",
         style: "margin: 8px 8px 8px 0;",
-        change: function () {
+        change: () => {
           saveLogSettings();
         },
       },
@@ -80,7 +80,7 @@ function renderLogControls(): HTMLElement[] {
       {
         id: "log-direction",
         style: "margin: 8px 8px 8px 0;",
-        change: function () {
+        change: () => {
           saveLogSettings();
         },
       },
@@ -99,7 +99,7 @@ function renderLogControls(): HTMLElement[] {
       {
         id: "log-lines",
         style: "margin: 8px 8px 8px 0;",
-        change: function () {
+        change: () => {
           saveLogSettings();
         },
       },
@@ -124,7 +124,7 @@ function renderLogControls(): HTMLElement[] {
           {
             class: "btn cbi-button cbi-button-remove",
             style: "margin-right: 10px",
-            click: async function () {
+            click: async () => {
               const message = _(
                 "DroidNet logs have been successfully cleared.",
               );
@@ -150,7 +150,7 @@ function renderLogControls(): HTMLElement[] {
           "button",
           {
             class: "btn cbi-button cbi-button-save",
-            click: function () {
+            click: () => {
               const logs = (
                 document.getElementById("syslog") as HTMLTextAreaElement
               ).value;
@@ -180,13 +180,13 @@ function renderLogViewer(): HTMLElement {
 }
 
 function startLogPolling(): void {
-  poll.add(function () {
+  poll.add(() => {
     const lines =
       (document.getElementById("log-lines") as HTMLSelectElement)?.value ||
       "20";
     return fs
       .exec("/usr/bin/tail", ["-n", lines, "/var/log/droidnet.log"])
-      .then(function (res) {
+      .then((res) => {
         const out = res && res.stdout ? res.stdout.trim() : "";
         const err = res && res.stderr ? res.stderr.trim() : "";
 
@@ -212,7 +212,7 @@ function startLogPolling(): void {
         if (filter !== "all") {
           data = data
             .split("\n")
-            .filter(function (log) {
+            .filter((log) => {
               return log.includes(filter);
             })
             .join("\n");
@@ -224,7 +224,7 @@ function startLogPolling(): void {
 
         syslog.textContent = data;
       })
-      .catch(function (error) {
+      .catch((error) => {
         UIRenderer.addNotification(
           "Error: Read log file!",
           "An error occurred while reading the file: " + String(error),
@@ -234,7 +234,7 @@ function startLogPolling(): void {
   }, 2);
 }
 
-// @ts-ignore
+// @ts-expect-error - LuCI baseclass expects a plain object map of methods.
 return view.extend({
   handleSaveApply: null,
   handleSave: null,
