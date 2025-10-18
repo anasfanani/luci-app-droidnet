@@ -6,40 +6,45 @@
 "require baseclass";
 "require rpc";
 
-class DroidNet {
-  private __deviceId: string | null = null;
-  private __deviceConnected: boolean | null = null;
-  private __callRCList = rpc.declare({
+const DroidNet = baseclass.extend({
+  __deviceId: null as string | null,
+  __deviceConnected: null as boolean | null,
+  __callRCList: rpc.declare({
     object: "rc",
     method: "list",
     params: ["name"],
     expect: {
       "": {},
     },
-  });
+  }),
 
-  private __callRCInit = rpc.declare({
+  __callRCInit: rpc.declare({
     object: "rc",
     method: "init",
     params: ["name", "action"],
     expect: {
       "": {},
     },
-  });
+  }),
 
-  private __toArray(cmd: string | string[]): string[] {
+  __toArray: function (cmd: string | string[]): string[] {
     return Array.isArray(cmd) ? cmd : [String(cmd)];
-  }
+  },
 
-  private async __exec(
+  __exec: async function <T = fs.FileExecResult>(
     command: string | string[],
-    callback?: (stdout: string) => any,
-    { asSu = false }: { asSu?: boolean } = {},
-  ): Promise<fs.FileExecResult> {
+    callback?: (stdout: string) => T,
+    options: ExecOptions = {},
+  ): Promise<T extends undefined ? fs.FileExecResult : T> {
+    const { asSu = false } = options;
     try {
       const id = await this.getDeviceId();
       if (!id) {
-        return { code: 1, stderr: "No device ID configured", stdout: "" };
+        return {
+          code: 1,
+          stderr: "No device ID configured",
+          stdout: "",
+        } as any;
       }
 
       if (!(await this.isDeviceConnected())) {
@@ -47,7 +52,7 @@ class DroidNet {
           code: 1,
           stderr: "Device not connected or not found",
           stdout: "",
-        };
+        } as any;
       }
 
       const shellArgs = asSu
@@ -60,26 +65,26 @@ class DroidNet {
         (result.stderr && result.stderr.trim().length > 0);
 
       if (hadError) {
-        return { ...result };
+        return { ...result } as any;
       }
 
-      if (!callback) return { ...result };
+      if (!callback) return { ...result } as any;
       const cbOut = await callback(result.stdout || "");
-      return cbOut;
+      return cbOut as any;
     } catch (error) {
-      return { code: 1, stderr: String(error), stdout: "" };
+      return { code: 1, stderr: String(error), stdout: "" } as any;
     }
-  }
+  },
 
-  async getDeviceId(): Promise<string | null> {
+  getDeviceId: async function (): Promise<string | null> {
     if (this.__deviceId === null) {
       await uci.load("droidnet");
       this.__deviceId = uci.get("droidnet", "device", "id");
     }
     return this.__deviceId;
-  }
+  },
 
-  async isDeviceConnected(): Promise<boolean> {
+  isDeviceConnected: async function (): Promise<boolean> {
     if (this.__deviceConnected === null) {
       const id = await this.getDeviceId();
       if (!id) {
@@ -91,23 +96,23 @@ class DroidNet {
         deviceCheck.code === 0 && (deviceCheck.stdout?.includes(id) || false);
     }
     return this.__deviceConnected;
-  }
+  },
 
-  async exec(
+  exec: async function <T = fs.FileExecResult>(
     command: string | string[],
-    callback?: (stdout: string) => any,
-  ): Promise<fs.FileExecResult> {
+    callback?: (stdout: string) => T,
+  ): Promise<T extends undefined ? fs.FileExecResult : T> {
     return this.__exec(command, callback, { asSu: false });
-  }
+  },
 
-  async suexec(
+  suexec: async function <T = fs.FileExecResult>(
     command: string | string[],
-    callback?: (stdout: string) => any,
-  ): Promise<fs.FileExecResult> {
+    callback?: (stdout: string) => T,
+  ): Promise<T extends undefined ? fs.FileExecResult : T> {
     return this.__exec(command, callback, { asSu: true });
-  }
+  },
 
-  async getDeviceLists(): Promise<DeviceList> {
+  getDeviceLists: async function (): Promise<DeviceList> {
     try {
       const result = await fs.exec("/usr/bin/env", [
         "HOME=/root",
@@ -154,13 +159,13 @@ class DroidNet {
     } catch (error) {
       throw new Error(String(error));
     }
-  }
+  },
 
-  load(loadFunction: () => Promise<any>): () => Promise<any> {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
+  load: function <T>(
+    loadFunction: () => Promise<T>,
+  ): () => Promise<T | DeviceStatus> {
     const self = this;
-    return async function (this: any) {
-      // Device validation guard
+    return async function (): Promise<T | DeviceStatus> {
       if (!(await self.getDeviceId())) {
         return { deviceNotSet: true };
       }
@@ -169,19 +174,17 @@ class DroidNet {
         return { deviceNotConnected: true };
       }
 
-      // Execute the actual load function
-      return await loadFunction.call(this);
+      return await loadFunction.call(self);
     };
-  }
+  },
 
-  async reloadAdbd(): Promise<fs.FileExecResult> {
+  reloadAdbd: async function (): Promise<fs.FileExecResult> {
     return await fs.exec("adb", ["kill-server"]);
-  }
+  },
 
-  log(message: string, location?: string): void {
+  log: function (message: string, location?: string): void {
     const logFile = "/var/log/droidnet.log";
 
-    // Get service from URL path or provided location
     const currentLocation = location || L.location();
     const pathParts = currentLocation.split("/");
     const lastPart = pathParts[pathParts.length - 1] || "unknown";
@@ -199,45 +202,24 @@ class DroidNet {
     const notif = `${date}, ${time} - ${service}: ${message}\n`;
 
     fs.exec("/usr/share/droidnet/helper", ["log", notif, logFile]);
-  }
+  },
 
-  async serviceStatus(): Promise<boolean> {
+  serviceStatus: async function (): Promise<boolean> {
     return (await this.__callRCList("droidnet"))?.droidnet?.running || false;
-  }
+  },
 
-  serviceReload(): Promise<any> {
+  serviceReload: function (): Promise<unknown> {
     return this.__callRCInit("droidnet", "reload");
-  }
+  },
 
-  serviceRestart(): Promise<any> {
+  serviceRestart: function (): Promise<unknown> {
     return this.__callRCInit("droidnet", "restart");
-  }
+  },
 
-  serviceStop(): Promise<any> {
+  serviceStop: function (): Promise<unknown> {
     return this.__callRCInit("droidnet", "stop");
-  }
-}
-
-const instance = new DroidNet();
-const proto = Object.getPrototypeOf(instance);
-const methods = Object.getOwnPropertyNames(proto)
-  .filter(
-    (name): name is keyof DroidNet =>
-      name !== "constructor" &&
-      typeof (instance as any)[name] === "function" &&
-      !name.startsWith("_"),
-  )
-  .reduce(
-    (obj, name) => {
-      const method = instance[name] as (...args: unknown[]) => unknown;
-      obj[name] = method.bind(instance);
-      return obj;
-    },
-    {} as Record<keyof DroidNet, any>,
-  );
+  },
+});
 
 // @ts-expect-error - LuCI baseclass expects a plain object map of methods.
-return baseclass.extend({
-  ...instance,
-  ...methods,
-} as DroidNet);
+return DroidNet;

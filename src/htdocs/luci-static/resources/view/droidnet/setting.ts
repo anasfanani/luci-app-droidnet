@@ -8,7 +8,7 @@
 "require uci";
 "require fs";
 "require tools.widgets as widgets";
-"require droidnet";
+"require tools/droidnet as DroidNet";
 "require tools/ui-renderer as UIRenderer";
 
 interface SettingData {
@@ -23,9 +23,9 @@ async function loadSettingData(): Promise<SettingData> {
   await uci.load("droidnet");
 
   const [deviceData, tunnelService, status] = await Promise.all([
-    droidnet.getDeviceLists(),
+    DroidNet.getDeviceLists(),
     loadTunnelServices(),
-    droidnet.serviceStatus(),
+    DroidNet.serviceStatus(),
   ]);
 
   return { devices: deviceData.devices, tunnelService, status };
@@ -153,9 +153,9 @@ function renderMonitoringSection(m: LuCI.form.Map, data: SettingData): void {
   enableOption.write = async function (section_id: string, value: string) {
     const isEnabled = value === "1";
     if (isEnabled) {
-      await droidnet.serviceRestart();
+      await DroidNet.serviceRestart();
     } else {
-      await droidnet.serviceStop();
+      await DroidNet.serviceStop();
     }
     return uci.set("droidnet", section_id, "enable", value);
   };
@@ -286,9 +286,9 @@ function renderHttpingSection(m: LuCI.form.Map, data: SettingData): void {
   enableOption.write = async function (section_id: string, value: string) {
     const isEnabled = value === "1";
     if (isEnabled) {
-      await droidnet.serviceRestart();
+      await DroidNet.serviceRestart();
     } else {
-      await droidnet.serviceStop();
+      await DroidNet.serviceStop();
     }
     return uci.set("droidnet", section_id, "enable", value);
   };
@@ -385,7 +385,7 @@ function renderHttpingSection(m: LuCI.form.Map, data: SettingData): void {
 
 // @ts-expect-error - LuCI baseclass expects a plain object map of methods.
 return view.extend({
-  load: droidnet.load(loadSettingData),
+  load: DroidNet.load(loadSettingData),
 
   render: async function (data: SettingData): Promise<HTMLElement> {
     const deviceCheck = await UIRenderer.checkDeviceAndRender(data);

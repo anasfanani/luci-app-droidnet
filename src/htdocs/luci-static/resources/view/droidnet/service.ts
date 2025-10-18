@@ -7,7 +7,7 @@
 "require uci";
 "require fs";
 "require ui";
-"require droidnet";
+"require tools/droidnet as DroidNet";
 "require tools/ui-renderer as UIRenderer";
 
 interface ServiceData {
@@ -209,7 +209,7 @@ async function getPackagesByFilter(filter: string): Promise<AppPackage[]> {
       break;
   }
 
-  const pmResult = await droidnet.exec(command);
+  const pmResult = await DroidNet.exec(command);
 
   const packages: AppPackage[] = [];
   const lines = (pmResult.stdout || "").trim().split("\n");
@@ -263,7 +263,7 @@ async function loadStorageInfo(): Promise<Record<string, any>> {
     Mounted: "mounted",
   };
 
-  return droidnet.exec(["df", "sdcard", "-h"], (stdout: string) => {
+  return DroidNet.exec(["df", "sdcard", "-h"], (stdout: string) => {
     const lines = stdout.split("\n");
     const header = lines[0]?.split(/\s+/) || [];
     const values = lines[1]?.split(/\s+/) || [];
@@ -281,7 +281,7 @@ async function loadStorageInfo(): Promise<Record<string, any>> {
 }
 
 async function loadApplicationInfo(): Promise<Record<string, any>> {
-  const pmResult = await droidnet.exec([
+  const pmResult = await DroidNet.exec([
     "pm",
     "list",
     "packages",
@@ -321,8 +321,8 @@ async function executePowerAction(
   delay = 10000,
 ): Promise<void> {
   UIRenderer.modalLoading(`${action}...`);
-  await droidnet.exec(command);
-  droidnet.log(_(message));
+  await DroidNet.exec(command);
+  DroidNet.log(_(message));
 
   setTimeout(() => {
     UIRenderer.modalSuccess(`${action} completed`, message);
@@ -346,7 +346,7 @@ function createPowerAction(
 
 async function removeApplication(packageName: string): Promise<void> {
   UIRenderer.modalLoading(`Removing ${packageName}...`);
-  const result = await droidnet.exec([
+  const result = await DroidNet.exec([
     "pm",
     "uninstall",
     "-k",
@@ -360,7 +360,7 @@ async function removeApplication(packageName: string): Promise<void> {
       "Application removed",
       `Application ${packageName} has been successfully removed.`,
     );
-    droidnet.log(
+    DroidNet.log(
       _("Removing %s application successfully.").format(packageName),
     );
     setTimeout(() => window.location.reload(), 2000);
@@ -373,7 +373,7 @@ async function removeApplication(packageName: string): Promise<void> {
         E("em", { style: "color: red;" }, error),
       ]),
     );
-    droidnet.log(
+    DroidNet.log(
       _("Failed to remove %s application: %s").format(packageName, error),
     );
   }
@@ -587,15 +587,15 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
                   `package ${pkg.name}`,
                   ["pm", "enable", "--user", "0", pkg.name],
                   ["pm", "disable", "--user", "0", pkg.name],
-                  (cmd: string[]) => droidnet.exec(cmd),
+                  (cmd: string[]) => DroidNet.exec(cmd),
                   {
                     onSuccess: (message, _result) => {
                       UIRenderer.modalSuccess(message);
-                      droidnet.log(message);
+                      DroidNet.log(message);
                     },
                     onFailed: (error, _result) => {
                       UIRenderer.modalError("Package operation failed", error);
-                      droidnet.log(error);
+                      DroidNet.log(error);
                     },
                     validator: (result) =>
                       result.code === 0 &&
@@ -617,15 +617,15 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
                   `package ${pkg.name}`,
                   ["pm", "unsuspend", "--user", "0", pkg.name],
                   ["pm", "suspend", "--user", "0", pkg.name],
-                  (cmd: string[]) => droidnet.exec(cmd),
+                  (cmd: string[]) => DroidNet.exec(cmd),
                   {
                     onSuccess: (message, _result) => {
                       UIRenderer.modalSuccess(message);
-                      droidnet.log(message);
+                      DroidNet.log(message);
                     },
                     onFailed: (error, _result) => {
                       UIRenderer.modalError("Package operation failed", error);
-                      droidnet.log(error);
+                      DroidNet.log(error);
                     },
                     validator: (result) =>
                       result.code === 0 &&
@@ -950,7 +950,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
                     async () => {
                       UIRenderer.modalLoading("Installing application...");
                       try {
-                        const deviceId = await droidnet.getDeviceId();
+                        const deviceId = await DroidNet.getDeviceId();
                         if (!deviceId) throw new Error("Device not found");
                         const installResult = await fs.exec_direct("adb", [
                           "-s",
@@ -964,7 +964,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
                             "Installation completed",
                             `Application ${result.name} has been successfully installed.`,
                           );
-                          droidnet.log(
+                          DroidNet.log(
                             _(
                               "Application %s has been successfully installed.",
                             ).format(result.name),
@@ -982,7 +982,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
                               E("em", { style: "color: red;" }, installResult),
                             ]),
                           );
-                          droidnet.log(
+                          DroidNet.log(
                             _("Failed to install %s application: %s").format(
                               result.name,
                               installResult,
@@ -1069,7 +1069,7 @@ return view.extend({
   handleSave: null,
   handleReset: null,
 
-  load: droidnet.load(loadServiceData),
+  load: DroidNet.load(loadServiceData),
 
   render: async function (data: ServiceData): Promise<HTMLElement> {
     const deviceCheck = await UIRenderer.checkDeviceAndRender(data);

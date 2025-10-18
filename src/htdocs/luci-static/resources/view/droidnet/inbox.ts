@@ -7,7 +7,7 @@
 "require uci";
 "require fs";
 "require ui";
-"require droidnet";
+"require tools/droidnet as DroidNet";
 "require tools/ui-renderer as UIRenderer";
 
 interface InboxData {
@@ -80,7 +80,7 @@ async function loadInboxData(): Promise<InboxData> {
     uci.get("droidnet", "device", "display_msg") || "10",
   );
 
-  const result = await droidnet.exec([
+  const result = await DroidNet.exec([
     "content",
     "query",
     "--uri",
@@ -293,7 +293,7 @@ function renderMessageTable(
                   class: "btn cbi-button cbi-button-neutral",
                   style: "font-size: 11px; padding: 2px 6px;",
                   click: async () => {
-                    await droidnet.exec([
+                    await DroidNet.exec([
                       "content",
                       "update",
                       "--uri",
@@ -438,7 +438,7 @@ function renderMessageTable(
                               class: "btn cbi-button cbi-button-neutral",
                               style: "font-size: 11px; padding: 4px 6px;",
                               click: async () => {
-                                await droidnet.exec([
+                                await DroidNet.exec([
                                   "content",
                                   "update",
                                   "--uri",
@@ -782,7 +782,7 @@ return view.extend({
   handleSave: null,
   handleReset: null,
 
-  load: droidnet.load(loadInboxData),
+  load: DroidNet.load(loadInboxData),
 
   render: async function (data: InboxData): Promise<HTMLElement> {
     const deviceCheck = await UIRenderer.checkDeviceAndRender(data);

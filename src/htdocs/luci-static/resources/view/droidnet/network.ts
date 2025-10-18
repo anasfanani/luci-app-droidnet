@@ -6,7 +6,7 @@
 "require uci";
 "require view";
 "require ui";
-"require droidnet";
+"require tools/droidnet as DroidNet";
 "require tools/ui-renderer as UIRenderer";
 
 // Data-driven architecture
@@ -67,7 +67,7 @@ async function loadDataDriven(): Promise<Record<string, any>> {
     const commandResults: Record<string, any> = {};
 
     for (const command of section.commands) {
-      commandResults[command.id] = await droidnet.exec(
+      commandResults[command.id] = await DroidNet.exec(
         command.shell.split(" "),
         command.parser,
       );
@@ -103,7 +103,7 @@ return view.extend({
   handleSave: null,
   handleReset: null,
 
-  load: droidnet.load(loadDataDriven),
+  load: DroidNet.load(loadDataDriven),
 
   render: async function (data: Record<string, any>): Promise<HTMLElement> {
     const deviceCheck = await UIRenderer.checkDeviceAndRender(data);

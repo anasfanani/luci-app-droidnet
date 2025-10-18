@@ -7,7 +7,7 @@
 "require form";
 "require uci";
 "require baseclass";
-"require droidnet";
+"require tools/droidnet as DroidNet";
 
 const UIRenderer = baseclass.extend({
   title: _(
@@ -346,7 +346,7 @@ const UIRenderer = baseclass.extend({
   },
 
   renderDeviceSelectionPage: async function (): Promise<HTMLElement> {
-    const devices = await droidnet.getDeviceLists();
+    const devices = await DroidNet.getDeviceLists();
     const deviceForm = await this.createDeviceSelectionForm({
       devices: devices,
       title: "Device Selection",
@@ -359,7 +359,7 @@ const UIRenderer = baseclass.extend({
       },
       onReload: async () => {
         // Access global droidnet directly
-        await droidnet.reloadAdbd();
+        await DroidNet.reloadAdbd();
         window.location.reload();
       },
     });

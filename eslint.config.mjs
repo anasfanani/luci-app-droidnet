@@ -47,7 +47,7 @@ export default defineConfig([
       },
     },
     plugins: {
-      prettier,
+      // prettier,
       tsdoc,
     },
     rules: {

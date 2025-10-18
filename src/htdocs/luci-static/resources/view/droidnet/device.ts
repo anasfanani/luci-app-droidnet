@@ -5,8 +5,8 @@
 "use strict";
 "require uci";
 "require view";
-"require droidnet";
 "require tools/ui-renderer as UIRenderer";
+"require tools/droidnet as DroidNet";
 
 interface DeviceData {
   deviceNotSet?: boolean;
@@ -54,7 +54,7 @@ async function loadDeviceProperties(): Promise<Record<string, any>> {
     "ro.build.version.security_patch": "device_security",
   };
 
-  return droidnet.exec(["getprop"], (stdout: string) => {
+  return DroidNet.exec(["getprop"], (stdout: string) => {
     const deviceInfo: Record<string, any> = {};
     const lines = stdout.split("\n");
 
@@ -76,7 +76,7 @@ async function loadDeviceProperties(): Promise<Record<string, any>> {
 }
 
 async function loadUptimeInfo(): Promise<Record<string, any>> {
-  return droidnet.exec(["uptime"], (stdout: string) => {
+  return DroidNet.exec(["uptime"], (stdout: string) => {
     const parts = stdout.trim().split(/\s+/);
     const uptimeParts = parts.slice(0, 4);
     return { device_uptime: uptimeParts.join(" ").replace(/,$/, "") };
@@ -84,14 +84,14 @@ async function loadUptimeInfo(): Promise<Record<string, any>> {
 }
 
 async function loadKernelInfo(): Promise<Record<string, any>> {
-  return droidnet.exec(["uname", "-a"], (stdout: string) => {
+  return DroidNet.exec(["uname", "-a"], (stdout: string) => {
     const parts = stdout.trim().split(/\s+/);
     return { device_uname: { kernel: parts[2] || "", arch: parts[12] || "" } };
   });
 }
 
 async function loadMemoryInfo(): Promise<Record<string, any>> {
-  return droidnet.exec(["cat", "/proc/meminfo"], (stdout: string) => {
+  return DroidNet.exec(["cat", "/proc/meminfo"], (stdout: string) => {
     const parts = stdout.trim().split(/\s+/);
     const kbValue = parseInt(parts[1] || "0") + parseInt(parts[4] || "0");
     const gbValue = kbValue / (1024 * 1024);
@@ -108,7 +108,7 @@ async function loadBatteryInfo(): Promise<Record<string, any>> {
     "Charge counter": "battery_counter",
   };
 
-  return droidnet.exec(["dumpsys", "battery"], (stdout: string) => {
+  return DroidNet.exec(["dumpsys", "battery"], (stdout: string) => {
     const batteryInfo: Record<string, any> = {};
     const lines = stdout.split("\n");
 
@@ -140,7 +140,7 @@ async function loadBatteryInfo(): Promise<Record<string, any>> {
 }
 
 async function loadRootInfo(): Promise<Record<string, any>> {
-  return droidnet.exec(["su", "-v"], (stdout: string) => {
+  return DroidNet.exec(["su", "-v"], (stdout: string) => {
     const trimmed = stdout.trim();
     if (
       !trimmed ||
@@ -236,7 +236,7 @@ return view.extend({
   handleSave: null,
   handleReset: null,
 
-  load: droidnet.load(loadDeviceData),
+  load: DroidNet.load(loadDeviceData),
 
   render: async function (data: DeviceData): Promise<HTMLElement> {
     const deviceCheck = await UIRenderer.checkDeviceAndRender(data);

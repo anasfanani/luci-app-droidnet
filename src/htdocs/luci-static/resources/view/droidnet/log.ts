@@ -8,7 +8,7 @@
 "require fs";
 "require ui";
 "require poll";
-"require droidnet";
+"require tools/droidnet as DroidNet";
 "require tools/ui-renderer as UIRenderer";
 
 interface LogData {
@@ -240,7 +240,7 @@ return view.extend({
   handleSave: null,
   handleReset: null,
 
-  load: droidnet.load(loadLogData),
+  load: DroidNet.load(loadLogData),
 
   render: async function (data: LogData): Promise<HTMLElement> {
     const deviceCheck = await UIRenderer.checkDeviceAndRender(data);
