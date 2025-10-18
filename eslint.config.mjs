@@ -1,0 +1,121 @@
+import eslint from "@eslint/js";
+import { defineConfig, globalIgnores } from "eslint/config";
+import tseslint from "typescript-eslint";
+
+import prettier from "eslint-plugin-prettier";
+import tsdoc from "eslint-plugin-tsdoc";
+import globals from "globals";
+
+export default defineConfig([
+  globalIgnores(
+    ["dist/**","build/**", "*.config.{js,mjs,ts}", "*.mjs","tests/**"]
+  ),
+  eslint.configs.recommended,
+  tseslint.configs.eslintRecommended,
+  tseslint.configs.recommendedTypeChecked,
+  tseslint.configs.stylisticTypeChecked,
+  tseslint.configs.strictTypeChecked,
+  {
+    files: ["src/**/*.ts"],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        _: "readonly",
+        E: "readonly",
+        L: "readonly",
+        baseclass: "readonly",
+        dom: "readonly",
+        firewall: "readonly",
+        form: "readonly",
+        fs: "readonly",
+        LuCI: "readonly",
+        network: "readonly",
+        prng: "readonly",
+        request: "readonly",
+        rpc: "readonly",
+        session: "readonly",
+        uci: "readonly",
+        ui: "readonly",
+        validation: "readonly",
+        view: "readonly",
+        widgets: "readonly",
+        XHR: "readonly",
+        poll: "readonly",
+        droidnet: "readonly",
+        UIRenderer: "readonly",
+      },
+      parserOptions: {
+        projectService: true,
+      },
+    },
+    plugins: {
+      prettier,
+      tsdoc,
+    },
+    rules: {
+      "@typescript-eslint/no-misused-promises": "off",
+      "no-var": "error",
+      "prefer-const": "error",
+      "no-unused-vars": "off",
+      "no-console": "warn",
+      "no-debugger": "error",
+      "no-alert": "warn",
+      eqeqeq: ["error", "always"],
+      curly: ["error", "multi-line"],
+      "no-eval": "error",
+      "no-implied-eval": "error",
+      "no-new-func": "error",
+      "no-script-url": "error",
+      "no-prototype-builtins": "off",
+      "prefer-arrow-callback": "error",
+      // "arrow-spacing": "error",
+      "no-duplicate-imports": "error",
+      // "object-shorthand": "error",
+      // "prefer-template": "error",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-non-null-assertion": "warn",
+      "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
+      "@typescript-eslint/array-type": ["error", { default: "array-simple" }],
+      // "@typescript-eslint/consistent-type-imports": [
+      //   "error",
+      //   { prefer: "type-imports" },
+      // ],
+      "@typescript-eslint/prefer-as-const": "error",
+      "@typescript-eslint/no-inferrable-types": "error",
+      complexity: ["warn", 15],
+      "max-depth": ["warn", 4],
+      "max-lines-per-function": [
+        "warn",
+        { max: 100, skipBlankLines: true, skipComments: true },
+      ],
+      "no-magic-numbers": [
+        "warn",
+        { ignore: [-1, 0, 1, 2], ignoreArrayIndexes: true },
+      ],
+      "no-nested-ternary": "error",
+      "no-unneeded-ternary": "error",
+      "no-else-return": "error",
+      "no-lonely-if": "error",
+      "no-useless-return": "error",
+      "no-useless-concat": "error",
+      "no-useless-escape": "error",
+      "no-return-assign": "error",
+      "no-param-reassign": "warn",
+      "consistent-return": "error",
+      "default-case": "warn",
+      "guard-for-in": "error",
+      "no-empty-function": "warn",
+      "no-loop-func": "error",
+      "tsdoc/syntax": "warn",
+      "prettier/prettier": "error",
+    },
+  },
+]);

@@ -47,5 +47,9 @@
     "forceConsistentCasingInFileNames": true,
     "removeComments": true
   },
-  "include": ["src/**/*.ts", "node_modules/@kuoruan/luci-types/index.d.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "node_modules/@kuoruan/luci-types/index.d.ts"
+  ]
 }

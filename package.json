@@ -6,17 +6,17 @@
   "scripts": {
     "build": "node build.mjs",
     "build:package": "bun run build && ./.github/tools/build-package.sh",
-    "livebuildtest": "bun run build && sshpass -p 'jancok123' scp -r dist/htdocs/luci-static/resources/* root@100.104.137.1:/www/luci-static/resources/ && npm run test:e2e",
+    "livebuildtest": "bun run build && sshpass -p 'jancok123' scp -o StrictHostKeyChecking=no -r dist/htdocs/luci-static/resources/* root@100.104.137.1:/www/luci-static/resources/ && npm run test:e2e",
     "version-bump": "./.github/tools/version-bump.sh",
     "watch": "tsc --watch",
-    "dev": "tsc --watch",
-    "lint" :"npx eslint '**/*.{js,ts}'",
+    "lint": "npx eslint",
     "tc": "bun x tsc --noEmit --strict",
     "fmt": "bun run tc && prettier --write .",
     "test:e2e": "npx playwright test",
     "prepare": "husky"
   },
   "devDependencies": {
+    "@eslint/js": "^9.38.0",
     "@kuoruan/luci-types": "^1.1.2",
     "@playwright/test": "^1.56.0",
     "@prettier/plugin-xml": "^3.4.2",
@@ -31,8 +31,10 @@
     "eslint-plugin-tsdoc": "^0.4.0",
     "globals": "^16.4.0",
     "husky": "^9.1.7",
+    "jiti": "^2.6.1",
     "lint-staged": "^16.2.4",
     "prettier": "^3.6.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.1"
   }
 }
