@@ -110,7 +110,7 @@ View all incoming messages received by Android modem, including sender informati
 ## Development
 
 ```sh
-curl -fsSL https://bun.com/install | sudo bash
+curl -fsSL https://bun.com/install |  bash
 source ~/.bashrc
 bun install
 ```
