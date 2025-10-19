@@ -132,15 +132,9 @@ return view.extend({
 
   load: DroidNet.load(loadDataDriven),
 
-  render: async function (
-    data: Record<string, Record<string, CommandData>> & DeviceStatus,
-  ): Promise<HTMLElement> {
-    const deviceCheck = await UIRenderer.checkDeviceAndRender(data);
-    if (deviceCheck) return deviceCheck;
-
-    // Use only data-driven sections
-    const sections = [renderDataDriven(data)];
-
-    return UIRenderer.renderPage(sections);
-  },
+  render: DroidNet.render(
+    (data: Record<string, Record<string, CommandData>> & DeviceStatus) => [
+      renderDataDriven(data),
+    ],
+  ),
 });

@@ -259,12 +259,8 @@ return view.extend({
 
   load: DroidNet.load(loadDeviceData),
 
-  render: async function (data: DeviceData): Promise<HTMLElement> {
-    const deviceCheck = await UIRenderer.checkDeviceAndRender(data);
-    if (deviceCheck) return deviceCheck;
-
-    const sections = [renderDeviceInfo(data), renderBatteryInfo(data)];
-
-    return UIRenderer.renderPage(sections);
-  },
+  render: DroidNet.render((data: DeviceData) => [
+    renderDeviceInfo(data),
+    renderBatteryInfo(data),
+  ]),
 });

@@ -197,7 +197,6 @@ function parseMessages(stdout: string): InboxMessage[] {
   return messages;
 }
 
-// eslint-disable-next-line max-lines-per-function
 function renderMessageTable(
   messages: InboxMessage[],
   display: number,
@@ -522,93 +521,86 @@ return view.extend({
 
   load: DroidNet.load(loadInboxData),
 
-  render: async function (data: InboxData): Promise<HTMLElement> {
-    const deviceCheck = await UIRenderer.checkDeviceAndRender(data);
-    if (deviceCheck) return deviceCheck;
+  render: DroidNet.render(
+    (data: InboxData) => {
+      if (data.messages_section) {
+        UIRenderer.addNotification(
+          "Error: Device conflict!",
+          "Please check your settings, the configured device and ADB devices are conflicting.",
+          "danger",
+        );
 
-    if (data.messages_section) {
-      UIRenderer.addNotification(
-        "Error: Device conflict!",
-        "Please check your settings, the configured device and ADB devices are conflicting.",
-        "danger",
-      );
+        return [
+          [
+            E(
+              "div",
+              {
+                class: "cbi-value",
+                style: "text-align: center; display: block;",
+              },
+              [E("em", _("No device detected or connected."))],
+            ),
+          ],
+        ];
+      }
 
-      const sections = [
-        [
-          E(
-            "div",
-            {
-              class: "cbi-value",
-              style: "text-align: center; display: block;",
-            },
-            [E("em", _("No device detected or connected."))],
-          ),
-        ],
-      ];
+      if (data.messages_info) {
+        UIRenderer.addNotification(
+          "Error: Device not supported!",
+          "Unable to read message because the device version cannot execute the command. Please ensure the device is rooted or has Android version 10 or above.",
+          "danger",
+        );
 
-      return UIRenderer.renderPage(sections);
-    }
+        return [
+          [
+            UIRenderer.renderTitle("Error Information"),
+            E(
+              "textarea",
+              {
+                id: "syslog",
+                class: "cbi-input-textarea",
+                style: "height: 500px; overflow-y: scroll;",
+                readonly: "readonly",
+                wrap: "off",
+                rows: 1,
+              },
+              data.messages_info,
+            ),
+          ],
+        ];
+      }
 
-    if (data.messages_info) {
-      UIRenderer.addNotification(
-        "Error: Device not supported!",
-        "Unable to read message because the device version cannot execute the command. Please ensure the device is rooted or has Android version 10 or above.",
-        "danger",
-      );
+      return [renderInboxControls(data.messages || [], data.display || 10)];
+    },
+    (data: InboxData) => {
+      // Auto-apply saved filters after render
+      setTimeout(() => {
+        const savedSettings = loadFilterSettings();
 
-      const sections = [
-        [
-          UIRenderer.renderTitle("Error Information"),
-          E(
-            "textarea",
-            {
-              id: "syslog",
-              class: "cbi-input-textarea",
-              style: "height: 500px; overflow-y: scroll;",
-              readonly: "readonly",
-              wrap: "off",
-              rows: 1,
-            },
-            data.messages_info,
-          ),
-        ],
-      ];
+        // Set dropdown values to saved settings
+        const readFilter = document.getElementById(
+          "read-filter",
+        ) as HTMLSelectElement;
+        const senderFilter = document.getElementById(
+          "sender-filter",
+        ) as HTMLSelectElement;
+        const simFilter = document.getElementById(
+          "sim-filter",
+        ) as HTMLSelectElement;
+        const perPage = document.getElementById(
+          "per-page",
+        ) as HTMLSelectElement;
 
-      return UIRenderer.renderPage(sections);
-    }
+        if (readFilter) readFilter.value = savedSettings.readFilter;
+        if (senderFilter) senderFilter.value = savedSettings.senderFilter;
+        if (simFilter) simFilter.value = savedSettings.simFilter;
+        if (perPage) perPage.value = savedSettings.perPage;
 
-    const sections = [
-      renderInboxControls(data.messages || [], data.display || 10),
-    ];
-    const page = UIRenderer.renderPage(sections);
-
-    // Auto-apply saved filters after render
-    setTimeout(() => {
-      const savedSettings = loadFilterSettings();
-
-      // Set dropdown values to saved settings
-      const readFilter = document.getElementById(
-        "read-filter",
-      ) as HTMLSelectElement;
-      const senderFilter = document.getElementById(
-        "sender-filter",
-      ) as HTMLSelectElement;
-      const simFilter = document.getElementById(
-        "sim-filter",
-      ) as HTMLSelectElement;
-      const perPage = document.getElementById("per-page") as HTMLSelectElement;
-
-      if (readFilter) readFilter.value = savedSettings.readFilter;
-      if (senderFilter) senderFilter.value = savedSettings.senderFilter;
-      if (simFilter) simFilter.value = savedSettings.simFilter;
-      if (perPage) perPage.value = savedSettings.perPage;
-
-      applyFilters(
-        data.messages || [],
-        parseInt(savedSettings.perPage) || data.display || 10,
-      );
-    }, 100);
-
-    return page;
-  },
+        applyFilters(
+          data.messages || [],
+          parseInt(savedSettings.perPage) || data.display || 10,
+        );
+      }, 100);
+    },
+  ),
 });

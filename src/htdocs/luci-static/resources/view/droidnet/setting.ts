@@ -395,16 +395,13 @@ function renderHttpingSection(m: LuCI.form.Map, data: SettingData): void {
 return view.extend({
   load: DroidNet.load(loadSettingData),
 
-  render: async function (data: SettingData): Promise<HTMLElement> {
-    const deviceCheck = await UIRenderer.checkDeviceAndRender(data);
-    if (deviceCheck) return deviceCheck;
-
+  render: DroidNet.render(async (data: SettingData) => {
     const m = new form.Map("droidnet");
 
     renderBaseSection(m, data);
     renderMonitoringSection(m, data);
     renderHttpingSection(m, data);
 
-    return UIRenderer.renderPage([[await m.render()]]);
-  },
+    return [[await m.render()]];
+  }),
 });

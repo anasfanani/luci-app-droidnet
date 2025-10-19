@@ -1055,58 +1055,56 @@ return view.extend({
 
   load: DroidNet.load(loadServiceData),
 
-  render: async function (data: ServiceData): Promise<HTMLElement> {
-    const deviceCheck = await UIRenderer.checkDeviceAndRender(data);
-    if (deviceCheck) return deviceCheck;
+  render: DroidNet.render(
+    (data: ServiceData) => [
+      renderPowerOptions(),
+      renderApplicationManager(data),
+    ],
+    (data: ServiceData) => {
+      // Auto-restore saved settings after render
+      setTimeout(async () => {
+        const savedSettings = loadServiceSettings();
+        const packageTypeFilter = document.getElementById(
+          "package-type-filter",
+        ) as HTMLSelectElement;
+        const searchInput = document.querySelector(
+          ".filter-input",
+        ) as HTMLInputElement;
 
-    const sections = [renderPowerOptions(), renderApplicationManager(data)];
-    const page = UIRenderer.renderPage(sections);
+        if (packageTypeFilter) packageTypeFilter.value = savedSettings.filter;
+        if (searchInput) searchInput.value = savedSettings.search;
 
-    // Auto-restore saved settings after render
-    setTimeout(async () => {
-      const savedSettings = loadServiceSettings();
-      const packageTypeFilter = document.getElementById(
-        "package-type-filter",
-      ) as HTMLSelectElement;
-      const searchInput = document.querySelector(
-        ".filter-input",
-      ) as HTMLInputElement;
-
-      if (packageTypeFilter) packageTypeFilter.value = savedSettings.filter;
-      if (searchInput) searchInput.value = savedSettings.search;
-
-      // Load UAD data in background (non-blocking)
-      try {
-        const packagesWithUAD = await loadUADDataForPackages(
-          data.application || [],
-        );
-        data.application = packagesWithUAD;
-
-        // Apply saved filter if not 'all'
-        if (savedSettings.filter !== "all") {
-          const filteredPackages = await getPackagesByFilter(
-            savedSettings.filter,
+        // Load UAD data in background (non-blocking)
+        try {
+          const packagesWithUAD = await loadUADDataForPackages(
+            data.application || [],
           );
-          const filteredWithUAD =
-            await loadUADDataForPackages(filteredPackages);
-          const newData = { ...data, application: filteredWithUAD };
-          updateApplicationTable(newData);
-        } else {
-          updateApplicationTable(data);
-        }
-      } catch (error) {
-        console.error("Failed to load UAD data:", error);
-        // Continue without UAD data
-        if (savedSettings.filter !== "all") {
-          const filteredPackages = await getPackagesByFilter(
-            savedSettings.filter,
-          );
-          const newData = { ...data, application: filteredPackages };
-          updateApplicationTable(newData);
-        }
-      }
-    }, 100);
+          data.application = packagesWithUAD;
 
-    return page;
-  },
+          // Apply saved filter if not 'all'
+          if (savedSettings.filter !== "all") {
+            const filteredPackages = await getPackagesByFilter(
+              savedSettings.filter,
+            );
+            const filteredWithUAD =
+              await loadUADDataForPackages(filteredPackages);
+            const newData = { ...data, application: filteredWithUAD };
+            updateApplicationTable(newData);
+          } else {
+            updateApplicationTable(data);
+          }
+        } catch (error) {
+          console.error("Failed to load UAD data:", error);
+          // Continue without UAD data
+          if (savedSettings.filter !== "all") {
+            const filteredPackages = await getPackagesByFilter(
+              savedSettings.filter,
+            );
+            const newData = { ...data, application: filteredPackages };
+            updateApplicationTable(newData);
+          }
+        }
+      }, 100);
+    },
+  ),
 });

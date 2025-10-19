@@ -152,6 +152,44 @@ const DroidNet = baseclass.extend({
     };
   },
 
+  render: function <T>(
+    renderSections:
+      | ((data: T) => Array<HTMLElement[] | null>)
+      | ((data: T) => Promise<Array<HTMLElement[] | null>>),
+    onAfterRender?: (data: T, page: HTMLElement) => void,
+  ): (data: T | DeviceStatus) => Promise<HTMLElement> {
+    console.debug("[DroidNet.render] Creating render function");
+    return async function (data: T | DeviceStatus): Promise<HTMLElement> {
+      console.debug("[DroidNet.render] Starting render, data:", data);
+
+      // Dynamically require UIRenderer to avoid circular dependency
+      const UIRenderer = await L.require("tools/ui-renderer");
+      console.debug("[DroidNet.render] UIRenderer loaded:", typeof UIRenderer);
+
+      const deviceCheck = await UIRenderer.checkDeviceAndRender(
+        data as DeviceStatus,
+      );
+      console.debug("[DroidNet.render] Device check result:", deviceCheck);
+      if (deviceCheck) return deviceCheck;
+
+      console.debug("[DroidNet.render] Calling renderSections");
+      const sections = await renderSections(data as T);
+      console.debug("[DroidNet.render] Sections:", sections);
+
+      console.debug("[DroidNet.render] Calling renderPage");
+      const page = UIRenderer.renderPage(sections);
+      console.debug("[DroidNet.render] Page created:", page);
+
+      if (onAfterRender) {
+        console.debug("[DroidNet.render] Calling onAfterRender");
+        onAfterRender(data as T, page);
+      }
+
+      console.debug("[DroidNet.render] Returning page");
+      return page;
+    };
+  },
+
   reloadAdbd: async function (): Promise<fs.FileExecResult> {
     return await fs.exec("adb", ["kill-server"]);
   },

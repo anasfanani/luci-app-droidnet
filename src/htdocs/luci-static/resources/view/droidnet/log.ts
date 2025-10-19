@@ -52,7 +52,6 @@ async function loadLogData(): Promise<LogData> {
   return {};
 }
 
-// eslint-disable-next-line max-lines-per-function
 function renderLogControls(): HTMLElement[] {
   return [
     E(
@@ -212,40 +211,34 @@ return view.extend({
 
   load: DroidNet.load(loadLogData),
 
-  render: async function (data: LogData): Promise<HTMLElement> {
-    const deviceCheck = await UIRenderer.checkDeviceAndRender(data);
-    if (deviceCheck) return deviceCheck;
-
-    const sections = [
+  render: DroidNet.render(
+    () => [
       [
         E("div", { class: "cbi-control" }, renderLogControls()),
         E("div", { class: "cbi-body" }, [renderLogViewer()]),
       ],
-    ];
+    ],
+    () => {
+      // Auto-restore saved settings after render
+      setTimeout(() => {
+        const savedSettings = loadLogSettings();
 
-    const page = UIRenderer.renderPage(sections);
+        const filterSelect = document.getElementById(
+          "log-filter",
+        ) as HTMLSelectElement;
+        const directionSelect = document.getElementById(
+          "log-direction",
+        ) as HTMLSelectElement;
+        const linesSelect = document.getElementById(
+          "log-lines",
+        ) as HTMLSelectElement;
 
-    // Auto-restore saved settings after render
-    setTimeout(() => {
-      const savedSettings = loadLogSettings();
+        if (filterSelect) filterSelect.value = savedSettings.filter;
+        if (directionSelect) directionSelect.value = savedSettings.direction;
+        if (linesSelect) linesSelect.value = savedSettings.lines;
 
-      const filterSelect = document.getElementById(
-        "log-filter",
-      ) as HTMLSelectElement;
-      const directionSelect = document.getElementById(
-        "log-direction",
-      ) as HTMLSelectElement;
-      const linesSelect = document.getElementById(
-        "log-lines",
-      ) as HTMLSelectElement;
-
-      if (filterSelect) filterSelect.value = savedSettings.filter;
-      if (directionSelect) directionSelect.value = savedSettings.direction;
-      if (linesSelect) linesSelect.value = savedSettings.lines;
-
-      startLogPolling();
-    }, 100);
-
-    return page;
-  },
+        startLogPolling();
+      }, 100);
+    },
+  ),
 });
