@@ -249,7 +249,7 @@ const WIFI_PATTERNS: ParsePattern[] = [
   { key: "stayAwake", regex: /Stay-awake conditions:\s*(\d+)/ },
   { key: "idleMode", regex: /mInIdleMode\s+(\w+)/ },
   { key: "scanPending", regex: /mScanPending\s+(\w+)/ },
-  { key: "vendor", regex: /Wi-Fi vendor:\s*(.+)/ },
+  { key: "vendor", regex: /Wi-Fi vendor:\s*([^\n]+)/ },
   { key: "supportedFeature", regex: /Supported feature:\s*(\d+)/ },
 ];
 
@@ -269,7 +269,7 @@ const BATTERY_PATTERNS: ParsePattern[] = [
   { key: "voltage", regex: /voltage:\s*(\d+)/ },
   { key: "temperature", regex: /temperature:\s*(\d+)/ },
   { key: "technology", regex: /technology:\s*(.+)/ },
-  { key: "currentNow", regex: /current now:\s*(\d+)/ },
+  { key: "currentNow", regex: /current now:\s*(-?\d+)/ },
   { key: "ledCharging", regex: /LED Charging:\s*(\w+)/ },
   { key: "ledLowBattery", regex: /LED Low Battery:\s*(\w+)/ },
   { key: "fastCharging", regex: /Adaptive Fast Charging Settings:\s*(\w+)/ },
@@ -278,7 +278,7 @@ const BATTERY_PATTERNS: ParsePattern[] = [
 
 // NetStats patterns
 const NETSTATS_PATTERNS: ParsePattern[] = [
-  { key: "activeInterface", regex: /Active interfaces:\s+iface=(\w+)/ },
+  { key: "activeInterface", regex: /Active interfaces:\s*\n\s*iface=(\w+)/ },
   { key: "interfaceType", regex: /type=(\w+)/ },
   { key: "interfaceSubType", regex: /subType=(\w+)/ },
   { key: "metered", regex: /metered=(\w+)/ },
@@ -430,9 +430,9 @@ const POWER_PATTERNS: ParsePattern[] = [
 
 // Alarm patterns
 const ALARM_PATTERNS: ParsePattern[] = [
-  { key: "minFuturity", regex: /min_futurity=\+([^\s]+)/ },
-  { key: "minInterval", regex: /min_interval=\+([^\s]+)/ },
-  { key: "maxInterval", regex: /max_interval=\+([^\s]+)/ },
+  { key: "minFuturity", regex: /min_futurity=\+([^\n]+)/ },
+  { key: "minInterval", regex: /min_interval=\+([^\n]+)/ },
+  { key: "maxInterval", regex: /max_interval=\+([^\n]+)/ },
   { key: "maxAlarmsPerUid", regex: /max_alarms_per_uid=(\d+)/ },
   { key: "appStandbyEnabled", regex: /app_standby_quotas_enabled=(\w+)/ },
   { key: "forceAppStandby", regex: /Force all apps standby:\s*(\w+)/ },
