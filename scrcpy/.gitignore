@@ -1,0 +1,7 @@
+node_modules/
+*.ipk
+*.log
+dist/
+build/
+src/node_modules/
+src/package-lock.json

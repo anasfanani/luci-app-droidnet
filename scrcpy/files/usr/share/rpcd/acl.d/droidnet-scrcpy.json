@@ -1,0 +1,12 @@
+{
+  "luci-app-droidnet-scrcpy": {
+    "description": "Grant access to DroidNet scrcpy features",
+    "read": {
+      "uci": ["droidnet-scrcpy"]
+    },
+    "write": {
+      "uci": ["droidnet-scrcpy"],
+      "luci": ["setInitAction"]
+    }
+  }
+}

@@ -54,9 +54,16 @@ src-git luci https://git.openwrt.org/project/luci.git;openwrt-23.05
 src-git routing https://git.openwrt.org/feed/routing.git;openwrt-23.05
 EOF
 
-# Copy package from dist (always update to latest)
+# Copy packages from dist (always update to latest)
 rm -rf package/luci-app-droidnet
 cp -r "$REPO_ROOT/dist" package/luci-app-droidnet
+
+# Copy scrcpy package if exists
+if [ -d "$REPO_ROOT/scrcpy" ]; then
+    echo "Found scrcpy package, adding to build..."
+    rm -rf package/luci-app-droidnet-scrcpy
+    cp -r "$REPO_ROOT/scrcpy" package/luci-app-droidnet-scrcpy
+fi
 
 # Update feeds only if feeds directory doesn't exist
 if [ ! -d "feeds" ]; then
@@ -72,7 +79,18 @@ fi
 
 ./scripts/feeds install luci-app-droidnet
 
+# Install scrcpy package if exists
+if [ -d "package/luci-app-droidnet-scrcpy" ]; then
+    echo "Installing scrcpy package..."
+    ./scripts/feeds install luci-app-droidnet-scrcpy
+fi
+
 # Configure build
+BUILD_SCRCPY=""
+if [ -d "package/luci-app-droidnet-scrcpy" ]; then
+    BUILD_SCRCPY="CONFIG_PACKAGE_luci-app-droidnet-scrcpy=m"
+fi
+
 cat > .config << EOF
 CONFIG_ALL_NONSHARED=n
 CONFIG_ALL_KMODS=n
@@ -82,19 +100,31 @@ CONFIG_LUCI_LANG_zh_Hans=n
 CONFIG_LUCI_JSMIN=n
 CONFIG_LUCI_CSSTIDY=n
 CONFIG_PACKAGE_luci-app-droidnet=m
+${BUILD_SCRCPY}
 EOF
 
 make defconfig
 make download -j"$(nproc)"
 
-# Build package
+# Build packages
 make package/luci-app-droidnet/{clean,compile} -j"$(nproc)"
+
+if [ -d "package/luci-app-droidnet-scrcpy" ]; then
+    echo "Building scrcpy package..."
+    make package/luci-app-droidnet-scrcpy/{clean,compile} -j"$(nproc)"
+fi
 
 echo "Build complete. IPK files are in $BUILD_DIR/sdk/bin/packages/x86_64/base/"
 
-# Copy IPK file to build root directory
+# Copy IPK files to build root directory
 IPK_FILE=$(find "$BUILD_DIR/sdk/bin/packages/x86_64/base/" -name "luci-app-droidnet_*.ipk" | head -1)
 if [ -n "$IPK_FILE" ]; then
     cp -f "$IPK_FILE" "$BUILD_DIR/"
-    echo "IPK file copied to: $BUILD_DIR/$(basename "$IPK_FILE")"
+    echo "Main package copied to: $BUILD_DIR/$(basename "$IPK_FILE")"
+fi
+
+SCRCPY_IPK=$(find "$BUILD_DIR/sdk/bin/packages/x86_64/base/" -name "luci-app-droidnet-scrcpy_*.ipk" | head -1)
+if [ -n "$SCRCPY_IPK" ]; then
+    cp -f "$SCRCPY_IPK" "$BUILD_DIR/"
+    echo "Scrcpy package copied to: $BUILD_DIR/$(basename "$SCRCPY_IPK")"
 fi

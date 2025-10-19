@@ -1,0 +1,12 @@
+{
+  "name": "droidnet-scrcpy-server",
+  "version": "1.0.0",
+  "description": "ws-scrcpy server wrapper for DroidNet",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws-scrcpy": "^6.0.0"
+  }
+}

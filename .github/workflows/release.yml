@@ -92,6 +92,14 @@ jobs:
         run: |
           cd sdk
           ./scripts/feeds install luci-app-droidnet
+          
+          # Install scrcpy package if exists
+          if [ -d "package/downloads/luci-app-droidnet/scrcpy" ]; then
+            echo "Found scrcpy package, adding to build..."
+            cp -r package/downloads/luci-app-droidnet/scrcpy package/luci-app-droidnet-scrcpy
+            ./scripts/feeds install luci-app-droidnet-scrcpy
+          fi
+          
           echo "CONFIG_ALL_NONSHARED=n" > .config
           echo "CONFIG_ALL_KMODS=n" >> .config
           echo "CONFIG_ALL=n" >> .config
@@ -100,13 +108,26 @@ jobs:
           echo "CONFIG_LUCI_JSMIN=n" >> .config
           echo "CONFIG_LUCI_CSSTIDY=n" >> .config
           echo "CONFIG_PACKAGE_luci-app-droidnet=m" >> .config
+          
+          # Add scrcpy to config if exists
+          if [ -d "package/luci-app-droidnet-scrcpy" ]; then
+            echo "CONFIG_PACKAGE_luci-app-droidnet-scrcpy=m" >> .config
+          fi
+          
           make defconfig
       - name: Compile IPK
         id: compile
         run: |
           cd sdk
-          echo "make package/luci-app-droidnet/{clean,compile} -j$(nproc)"
+          echo "Building main package..."
           make package/luci-app-droidnet/{clean,compile} -j$(nproc)
+          
+          # Build scrcpy package if exists
+          if [ -d "package/luci-app-droidnet-scrcpy" ]; then
+            echo "Building scrcpy package..."
+            make package/luci-app-droidnet-scrcpy/{clean,compile} -j$(nproc)
+          fi
+          
           mv bin/packages/x86_64/base/ ../
           rm .config .config.old
           cd ..

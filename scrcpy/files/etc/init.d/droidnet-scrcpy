@@ -1,0 +1,37 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=10
+
+USE_PROCD=1
+
+PROG=/usr/lib/droidnet-scrcpy/server.js
+DEVICE_ID=""
+PORT=8000
+
+start_service() {
+	config_load droidnet
+	config_get DEVICE_ID device id
+	
+	config_load droidnet-scrcpy
+	config_get PORT server port 8000
+	
+	[ -z "$DEVICE_ID" ] && {
+		logger -t droidnet-scrcpy "No device configured"
+		return 1
+	}
+	
+	procd_open_instance
+	procd_set_param command node $PROG --port $PORT --udid $DEVICE_ID
+	procd_set_param respawn ${respawn_threshold:-3600} ${respawn_timeout:-5} ${respawn_retry:-5}
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_set_param user root
+	procd_close_instance
+	
+	logger -t droidnet-scrcpy "Started on port $PORT for device $DEVICE_ID"
+}
+
+service_triggers() {
+	procd_add_reload_trigger "droidnet-scrcpy"
+}

@@ -1,0 +1,6 @@
+
+config server 'server'
+	option enabled '0'
+	option port '8000'
+	option max_fps '60'
+	option bit_rate '8000000'

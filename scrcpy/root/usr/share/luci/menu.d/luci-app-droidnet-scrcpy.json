@@ -1,0 +1,13 @@
+{
+  "admin/droidnet/scrcpy": {
+    "title": "Screen Mirror",
+    "order": 50,
+    "action": {
+      "type": "view",
+      "path": "droidnet/scrcpy"
+    },
+    "depends": {
+      "acl": ["luci-app-droidnet-scrcpy"]
+    }
+  }
+}
