@@ -199,55 +199,56 @@ function renderDeviceInfo(data: DeviceData): HTMLElement[] {
     return "-";
   };
 
+  const rows = [
+    { label: "Device ID", value: data["device_id"] || "-" },
+    {
+      label: "Processors",
+      value: formatValue(data["device_cpu"], (v) => v.toUpperCase()),
+    },
+    { label: "Root status", value: formatRoot(data["device_root"]) },
+    { label: "RAM", value: data["device_memory"] || "-" },
+    {
+      label: "Brand name",
+      value: formatValue(data["device_brand"], capitalize),
+    },
+    { label: "Architecture", value: data["device_uname"]?.arch || "-" },
+    { label: "Code name", value: data["device_code"] || "-" },
+    { label: "Android version", value: data["device_version"] || "-" },
+    {
+      label: "Model number",
+      value: formatValue(data["device_model"], capitalize),
+    },
+    { label: "SDK version", value: data["device_sdk"] || "-" },
+    { label: "Used time", value: data["device_uptime"] || "-" },
+    {
+      label: "Security patch level",
+      value: data["device_security"] || "-",
+    },
+    {
+      label: "System on Chip (SoC)",
+      value: formatValue(data["device_soc"], (v) => v.toUpperCase()),
+    },
+    { label: "Kernel version", value: data["device_uname"]?.kernel || "-" },
+  ];
+
   return [
     UIRenderer.renderTitle("Device Information"),
-    UIRenderer.renderTable(
-      [
-        { label: "Device ID", value: data["device_id"] || "-" },
-        {
-          label: "Processors",
-          value: formatValue(data["device_cpu"], (v) => v.toUpperCase()),
-        },
-        { label: "Root status", value: formatRoot(data["device_root"]) },
-        { label: "RAM", value: data["device_memory"] || "-" },
-        {
-          label: "Brand name",
-          value: formatValue(data["device_brand"], capitalize),
-        },
-        { label: "Architecture", value: data["device_uname"]?.arch || "-" },
-        { label: "Code name", value: data["device_code"] || "-" },
-        { label: "Android version", value: data["device_version"] || "-" },
-        {
-          label: "Model number",
-          value: formatValue(data["device_model"], capitalize),
-        },
-        { label: "SDK version", value: data["device_sdk"] || "-" },
-        { label: "Used time", value: data["device_uptime"] || "-" },
-        {
-          label: "Security patch level",
-          value: data["device_security"] || "-",
-        },
-        {
-          label: "System on Chip (SoC)",
-          value: formatValue(data["device_soc"], (v) => v.toUpperCase()),
-        },
-        { label: "Kernel version", value: data["device_uname"]?.kernel || "-" },
-      ],
-      { col: 4 },
-    ),
+    UIRenderer.renderTable(rows, { col: 4 }),
   ];
 }
 
 function renderBatteryInfo(data: DeviceData): HTMLElement[] {
+  const rows = [
+    { label: "Level", value: data["battery_level"] || "-" },
+    { label: "Charge counter", value: data["battery_counter"] || "-" },
+    { label: "Voltage", value: data["battery_voltage"] || "-" },
+    { label: "Temperature", value: data["battery_temperature"] || "-" },
+    { label: "Technology", value: data["battery_technology"] || "-" },
+  ];
+
   return [
     UIRenderer.renderTitle("Battery Information"),
-    UIRenderer.renderTable([
-      { label: "Level", value: data["battery_level"] || "-" },
-      { label: "Charge counter", value: data["battery_counter"] || "-" },
-      { label: "Voltage", value: data["battery_voltage"] || "-" },
-      { label: "Temperature", value: data["battery_temperature"] || "-" },
-      { label: "Technology", value: data["battery_technology"] || "-" },
-    ]),
+    UIRenderer.renderTable(rows),
   ];
 }
 

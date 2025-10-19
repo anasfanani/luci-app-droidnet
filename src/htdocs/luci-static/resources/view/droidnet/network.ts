@@ -106,15 +106,6 @@ function renderDataDriven(
         value: Array.isArray(value) ? value.join(", ") : String(value),
       }));
 
-      // Check for empty values
-      const emptyRows = rows.filter((r) => !r.value);
-      if (emptyRows.length > 0) {
-        console.warn(
-          "DroidNet: Missing data for:",
-          emptyRows.map((r) => r.label).join(", "),
-        );
-      }
-
       return rows.length > 0
         ? [UIRenderer.renderTitle(section.title), UIRenderer.renderTable(rows)]
         : null;

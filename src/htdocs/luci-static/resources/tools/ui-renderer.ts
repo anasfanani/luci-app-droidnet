@@ -41,6 +41,26 @@ const UIRenderer = baseclass.extend({
     config: UITableConfig,
   ): HTMLElement {
     const headers = config.headers || [];
+
+    // Validate rows for missing data
+    if (headers.length > 0) {
+      rows.forEach((row) => {
+        const emptyCells = row
+          .map((cell, cellIndex) => ({
+            header: headers[cellIndex],
+            isEmpty: !cell || cell === "-" || cell === "",
+          }))
+          .filter((item) => item.isEmpty && item.header);
+
+        if (emptyCells.length > 0) {
+          console.error(
+            `DroidNet: Missing data for:`,
+            emptyCells.map((item) => item.header).join(", "),
+          );
+        }
+      });
+    }
+
     const styles = ["cbi-rowstyle-1", "cbi-rowstyle-2"];
     const cellClass = config.cellClass || "td";
     const headerClass = config.headerClass || "th";
@@ -82,6 +102,17 @@ const UIRenderer = baseclass.extend({
     rows: UITableRow[],
     config: UITableConfig,
   ): HTMLElement {
+    // Validate rows for missing data
+    const emptyRows = rows.filter(
+      (r) => !r.value || r.value === "-" || r.value === "",
+    );
+    if (emptyRows.length > 0) {
+      console.error(
+        "DroidNet: Missing data for:",
+        emptyRows.map((r) => r.label).join(", "),
+      );
+    }
+
     const defaultConfig = {
       col: 2,
       colSizeMap: {
