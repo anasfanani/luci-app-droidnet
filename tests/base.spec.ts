@@ -14,7 +14,7 @@ let authToken: string | undefined;
 const consoleErrors: string[] = [];
 const consoleWarnings: string[] = [];
 
-test.describe("DroidNet Tests", () => {
+test.describe.serial("DroidNet Tests", () => {
   test.beforeEach(({ page }) => {
     consoleErrors.length = 0;
     consoleWarnings.length = 0;

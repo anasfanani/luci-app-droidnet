@@ -1,14 +1,22 @@
 import type { Reporter, TestCase, TestResult } from "@playwright/test/reporter";
 
 class CleanReporter implements Reporter {
+  private hasFailed = false;
+
   onTestBegin(test: TestCase) {
-    console.log(`Testing ${test.title}...`);
+    if (!this.hasFailed) {
+      console.log(`Testing ${test.title}...`);
+    }
   }
 
   onTestEnd(test: TestCase, result: TestResult) {
+    if (result.status === "skipped") {
+      return;
+    }
     const pageName = test.title.replace(" Page", "").toLowerCase();
 
     if (result.status === "failed") {
+      this.hasFailed = true;
       const error = result.errors[0];
       if (error?.message?.includes("Console errors")) {
         console.log(`❌ ${test.title}: Console errors detected`);

@@ -109,7 +109,7 @@ function renderDataDriven(
       // Check for empty values
       const emptyRows = rows.filter((r) => !r.value);
       if (emptyRows.length > 0) {
-        console.error(
+        console.warn(
           "DroidNet: Missing data for:",
           emptyRows.map((r) => r.label).join(", "),
         );
