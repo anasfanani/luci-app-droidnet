@@ -56,121 +56,85 @@ async function loadLogData(): Promise<LogData> {
 function renderLogControls(): HTMLElement[] {
   return [
     E(
-      "label",
-      { for: "log-filter", style: "margin-right: 8px;" },
-      _("Filter by service") + " : ",
-    ),
-    E(
-      "select",
-      {
-        id: "log-filter",
-        style: "margin: 8px 8px 8px 0;",
-        change: () => {
-          saveLogSettings();
-        },
-      },
-      [
-        E("option", { value: "all" }, _("All")),
-        E("option", { value: "Application" }, _("Application")),
-        E("option", { value: "Monitoring" }, _("Monitoring")),
-        E("option", { value: "Network" }, _("Network")),
-        E("option", { value: "Power" }, _("Power")),
-      ],
-    ),
-    E(
-      "label",
-      { for: "log-direction", style: "margin-right: 8px;" },
-      _("Log direction") + " : ",
-    ),
-    E(
-      "select",
-      {
-        id: "log-direction",
-        style: "margin: 8px 8px 8px 0;",
-        change: () => {
-          saveLogSettings();
-        },
-      },
-      [
-        E("option", { value: "down" }, _("Down")),
-        E("option", { value: "up" }, _("Up")),
-      ],
-    ),
-    E(
-      "label",
-      { for: "log-lines", style: "margin-right: 8px;" },
-      _("Lines") + " : ",
-    ),
-    E(
-      "select",
-      {
-        id: "log-lines",
-        style: "margin: 8px 8px 8px 0;",
-        change: () => {
-          saveLogSettings();
-        },
-      },
-      [
-        E("option", { value: "10" }, "10"),
-        E("option", { value: "20" }, "20"),
-        E("option", { value: "50" }, "50"),
-        E("option", { value: "100" }, "100"),
-        E("option", { value: "200" }, "200"),
-        E("option", { value: "500" }, "500"),
-      ],
-    ),
-    E(
       "div",
-      {
-        class: "log-button",
-        style: "display: inline-block; margin: 0 8px 8px 0;",
-      },
-      [
-        E(
-          "button",
-          {
-            class: "btn cbi-button cbi-button-remove",
-            style: "margin-right: 10px",
-            click: async () => {
-              const message = _(
-                "DroidNet logs have been successfully cleared.",
-              );
-              const date = new Date().toLocaleDateString(undefined, {
-                weekday: "short",
-                month: "short",
-                day: "2-digit",
-              });
-              const time = new Date().toLocaleTimeString(undefined, {
-                hour: "2-digit",
-                minute: "2-digit",
-              });
-              const notif = `${date}, ${time} - Network service: ${message}\n`;
-              await fs.write("/var/log/droidnet.log", notif);
-              (
-                document.getElementById("syslog") as HTMLTextAreaElement
-              ).textContent = notif;
-            },
+      { class: "filter-controls", style: "margin: 10px 0;" },
+      UIRenderer.renderFilters([
+        {
+          label: "Filter by service",
+          type: "select",
+          id: "log-filter",
+          options: [
+            { value: "all", label: "All" },
+            { value: "Application", label: "Application" },
+            { value: "Monitoring", label: "Monitoring" },
+            { value: "Network", label: "Network" },
+            { value: "Power", label: "Power" },
+          ],
+          onChange: saveLogSettings,
+        },
+        {
+          label: "Log direction",
+          type: "select",
+          id: "log-direction",
+          options: [
+            { value: "down", label: "Down" },
+            { value: "up", label: "Up" },
+          ],
+          onChange: saveLogSettings,
+        },
+        {
+          label: "Lines",
+          type: "select",
+          id: "log-lines",
+          options: [
+            { value: "10", label: "10" },
+            { value: "20", label: "20" },
+            { value: "50", label: "50" },
+            { value: "100", label: "100" },
+            { value: "200", label: "200" },
+            { value: "500", label: "500" },
+          ],
+          onChange: saveLogSettings,
+        },
+        {
+          label: "Clear",
+          type: "button",
+          class: "btn cbi-button cbi-button-remove",
+          style: "margin-right: 10px;",
+          onClick: async () => {
+            const message = _("DroidNet logs have been successfully cleared.");
+            const date = new Date().toLocaleDateString(undefined, {
+              weekday: "short",
+              month: "short",
+              day: "2-digit",
+            });
+            const time = new Date().toLocaleTimeString(undefined, {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            const notif = `${date}, ${time} - Network service: ${message}\n`;
+            await fs.write("/var/log/droidnet.log", notif);
+            (
+              document.getElementById("syslog") as HTMLTextAreaElement
+            ).textContent = notif;
           },
-          _("Clear"),
-        ),
-        E(
-          "button",
-          {
-            class: "btn cbi-button cbi-button-save",
-            click: () => {
-              const logs = (
-                document.getElementById("syslog") as HTMLTextAreaElement
-              ).value;
-              const blob = new Blob([logs], { type: "text/plain" });
-              const link = document.createElement("a");
-              link.href = window.URL.createObjectURL(blob);
-              link.download = "droidnet.log";
-              link.click();
-            },
+        },
+        {
+          label: "Download",
+          type: "button",
+          class: "btn cbi-button cbi-button-save",
+          onClick: () => {
+            const logs = (
+              document.getElementById("syslog") as HTMLTextAreaElement
+            ).value;
+            const blob = new Blob([logs], { type: "text/plain" });
+            const link = document.createElement("a");
+            link.href = window.URL.createObjectURL(blob);
+            link.download = "droidnet.log";
+            link.click();
           },
-          _("Download"),
-        ),
-      ],
+        },
+      ]),
     ),
   ];
 }

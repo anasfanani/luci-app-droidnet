@@ -481,237 +481,212 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
   const currentPackages = packages.slice(start, end);
 
   if (packages.length === 0) {
-    return E("table", { class: "table cbi-section-table" }, [
-      E("tr", { class: "tr table-titles" }, [
-        E("th", { class: "th left" }, _("Package Name")),
-        E("th", { class: "th center" }, _("Version")),
-        E("th", { class: "th center" }, _("UID")),
-        E("th", { class: "th center" }, _("UAD Status")),
-        E("th", { class: "th" }, _("Actions")),
-      ]),
-      E("tr", { class: "tr cbi-rowstyle-2" }, [
-        E("td", { class: "td center", colspan: "5" }, [
-          E("em", _("Application not found")),
-        ]),
-      ]),
-    ]);
+    return UIRenderer.renderTable([[E("em", _("Application not found"))]], {
+      headers: ["Package Name", "Version", "UID", "UAD Status", "Actions"],
+      cellClass: "td left",
+      headerClass: "th left",
+    });
   }
 
-  // eslint-disable-next-line max-lines-per-function
-  const tableRows = currentPackages.map((pkg: AppPackage, index) => {
-    const rowClass = index % 2 === 0 ? "cbi-rowstyle-1" : "cbi-rowstyle-2";
+  const rows = currentPackages.map((pkg: AppPackage) => {
     const uadInfo = pkg.uadInfo;
 
-    return E("tr", { class: "tr " + rowClass }, [
-      E(
-        "td",
-        { class: "td left", style: "max-width: 300px;" },
-        [
-          E(
-            "div",
-            {
-              style:
-                "overflow: hidden; text-overflow: ellipsis; white-space: nowrap;",
-            },
-            pkg.name,
-          ),
-          uadInfo
-            ? E(
-                "small",
-                {
-                  style:
-                    "display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;",
-                },
-                uadInfo.description.split("\n")[0],
-              )
-            : null,
-        ].filter(Boolean),
-      ),
-      E("td", { class: "td center" }, pkg.versionCode),
-      E("td", { class: "td center" }, pkg.uid),
-      E(
-        "td",
-        { class: "td center" },
+    const packageName = E(
+      "div",
+      { style: "max-width: 300px;" },
+      [
+        E(
+          "div",
+          {
+            style:
+              "overflow: hidden; text-overflow: ellipsis; white-space: nowrap;",
+          },
+          pkg.name,
+        ),
         uadInfo
           ? E(
-              "span",
+              "small",
               {
-                style: `background: ${getRemovalColor(uadInfo.removal)}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;`,
+                style:
+                  "display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;",
               },
-              uadInfo.removal,
+              uadInfo.description.split("\n")[0],
             )
-          : E("span", { style: "color: #999; font-size: 11px;" }, "Unknown"),
-      ),
-      E(
-        "td",
-        { class: "td right" },
-        [
-          uadInfo
-            ? E(
-                "button",
-                {
-                  class: "btn cbi-button cbi-button-neutral",
-                  style:
-                    "font-size: 11px; padding: 2px 6px; margin-right: 5px;",
-                  click: function () {
-                    ui.showModal(
-                      _("Package Information"),
-                      [
-                        E("div", { style: "margin-bottom: 10px;" }, [
-                          E("strong", pkg.name),
-                          E("br"),
-                          E(
-                            "span",
-                            `Version: ${pkg.versionCode} | UID: ${pkg.uid}`,
-                          ),
-                          E("br"),
-                          E(
-                            "span",
-                            {
-                              style: `color: ${getRemovalColor(uadInfo.removal)};`,
-                            },
-                            `Removal: ${uadInfo.removal}`,
-                          ),
-                        ]),
-                        E("div", {
-                          style:
-                            "border-top: 1px solid #ccc; padding-top: 10px;",
-                        }),
-                        E("p", {
-                          innerHTML: uadInfo.description.replace(/\n/g, "<br>"),
-                        }),
-                        uadInfo.dependencies.length > 0
-                          ? E("div", [
-                              E("strong", "Dependencies: "),
-                              E("span", uadInfo.dependencies.join(", ")),
-                            ])
-                          : null,
-                        E("div", { class: "right" }, [
-                          E(
-                            "button",
-                            { class: "btn", click: ui.hideModal },
-                            _("OK"),
-                          ),
-                        ]),
-                      ].filter(Boolean),
-                    );
-                  },
-                },
-                _("Info"),
-              )
-            : null,
-          E(
-            "button",
-            {
-              class: "btn cbi-button cbi-button-neutral",
-              style: "font-size: 11px; padding: 2px 6px; margin-right: 5px;",
-              click: () => {
-                const toggleAction = UIRenderer.createToggleAction(
-                  `package ${pkg.name}`,
-                  ["pm", "enable", "--user", "0", pkg.name],
-                  ["pm", "disable", "--user", "0", pkg.name],
-                  async (cmd: string[]) => {
-                    const result = await DroidNet.exec(cmd, { su: true });
-                    return {
-                      code: result.code || 0,
-                      stdout: result.stdout || "",
-                      stderr: result.stderr || "",
-                    };
-                  },
-                  {
-                    onSuccess: (message, _result) => {
-                      UIRenderer.modalSuccess(message);
-                      DroidNet.log(message);
-                    },
-                    onFailed: (error, _result) => {
-                      UIRenderer.modalError("Package operation failed", error);
-                      DroidNet.log(error);
-                    },
-                    validator: (result) =>
-                      result.code === 0 &&
-                      !result.stdout?.includes("Security exception"),
-                  },
-                );
-                toggleAction.onEnable(); // Calls disable
-              },
-            },
-            _("Disable"),
-          ),
-          E(
-            "button",
-            {
-              class: "btn cbi-button cbi-button-neutral",
-              style: "font-size: 11px; padding: 2px 6px; margin-right: 5px;",
-              click: () => {
-                const toggleAction = UIRenderer.createToggleAction(
-                  `package ${pkg.name}`,
-                  ["pm", "unsuspend", "--user", "0", pkg.name],
-                  ["pm", "suspend", "--user", "0", pkg.name],
-                  async (cmd: string[]) => {
-                    const result = await DroidNet.exec(cmd, { su: true });
-                    return {
-                      code: result.code || 0,
-                      stdout: result.stdout || "",
-                      stderr: result.stderr || "",
-                    };
-                  },
-                  {
-                    onSuccess: (message, _result) => {
-                      UIRenderer.modalSuccess(message);
-                      DroidNet.log(message);
-                    },
-                    onFailed: (error, _result) => {
-                      UIRenderer.modalError("Package operation failed", error);
-                      DroidNet.log(error);
-                    },
-                    validator: (result) =>
-                      result.code === 0 &&
-                      !result.stdout?.includes("Security exception"),
-                  },
-                );
-                toggleAction.onEnable(); // Calls suspend
-              },
-            },
-            _("Suspend"),
-          ),
-          E(
-            "button",
-            {
-              class: "btn cbi-button cbi-button-remove",
-              style: "font-size: 11px; padding: 2px 6px;",
-              click: () => {
-                const warning =
-                  uadInfo && uadInfo.removal === "Unsafe"
-                    ? _(
-                        "\n⚠️ WARNING: This package is marked as UNSAFE to remove and may cause system instability!",
-                      )
-                    : "";
+          : null,
+      ].filter(Boolean),
+    );
 
-                UIRenderer.confirmAction(
-                  `Remove application ${pkg.name}`,
-                  _("Are you sure you want to remove this application?") +
-                    warning,
-                  () => removeApplication(pkg.name),
-                );
-              },
+    const uadStatus = uadInfo
+      ? E(
+          "span",
+          {
+            style: `background: ${getRemovalColor(uadInfo.removal)}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;`,
+          },
+          uadInfo.removal,
+        )
+      : E("span", { style: "color: #999; font-size: 11px;" }, "Unknown");
+
+    const infoBtn = uadInfo
+      ? E(
+          "button",
+          {
+            class: "btn cbi-button cbi-button-neutral",
+            style: "font-size: 11px; padding: 2px 6px; margin-right: 5px;",
+            click: () => {
+              const desc = uadInfo.description
+                .split("\n")
+                .map((line, i, arr) =>
+                  i < arr.length - 1 ? [line, E("br")] : line,
+                )
+                .flat();
+
+              ui.showModal(
+                _("Package Information"),
+                [
+                  E("div", { style: "margin-bottom: 10px;" }, [
+                    E("strong", pkg.name),
+                    E("br"),
+                    E("span", `Version: ${pkg.versionCode} | UID: ${pkg.uid}`),
+                    E("br"),
+                    E(
+                      "span",
+                      { style: `color: ${getRemovalColor(uadInfo.removal)};` },
+                      `Removal: ${uadInfo.removal}`,
+                    ),
+                  ]),
+                  E("div", {
+                    style: "border-top: 1px solid #ccc; padding-top: 10px;",
+                  }),
+                  E("p", {}, desc),
+                  uadInfo.dependencies.length > 0
+                    ? E("div", [
+                        E("strong", "Dependencies: "),
+                        E("span", uadInfo.dependencies.join(", ")),
+                      ])
+                    : null,
+                  E("div", { class: "right" }, [
+                    E("button", { class: "btn", click: ui.hideModal }, _("OK")),
+                  ]),
+                ].filter(Boolean),
+              );
             },
-            _("Remove"),
-          ),
-        ].filter(Boolean),
-      ),
-    ]);
+          },
+          _("Info"),
+        )
+      : null;
+
+    const disableBtn = E(
+      "button",
+      {
+        class: "btn cbi-button cbi-button-neutral",
+        style: "font-size: 11px; padding: 2px 6px; margin-right: 5px;",
+        click: () => {
+          const toggleAction = UIRenderer.createToggleAction(
+            `package ${pkg.name}`,
+            ["pm", "enable", "--user", "0", pkg.name],
+            ["pm", "disable", "--user", "0", pkg.name],
+            async (cmd: string[]) => {
+              const result = await DroidNet.exec(cmd, { su: true });
+              return {
+                code: result.code || 0,
+                stdout: result.stdout || "",
+                stderr: result.stderr || "",
+              };
+            },
+            {
+              onSuccess: (message) => {
+                UIRenderer.modalSuccess(message);
+                DroidNet.log(message);
+              },
+              onFailed: (error) => {
+                UIRenderer.modalError("Package operation failed", error);
+                DroidNet.log(error);
+              },
+              validator: (result) =>
+                result.code === 0 &&
+                !result.stdout?.includes("Security exception"),
+            },
+          );
+          toggleAction.onEnable();
+        },
+      },
+      _("Disable"),
+    );
+
+    const suspendBtn = E(
+      "button",
+      {
+        class: "btn cbi-button cbi-button-neutral",
+        style: "font-size: 11px; padding: 2px 6px; margin-right: 5px;",
+        click: () => {
+          const toggleAction = UIRenderer.createToggleAction(
+            `package ${pkg.name}`,
+            ["pm", "unsuspend", "--user", "0", pkg.name],
+            ["pm", "suspend", "--user", "0", pkg.name],
+            async (cmd: string[]) => {
+              const result = await DroidNet.exec(cmd, { su: true });
+              return {
+                code: result.code || 0,
+                stdout: result.stdout || "",
+                stderr: result.stderr || "",
+              };
+            },
+            {
+              onSuccess: (message) => {
+                UIRenderer.modalSuccess(message);
+                DroidNet.log(message);
+              },
+              onFailed: (error) => {
+                UIRenderer.modalError("Package operation failed", error);
+                DroidNet.log(error);
+              },
+              validator: (result) =>
+                result.code === 0 &&
+                !result.stdout?.includes("Security exception"),
+            },
+          );
+          toggleAction.onEnable();
+        },
+      },
+      _("Suspend"),
+    );
+
+    const removeBtn = E(
+      "button",
+      {
+        class: "btn cbi-button cbi-button-remove",
+        style: "font-size: 11px; padding: 2px 6px;",
+        click: () => {
+          const warning =
+            uadInfo && uadInfo.removal === "Unsafe"
+              ? _(
+                  "\n⚠️ WARNING: This package is marked as UNSAFE to remove and may cause system instability!",
+                )
+              : "";
+          UIRenderer.confirmAction(
+            `Remove application ${pkg.name}`,
+            _("Are you sure you want to remove this application?") + warning,
+            () => removeApplication(pkg.name),
+          );
+        },
+      },
+      _("Remove"),
+    );
+
+    return [
+      packageName,
+      pkg.versionCode,
+      pkg.uid,
+      uadStatus,
+      E("div", [infoBtn, disableBtn, suspendBtn, removeBtn].filter(Boolean)),
+    ];
   });
 
-  return E("table", { class: "table cbi-section-table" }, [
-    E("tr", { class: "tr table-titles" }, [
-      E("th", { class: "th left" }, _("Package Name")),
-      E("th", { class: "th center" }, _("Version")),
-      E("th", { class: "th center" }, _("UID")),
-      E("th", { class: "th center" }, _("UAD Status")),
-      E("th", { class: "th" }, _("Actions")),
-    ]),
-    ...tableRows,
-  ]);
+  return UIRenderer.renderTable(rows, {
+    headers: ["Package Name", "Version", "UID", "UAD Status", "Actions"],
+    cellClass: "td left",
+    headerClass: "th left",
+  });
 }
 
 function updateApplicationTable(data: ServiceData): void {
@@ -795,139 +770,130 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
         E(
           "span",
           { class: "control-group", style: "display: flex; gap: 10px;" },
-          [
-            E(
-              "select",
-              {
-                id: "package-type-filter",
-                style: "margin-right: 10px;",
-                change: async function () {
-                  const filter = (this as HTMLSelectElement).value;
-                  saveServiceSettings();
-                  currentPage = 1;
-
-                  if (filter === "all") {
-                    updateApplicationTable(data);
-                  } else {
-                    try {
-                      const filteredPackages =
-                        await getPackagesByFilter(filter);
-                      const packagesWithUAD =
-                        await loadUADDataForPackages(filteredPackages);
-                      const newData = { ...data, application: packagesWithUAD };
-                      updateApplicationTable(newData);
-                    } catch (error) {
-                      console.error("Filter error:", error);
-                      updateApplicationTable(data);
-                    }
-                  }
-                },
-              },
-              [
-                E("option", { value: "all" }, _("All Packages")),
-                E("option", { value: "enabled" }, _("Enabled Packages")),
-                E("option", { value: "disabled" }, _("Disabled Packages")),
-                E("option", { value: "system" }, _("System Packages")),
-                E(
-                  "option",
-                  { value: "third-party" },
-                  _("Third Party Packages"),
-                ),
+          UIRenderer.renderFilters([
+            {
+              label: "",
+              type: "select",
+              id: "package-type-filter",
+              style: "margin-right: 10px;",
+              options: [
+                { value: "all", label: "All Packages" },
+                { value: "enabled", label: "Enabled Packages" },
+                { value: "disabled", label: "Disabled Packages" },
+                { value: "system", label: "System Packages" },
+                { value: "third-party", label: "Third Party Packages" },
               ],
-            ),
-            E("input", {
-              type: "text",
+              onChange: async function () {
+                const filter = (
+                  document.getElementById(
+                    "package-type-filter",
+                  ) as HTMLSelectElement
+                ).value;
+                saveServiceSettings();
+                currentPage = 1;
+
+                if (filter === "all") {
+                  updateApplicationTable(data);
+                } else {
+                  try {
+                    const filteredPackages = await getPackagesByFilter(filter);
+                    const packagesWithUAD =
+                      await loadUADDataForPackages(filteredPackages);
+                    const newData = { ...data, application: packagesWithUAD };
+                    updateApplicationTable(newData);
+                  } catch (error) {
+                    console.error("Filter error:", error);
+                    updateApplicationTable(data);
+                  }
+                }
+              },
+            },
+            {
+              label: "",
+              type: "input",
               class: "filter-input",
               placeholder: "Type to filter…",
-              keyup: (event: KeyboardEvent) => {
-                currentFilter = (event.target as HTMLInputElement).value;
+              style: "margin: 0;",
+              onChange: (event?: Event) => {
+                currentFilter =
+                  (event?.target as HTMLInputElement)?.value || "";
                 currentPage = 1;
                 saveServiceSettings();
                 updateApplicationTable(data);
               },
-            }),
-            E(
-              "button",
-              {
-                class: "btn cbi-button",
-                click: () => {
-                  currentFilter = "";
-                  currentPage = 1;
-                  updateApplicationTable(data);
-                  const input = document.querySelector(
-                    ".filter-input",
-                  ) as HTMLInputElement;
-                  const select = document.getElementById(
-                    "package-type-filter",
-                  ) as HTMLSelectElement;
-                  if (input) input.value = "";
-                  if (select) select.value = "all";
-                },
+            },
+            {
+              label: "Clear",
+              type: "button",
+              class: "btn cbi-button",
+              style: "margin: 0;",
+              onClick: () => {
+                currentFilter = "";
+                currentPage = 1;
+                updateApplicationTable(data);
+                const input = document.querySelector(
+                  ".filter-input",
+                ) as HTMLInputElement;
+                const select = document.getElementById(
+                  "package-type-filter",
+                ) as HTMLSelectElement;
+                if (input) input.value = "";
+                if (select) select.value = "all";
               },
-              _("Clear"),
-            ),
-            E(
-              "button",
-              {
-                class: "btn cbi-button cbi-button-action",
-                style: "margin-left: 5px;",
-                click: async () => {
-                  try {
-                    ui.showModal(_("Refreshing UAD Database"), [
+            },
+            {
+              label: "Refresh UAD",
+              type: "button",
+              class: "btn cbi-button cbi-button-action",
+              style: "margin: 0;",
+              onClick: async () => {
+                try {
+                  ui.showModal(_("Refreshing UAD Database"), [
+                    E("div", { style: "text-align: center; padding: 20px;" }, [
                       E(
                         "div",
-                        { style: "text-align: center; padding: 20px;" },
-                        [
-                          E(
-                            "div",
-                            _("Downloading latest UAD package definitions..."),
-                          ),
-                          E("div", { style: "margin-top: 10px;" }, [
-                            E("div", {
-                              class: "spinner",
-                              style:
-                                "display: inline-block; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;",
-                            }),
-                          ]),
-                        ],
+                        _("Downloading latest UAD package definitions..."),
                       ),
-                    ]);
+                      E("div", { style: "margin-top: 10px;" }, [
+                        E("div", {
+                          class: "spinner",
+                          style:
+                            "display: inline-block; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;",
+                        }),
+                      ]),
+                    ]),
+                  ]);
 
-                    // Add CSS for spinner animation
-                    const style = document.createElement("style");
-                    style.textContent =
-                      "@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }";
-                    document.head.appendChild(style);
+                  const style = document.createElement("style");
+                  style.textContent =
+                    "@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }";
+                  document.head.appendChild(style);
 
-                    uadData = null; // Clear cache
-                    uadDownloadPromise = null; // Reset promise
-                    uadDownloadFailed = false; // Reset failure flag
-                    await downloadUADData();
+                  uadData = null;
+                  uadDownloadPromise = null;
+                  uadDownloadFailed = false;
+                  await downloadUADData();
 
-                    ui.hideModal();
-                    UIRenderer.addNotification(
-                      _("UAD Database Updated"),
-                      _(
-                        "Package definitions have been refreshed successfully.",
-                      ),
-                      "info",
-                    );
-                    location.reload(); // Reload to show updated data
-                  } catch (error) {
-                    ui.hideModal();
-                    UIRenderer.addNotification(
-                      _("UAD Update Failed"),
-                      _(
-                        "Failed to download UAD database: %s. Please check network connectivity and permissions.",
-                      ).format(String(error)),
-                      "danger",
-                    );
-                  }
-                },
+                  ui.hideModal();
+                  UIRenderer.addNotification(
+                    _("UAD Database Updated"),
+                    _("Package definitions have been refreshed successfully."),
+                    "info",
+                  );
+                  location.reload();
+                } catch (error) {
+                  ui.hideModal();
+                  UIRenderer.addNotification(
+                    _("UAD Update Failed"),
+                    _(
+                      "Failed to download UAD database: %s. Please check network connectivity and permissions.",
+                    ).format(String(error)),
+                    "danger",
+                  );
+                }
               },
-              _("Refresh UAD"),
-            ),
-          ],
+            },
+          ]),
         ),
       ]),
       E("div", { class: "action-application", style: "padding: .25em;" }, [

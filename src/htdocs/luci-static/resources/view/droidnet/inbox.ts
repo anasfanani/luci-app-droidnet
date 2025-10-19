@@ -206,319 +206,90 @@ function renderMessageTable(
   const endIndex = Math.min(startIndex + display, messages.length);
   const currentPageData = messages.slice(startIndex, endIndex);
 
-  // eslint-disable-next-line max-lines-per-function
-  const tableRows = currentPageData.map((inbox, index) => {
-    const rowClass = index % 2 === 0 ? "cbi-rowstyle-1" : "cbi-rowstyle-2";
-    const message = inbox.body.replace(/\n/g, "<br>");
+  const rows = currentPageData.map((inbox) => {
+    const readIcon = inbox.read ? "📖" : "📩";
     const preview =
       inbox.body.length > 50 ? inbox.body.substring(0, 50) + "..." : inbox.body;
-    const mobilePreview =
-      inbox.body.length > 30 ? inbox.body.substring(0, 30) + "..." : inbox.body;
-    const readStyle = inbox.read ? "" : "font-weight: bold;";
-    const readIcon = inbox.read ? "📖" : "📩";
+    const messageHtml = inbox.body.replace(/\n/g, "<br>");
 
-    return E("tr", { class: "tr " + rowClass }, [
-      // Desktop view
-      E(
-        "td",
-        { class: "td desktop-only", style: "text-align: center; width: 5%;" },
-        readIcon,
-      ),
-      E(
-        "td",
-        { class: "td desktop-only", style: readStyle + " width: 18%;" },
-        inbox.received.date,
-      ),
-      E(
-        "td",
-        { class: "td desktop-only", style: readStyle + " width: 12%;" },
-        inbox.address,
-      ),
-      E(
-        "td",
-        { class: "td desktop-only", style: readStyle + " width: 30%;" },
-        preview,
-      ),
-      E(
-        "td",
-        { class: "td desktop-only", style: "text-align: center; width: 8%;" },
-        `#${inbox.thread_id}`,
-      ),
-      E(
-        "td",
-        { class: "td desktop-only", style: "text-align: center; width: 7%;" },
-        inbox.sim_slot,
-      ),
-      E(
-        "td",
-        { class: "td desktop-only", style: "width: 20%;" },
-        [
-          E(
-            "button",
-            {
-              class: "btn cbi-button cbi-button-action",
-              style: "margin-right: 5px;",
-              click: () => {
-                ui.showModal(inbox.address, [
-                  E("div", { style: "margin-bottom: 10px;" }, [
-                    E("strong", `From: ${inbox.address}`),
-                    E("br"),
-                    E(
-                      "em",
-                      `Received: ${inbox.received.date} - ${inbox.received.time}`,
-                    ),
-                    E("br"),
-                    E("em", `Sent: ${inbox.sent.date} - ${inbox.sent.time}`),
-                    E("br"),
-                    E(
-                      "span",
-                      { style: inbox.read ? "" : "font-weight: bold;" },
-                      inbox.read ? "Read" : "Unread",
-                    ),
-                  ]),
-                  E("div", {
-                    style: "border-top: 1px solid #ccc; padding-top: 10px;",
-                  }),
-                  E("p", message),
-                  E("div", { class: "right" }, [
-                    E(
-                      "button",
-                      {
-                        class: "btn",
-                        click: ui.hideModal,
-                      },
-                      _("OK"),
-                    ),
-                  ]),
-                ]);
-              },
-            },
-            _("View"),
-          ),
-          !inbox.read
-            ? E(
-                "button",
-                {
-                  class: "btn cbi-button cbi-button-neutral",
-                  style: "font-size: 11px; padding: 2px 6px;",
-                  click: async () => {
-                    await DroidNet.exec([
-                      "content",
-                      "update",
-                      "--uri",
-                      `content://sms/${inbox._id}`,
-                      "--bind",
-                      "read:i:1",
-                    ]);
-                    location.reload();
-                  },
-                },
-                _("Read"),
-              )
-            : null,
-        ].filter(Boolean),
-      ),
+    const viewButton = E(
+      "button",
+      {
+        class: "btn cbi-button cbi-button-action",
+        style: "margin-right: 5px;",
+        click: () => {
+          ui.showModal(inbox.address, [
+            E("div", { style: "margin-bottom: 10px;" }, [
+              E("strong", `From: ${inbox.address}`),
+              E("br"),
+              E("em", `Received: ${inbox.received.date}`),
+              E("br"),
+              E(
+                "span",
+                { style: inbox.read ? "" : "font-weight: bold;" },
+                inbox.read ? "Read" : "Unread",
+              ),
+            ]),
+            E("div", {
+              style: "border-top: 1px solid #ccc; padding-top: 10px;",
+            }),
+            E(
+              "p",
+              {},
+              messageHtml
+                .split("<br>")
+                .map((line, i, arr) =>
+                  i < arr.length - 1 ? [line, E("br")] : line,
+                )
+                .flat(),
+            ),
+            E("div", { class: "right" }, [
+              E("button", { class: "btn", click: ui.hideModal }, _("OK")),
+            ]),
+          ]);
+        },
+      },
+      _("View"),
+    );
 
-      // Mobile view - single column with card layout
-      E(
-        "td",
-        { class: "td mobile-only", style: "width: 100%; padding: 10px;" },
-        [
-          E(
-            "div",
-            {
-              class: "mobile-message-card",
-              style:
-                "border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin: 5px 0;",
+    const markReadButton = !inbox.read
+      ? E(
+          "button",
+          {
+            class: "btn cbi-button cbi-button-neutral",
+            style: "font-size: 11px; padding: 2px 6px;",
+            click: async () => {
+              await DroidNet.exec([
+                "content",
+                "update",
+                "--uri",
+                `content://sms/${inbox._id}`,
+                "--bind",
+                "read:i:1",
+              ]);
+              location.reload();
             },
-            [
-              E(
-                "div",
-                {
-                  style:
-                    "display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;",
-                },
-                [
-                  E("div", { style: "display: flex; align-items: center;" }, [
-                    E(
-                      "span",
-                      { style: "margin-right: 8px; font-size: 16px;" },
-                      readIcon,
-                    ),
-                    E("strong", { style: readStyle }, inbox.address),
-                    E(
-                      "span",
-                      {
-                        style:
-                          "margin-left: 8px; background: #007cba; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;",
-                      },
-                      inbox.sim_slot,
-                    ),
-                  ]),
-                  E(
-                    "div",
-                    {
-                      style: "text-align: right; font-size: 12px; color: #666;",
-                    },
-                    [
-                      E(
-                        "div",
-                        inbox.received.date.split(" ").slice(0, 3).join(" "),
-                      ),
-                      E(
-                        "div",
-                        inbox.received.date.split(" ").slice(3).join(" "),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              E("div", { style: "margin-bottom: 8px;" }, mobilePreview),
-              E(
-                "div",
-                {
-                  style:
-                    "display: flex; justify-content: space-between; align-items: center;",
-                },
-                [
-                  E(
-                    "span",
-                    { style: "font-size: 12px; color: #666;" },
-                    `Thread #${inbox.thread_id}`,
-                  ),
-                  E(
-                    "div",
-                    [
-                      E(
-                        "button",
-                        {
-                          class: "btn cbi-button cbi-button-action",
-                          style:
-                            "font-size: 12px; padding: 4px 8px; margin-right: 5px;",
-                          click: () => {
-                            ui.showModal(inbox.address, [
-                              E("div", { style: "margin-bottom: 10px;" }, [
-                                E("strong", `From: ${inbox.address}`),
-                                E("br"),
-                                E(
-                                  "em",
-                                  `Received: ${inbox.received.date} - ${inbox.received.time}`,
-                                ),
-                                E("br"),
-                                E(
-                                  "em",
-                                  `Sent: ${inbox.sent.date} - ${inbox.sent.time}`,
-                                ),
-                                E("br"),
-                                E(
-                                  "span",
-                                  {
-                                    style: inbox.read
-                                      ? ""
-                                      : "font-weight: bold;",
-                                  },
-                                  inbox.read ? "Read" : "Unread",
-                                ),
-                              ]),
-                              E("div", {
-                                style:
-                                  "border-top: 1px solid #ccc; padding-top: 10px;",
-                              }),
-                              E("p", message),
-                              E("div", { class: "right" }, [
-                                E(
-                                  "button",
-                                  {
-                                    class: "btn",
-                                    click: ui.hideModal,
-                                  },
-                                  _("OK"),
-                                ),
-                              ]),
-                            ]);
-                          },
-                        },
-                        _("View"),
-                      ),
-                      !inbox.read
-                        ? E(
-                            "button",
-                            {
-                              class: "btn cbi-button cbi-button-neutral",
-                              style: "font-size: 11px; padding: 4px 6px;",
-                              click: async () => {
-                                await DroidNet.exec([
-                                  "content",
-                                  "update",
-                                  "--uri",
-                                  `content://sms/${inbox._id}`,
-                                  "--bind",
-                                  "read:i:1",
-                                ]);
-                                location.reload();
-                              },
-                            },
-                            _("Read"),
-                          )
-                        : null,
-                    ].filter(Boolean),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    ]);
+          },
+          _("Read"),
+        )
+      : null;
+
+    return [
+      readIcon,
+      inbox.received.date,
+      inbox.address,
+      preview,
+      `#${inbox.thread_id}`,
+      inbox.sim_slot,
+      E("div", [viewButton, markReadButton].filter(Boolean)),
+    ];
   });
 
-  return E("div", [
-    // Add responsive CSS
-    E(
-      "style",
-      `
-      @media (max-width: 768px) {
-        .desktop-only { display: none !important; }
-        .mobile-only { display: table-cell !important; }
-        .table.cbi-section-table { border: none; }
-        .tr.table-titles { display: none; }
-      }
-      @media (min-width: 769px) {
-        .desktop-only { display: table-cell !important; }
-        .mobile-only { display: none !important; }
-      }
-    `,
-    ),
-    E("table", { class: "table cbi-section-table" }, [
-      E("tr", { class: "tr table-titles" }, [
-        E("th", { class: "th desktop-only", style: "width: 5%;" }, "📧"),
-        E(
-          "th",
-          { class: "th desktop-only", style: "width: 18%;" },
-          _("Date & Time"),
-        ),
-        E("th", { class: "th desktop-only", style: "width: 12%;" }, _("From")),
-        E(
-          "th",
-          { class: "th desktop-only", style: "width: 30%;" },
-          _("Preview"),
-        ),
-        E("th", { class: "th desktop-only", style: "width: 8%;" }, _("Thread")),
-        E("th", { class: "th desktop-only", style: "width: 7%;" }, _("SIM")),
-        E(
-          "th",
-          { class: "th desktop-only", style: "width: 20%;" },
-          _("Actions"),
-        ),
-        E(
-          "th",
-          { class: "th mobile-only", style: "width: 100%;" },
-          _("Messages"),
-        ),
-      ]),
-      ...tableRows,
-    ]),
-  ]);
+  return UIRenderer.renderTable(rows, {
+    headers: ["", "Date", "From", "Message", "Thread", "SIM", "Actions"],
+    cellClass: "td left",
+    headerClass: "th left",
+  });
 }
 
 function updateMessageTable(messages: InboxMessage[], display: number): void {
@@ -571,6 +342,16 @@ function renderInboxControls(
   const simCards = Array.from(new Set(messages.map((m) => m.sim_slot))).sort();
   const savedSettings = loadFilterSettings();
 
+  const applyFiltersHandler = () => {
+    saveFilterSettings();
+    applyFilters(
+      messages,
+      parseInt(
+        (document.getElementById("per-page") as HTMLSelectElement).value,
+      ),
+    );
+  };
+
   return [
     UIRenderer.renderTitle("Inbox Messages"),
     E(
@@ -579,109 +360,65 @@ function renderInboxControls(
       `${messages.length} messages, ${unreadCount} unread, ${threadCount} conversations, ${simCards.length} SIM cards`,
     ),
 
-    // Filter Controls
-    E("div", { style: "margin: 10px 0; padding: 10px; border-radius: 5px;" }, [
-      E("label", { style: "margin-right: 10px;" }, _("Filter: ")),
-      E(
-        "select",
+    E(
+      "div",
+      { class: "filter-controls", style: "margin: 10px 0;" },
+      UIRenderer.renderFilters([
         {
+          label: "Filter",
+          type: "select",
           id: "read-filter",
           style: "margin-right: 15px;",
-          change: () => {
-            saveFilterSettings();
-            applyFilters(
-              messages,
-              parseInt(
-                (document.getElementById("per-page") as HTMLSelectElement)
-                  .value,
-              ),
-            );
-          },
+          options: [
+            { value: "all", label: "All Messages" },
+            { value: "unread", label: `Unread (${unreadCount})` },
+            { value: "read", label: `Read (${messages.length - unreadCount})` },
+          ],
+          onChange: applyFiltersHandler,
         },
-        [
-          E("option", { value: "all" }, _("All Messages")),
-          E("option", { value: "unread" }, `${_("Unread")} (${unreadCount})`),
-          E(
-            "option",
-            { value: "read" },
-            `${_("Read")} (${messages.length - unreadCount})`,
-          ),
-        ],
-      ),
-      E(
-        "select",
         {
+          label: "",
+          type: "select",
           id: "sender-filter",
           style: "margin-right: 15px;",
-          change: () => {
-            saveFilterSettings();
-            applyFilters(
-              messages,
-              parseInt(
-                (document.getElementById("per-page") as HTMLSelectElement)
-                  .value,
-              ),
-            );
-          },
+          options: [
+            { value: "all", label: "All Senders" },
+            ...Array.from(new Set(messages.map((m) => m.address))).map(
+              (sender) => ({
+                value: sender,
+                label: sender,
+              }),
+            ),
+          ],
+          onChange: applyFiltersHandler,
         },
-        [
-          E("option", { value: "all" }, _("All Senders")),
-          ...Array.from(new Set(messages.map((m) => m.address))).map((sender) =>
-            E("option", { value: sender }, sender),
-          ),
-        ],
-      ),
-      E(
-        "select",
         {
+          label: "",
+          type: "select",
           id: "sim-filter",
           style: "margin-right: 15px;",
-          change: () => {
-            saveFilterSettings();
-            applyFilters(
-              messages,
-              parseInt(
-                (document.getElementById("per-page") as HTMLSelectElement)
-                  .value,
-              ),
-            );
-          },
+          options: [
+            { value: "all", label: "All SIMs" },
+            ...simCards.map((sim) => ({ value: sim, label: sim })),
+          ],
+          onChange: applyFiltersHandler,
         },
-        [
-          E("option", { value: "all" }, _("All SIMs")),
-          ...simCards.map((sim) => E("option", { value: sim }, sim)),
-        ],
-      ),
-      E(
-        "label",
-        { style: "margin-left: 20px; margin-right: 5px;" },
-        _("Per page: "),
-      ),
-      E(
-        "select",
         {
+          label: "Per page",
+          type: "select",
           id: "per-page",
-          style: "margin-right: 15px;",
-          change: () => {
-            saveFilterSettings();
-            applyFilters(
-              messages,
-              parseInt(
-                (document.getElementById("per-page") as HTMLSelectElement)
-                  .value,
-              ),
-            );
-          },
+          style: "margin-left: 20px; margin-right: 15px;",
+          options: [
+            { value: "5", label: "5" },
+            { value: "10", label: "10" },
+            { value: "20", label: "20" },
+            { value: "50", label: "50" },
+            { value: "100", label: "100" },
+          ],
+          onChange: applyFiltersHandler,
         },
-        [
-          E("option", { value: "5" }, "5"),
-          E("option", { value: "10" }, "10"),
-          E("option", { value: "20" }, "20"),
-          E("option", { value: "50" }, "50"),
-          E("option", { value: "100" }, "100"),
-        ],
-      ),
-    ]),
+      ]),
+    ),
 
     // Pagination Controls
     E(

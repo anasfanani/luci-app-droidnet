@@ -1,13 +1,33 @@
 declare global {
+  // Label-value format (device.ts style)
   interface UITableRow {
     label: string;
     value: string | number | boolean;
     action?: UIToggleAction;
   }
 
+  // Array format (service.ts, inbox.ts style)
+  type UITableCell = string | number | boolean | HTMLElement;
+  type UITableArrayRow = UITableCell[];
+
+  interface UIFilterConfig {
+    label: string;
+    type: "select" | "input" | "button";
+    id?: string;
+    class?: string;
+    style?: string;
+    options?: Array<{ value: string; label: string }>;
+    placeholder?: string;
+    onChange?: (event?: Event) => void;
+    onClick?: () => void;
+  }
+
   interface UITableConfig {
     col?: number;
     colSizeMap?: Record<number, number[]>;
+    headers?: string[]; // For array format
+    cellClass?: string; // Custom cell class
+    headerClass?: string; // Custom header class
   }
 
   interface UITabConfig {
@@ -65,7 +85,10 @@ declare global {
     title: string;
     description: string;
     header: HTMLElement[];
-    renderTable(rows: UITableRow[], config?: UITableConfig): HTMLElement;
+    renderTable(
+      rows: UITableRow[] | UITableArrayRow[],
+      config?: UITableConfig,
+    ): HTMLElement;
     renderTitle(title: string): HTMLElement;
     renderTab(tabs: UITabConfig[]): HTMLElement;
     renderPage(sections: HTMLElement[][], header?: HTMLElement): HTMLElement;

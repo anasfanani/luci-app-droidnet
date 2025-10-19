@@ -193,8 +193,9 @@ function renderDeviceInfo(data: DeviceData): HTMLElement[] {
     root: boolean | { version: string; name: string } | undefined,
   ): string => {
     if (root === false) return _("Non-root");
-    if (root && typeof root === "object")
+    if (root && typeof root === "object") {
       return _("Root with %s (%s)").format(root.name, root.version);
+    }
     return "-";
   };
 

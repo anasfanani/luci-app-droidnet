@@ -24,16 +24,74 @@ const UIRenderer = baseclass.extend({
   },
 
   renderTable: function (
-    rows: UITableRow[] = [],
+    rows: UITableRow[] | UITableArrayRow[] = [],
     config: UITableConfig = {},
   ): HTMLElement {
-    const defaultConfig: Required<UITableConfig> = {
+    // Detect format: array format if first row is an array
+    if (rows.length > 0 && Array.isArray(rows[0])) {
+      return this.__renderArrayTable(rows as UITableArrayRow[], config);
+    }
+
+    // Original label-value format
+    return this.__renderLabelValueTable(rows as UITableRow[], config);
+  },
+
+  __renderArrayTable: function (
+    rows: UITableArrayRow[],
+    config: UITableConfig,
+  ): HTMLElement {
+    const headers = config.headers || [];
+    const styles = ["cbi-rowstyle-1", "cbi-rowstyle-2"];
+    const cellClass = config.cellClass || "td";
+    const headerClass = config.headerClass || "th";
+
+    const tableHeader =
+      headers.length > 0
+        ? E(
+            "tr",
+            { class: "tr table-titles" },
+            headers.map((h) => E("th", { class: headerClass }, _(h))),
+          )
+        : null;
+
+    const tableRows = rows.map((cells, rowIndex) => {
+      const rowStyle = styles[rowIndex % 2];
+      return E(
+        "tr",
+        { class: "tr " + rowStyle },
+        cells.map((cell) => {
+          const content =
+            typeof cell === "string" ||
+            typeof cell === "number" ||
+            typeof cell === "boolean"
+              ? _(String(cell))
+              : cell;
+          return E("td", { class: cellClass }, content);
+        }),
+      );
+    });
+
+    return E(
+      "table",
+      { class: "table cbi-section-table" },
+      [tableHeader, ...tableRows].filter(Boolean),
+    );
+  },
+
+  __renderLabelValueTable: function (
+    rows: UITableRow[],
+    config: UITableConfig,
+  ): HTMLElement {
+    const defaultConfig = {
       col: 2,
       colSizeMap: {
         2: [50, 50],
         4: [25, 25, 25, 25],
         6: [16.6, 16.6, 16.6, 16.6],
       },
+      headers: [],
+      cellClass: "td",
+      headerClass: "th",
     };
     const finalConfig = { ...defaultConfig, ...config };
     const filteredRows = rows.filter(
@@ -42,7 +100,8 @@ const UIRenderer = baseclass.extend({
     const styles = ["cbi-rowstyle-1", "cbi-rowstyle-2"];
     const columnsPerRow = finalConfig.col;
     const itemsPerRow = Math.floor(columnsPerRow / 2);
-    const colSizes = finalConfig.colSizeMap[columnsPerRow] || [];
+    const colSizes =
+      (finalConfig.colSizeMap as Record<number, number[]>)[columnsPerRow] || [];
 
     const chunkedRows: UITableRow[][] = [];
     for (let i = 0; i < filteredRows.length; i += itemsPerRow) {
@@ -124,6 +183,67 @@ const UIRenderer = baseclass.extend({
 
   renderTitle: function (title: string): HTMLElement {
     return E("h3", { class: "section-title" }, _(title));
+  },
+
+  renderFilters: function (filters: UIFilterConfig[]): HTMLElement[] {
+    return filters
+      .map((filter) => {
+        const parts: HTMLElement[] = [];
+
+        if (filter.label) {
+          parts.push(
+            E(
+              "label",
+              { for: filter.id, style: "margin-right: 8px;" },
+              _(filter.label) + " : ",
+            ),
+          );
+        }
+
+        if (filter.type === "select") {
+          parts.push(
+            E(
+              "select",
+              {
+                id: filter.id,
+                class: filter.class,
+                style: filter.style || "margin: 8px 8px 8px 0;",
+                change: filter.onChange,
+              },
+              (filter.options || []).map((opt) =>
+                E("option", { value: opt.value }, _(opt.label)),
+              ),
+            ),
+          );
+        } else if (filter.type === "input") {
+          parts.push(
+            E("input", {
+              type: "text",
+              id: filter.id,
+              class: filter.class || "filter-input",
+              placeholder: filter.placeholder,
+              style: filter.style || "margin: 8px 8px 8px 0;",
+              keyup: filter.onChange,
+            }),
+          );
+        } else if (filter.type === "button") {
+          parts.push(
+            E(
+              "button",
+              {
+                id: filter.id,
+                class: filter.class || "btn cbi-button",
+                style: filter.style || "margin: 8px 8px 8px 0;",
+                click: filter.onClick,
+              },
+              _(filter.label),
+            ),
+          );
+        }
+
+        return parts;
+      })
+      .flat();
   },
 
   renderTab: function (tabs: Array<UITabConfig | null> = []): HTMLElement {

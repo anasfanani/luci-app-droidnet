@@ -11,8 +11,24 @@ import {
 
 // Global token storage
 let authToken: string;
+const consoleErrors: string[] = [];
 
 test.describe("DroidNet Tests", () => {
+  test.beforeEach(({ page }) => {
+    consoleErrors.length = 0;
+    page.on("console", (msg) => {
+      if (msg.type() === "error") {
+        consoleErrors.push(msg.text());
+      }
+    });
+  });
+
+  test.afterEach(() => {
+    if (consoleErrors.length > 0) {
+      throw new Error(`Console errors: ${consoleErrors.join(", ")}`);
+    }
+  });
+
   test("Login", async ({ page }) => {
     const baseUrl = process.env.LUCI_BASE_URL;
     const username = process.env.LUCI_USERNAME;

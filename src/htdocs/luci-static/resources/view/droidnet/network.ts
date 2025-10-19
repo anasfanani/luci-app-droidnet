@@ -52,6 +52,13 @@ const NETWORK_CONFIG: NetworkConfig = {
         const dns = data["connectivity"]?.stdout?.match(
           /DnsAddresses:\s*\[\s*([^\]]+)\s*\]/,
         );
+        const linkProps = data["connectivity"]?.stdout?.match(
+          /LinkProperties:\s*\{([^}]+)\}/,
+        );
+        const routes = data["connectivity"]?.stdout?.match(
+          /Routes:\s*\[([^\]]+)\]/,
+        );
+        const mtu = data["connectivity"]?.stdout?.match(/Mtu:\s*(\d+)/);
 
         return {
           "Network capabilities": caps?.[1]?.split("&") || [],
@@ -59,6 +66,9 @@ const NETWORK_CONFIG: NetworkConfig = {
             dns?.[1]
               ?.split(",")
               .map((s: string) => s.trim().replace(/^\//, "")) || [],
+          "Link properties": linkProps?.[1]?.trim() || "",
+          Routes: routes?.[1]?.trim() || "",
+          MTU: mtu?.[1] || "",
         };
       },
     },
@@ -95,6 +105,15 @@ function renderDataDriven(
         label,
         value: Array.isArray(value) ? value.join(", ") : String(value),
       }));
+
+      // Check for empty values
+      const emptyRows = rows.filter((r) => !r.value);
+      if (emptyRows.length > 0) {
+        console.error(
+          "DroidNet: Missing data for:",
+          emptyRows.map((r) => r.label).join(", "),
+        );
+      }
 
       return rows.length > 0
         ? [UIRenderer.renderTitle(section.title), UIRenderer.renderTable(rows)]
