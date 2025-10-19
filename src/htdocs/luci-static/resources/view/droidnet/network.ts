@@ -125,16 +125,11 @@ function renderDataDriven(
 }
 
 // @ts-expect-error - LuCI baseclass expects a plain object map of methods.
-return view.extend({
-  handleSaveApply: null,
-  handleSave: null,
-  handleReset: null,
-
-  load: DroidNet.load(loadDataDriven),
-
-  render: DroidNet.render(
-    (data: Record<string, Record<string, CommandData>> & DeviceStatus) => [
-      renderDataDriven(data),
-    ],
-  ),
-});
+return view.extend(
+  DroidNet.createView({
+    load: loadDataDriven,
+    render: (
+      data: Record<string, Record<string, CommandData>> & DeviceStatus,
+    ) => [renderDataDriven(data)],
+  }),
+);

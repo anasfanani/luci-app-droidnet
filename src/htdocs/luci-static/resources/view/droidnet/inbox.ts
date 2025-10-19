@@ -41,42 +41,22 @@ interface InboxMessage {
   [key: string]: unknown;
 }
 
-interface FilterSettings {
+interface FilterSettings extends Record<string, string> {
   readFilter: string;
   senderFilter: string;
   simFilter: string;
   perPage: string;
 }
 
-function saveFilterSettings(): void {
-  const settings = {
-    readFilter:
-      (document.getElementById("read-filter") as HTMLSelectElement)?.value ||
-      "all",
-    senderFilter:
-      (document.getElementById("sender-filter") as HTMLSelectElement)?.value ||
-      "all",
-    simFilter:
-      (document.getElementById("sim-filter") as HTMLSelectElement)?.value ||
-      "all",
-    perPage:
-      (document.getElementById("per-page") as HTMLSelectElement)?.value || "10",
-  };
-  localStorage.setItem("droidnet-inbox-filters", JSON.stringify(settings));
-}
-
-function loadFilterSettings(): FilterSettings {
-  const saved = localStorage.getItem("droidnet-inbox-filters");
-  const settings = saved
-    ? JSON.parse(saved)
-    : {
-        readFilter: "all",
-        senderFilter: "all",
-        simFilter: "all",
-        perPage: "10",
-      };
-  return settings;
-}
+const filterSettings = DroidNet.createSettingsManager<FilterSettings>(
+  "droidnet-inbox-filters",
+  {
+    readFilter: { elementId: "read-filter", default: "all" },
+    senderFilter: { elementId: "sender-filter", default: "all" },
+    simFilter: { elementId: "sim-filter", default: "all" },
+    perPage: { elementId: "per-page", default: "10" },
+  },
+);
 
 let inboxCurrentPage = 1;
 
@@ -337,10 +317,10 @@ function renderInboxControls(
   const unreadCount = messages.filter((m) => !m.read).length;
   const threadCount = new Set(messages.map((m) => m.thread_id)).size;
   const simCards = Array.from(new Set(messages.map((m) => m.sim_slot))).sort();
-  const savedSettings = loadFilterSettings();
+  const savedSettings = filterSettings.load();
 
   const applyFiltersHandler = () => {
-    saveFilterSettings();
+    filterSettings.save();
     applyFilters(
       messages,
       parseInt(
@@ -514,15 +494,10 @@ function applyFilters(messages: InboxMessage[], newDisplay: number): void {
 }
 
 // @ts-expect-error - LuCI baseclass expects a plain object map of methods.
-return view.extend({
-  handleSaveApply: null,
-  handleSave: null,
-  handleReset: null,
-
-  load: DroidNet.load(loadInboxData),
-
-  render: DroidNet.render(
-    (data: InboxData) => {
+return view.extend(
+  DroidNet.createView({
+    load: loadInboxData,
+    render: (data: InboxData) => {
       if (data.messages_section) {
         UIRenderer.addNotification(
           "Error: Device conflict!",
@@ -572,35 +547,16 @@ return view.extend({
 
       return [renderInboxControls(data.messages || [], data.display || 10)];
     },
-    (data: InboxData) => {
+    onAfterRender: (data: InboxData) => {
       // Auto-apply saved filters after render
       setTimeout(() => {
-        const savedSettings = loadFilterSettings();
-
-        // Set dropdown values to saved settings
-        const readFilter = document.getElementById(
-          "read-filter",
-        ) as HTMLSelectElement;
-        const senderFilter = document.getElementById(
-          "sender-filter",
-        ) as HTMLSelectElement;
-        const simFilter = document.getElementById(
-          "sim-filter",
-        ) as HTMLSelectElement;
-        const perPage = document.getElementById(
-          "per-page",
-        ) as HTMLSelectElement;
-
-        if (readFilter) readFilter.value = savedSettings.readFilter;
-        if (senderFilter) senderFilter.value = savedSettings.senderFilter;
-        if (simFilter) simFilter.value = savedSettings.simFilter;
-        if (perPage) perPage.value = savedSettings.perPage;
-
+        filterSettings.restore(0);
+        const savedSettings = filterSettings.load();
         applyFilters(
           data.messages || [],
           parseInt(savedSettings.perPage) || data.display || 10,
         );
       }, 100);
     },
-  ),
-});
+  }),
+);

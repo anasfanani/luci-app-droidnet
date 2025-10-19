@@ -190,6 +190,87 @@ const DroidNet = baseclass.extend({
     };
   },
 
+  createView: function <T>(options: {
+    load: () => Promise<T>;
+    render:
+      | ((data: T) => Array<HTMLElement[] | null>)
+      | ((data: T) => Promise<Array<HTMLElement[] | null>>);
+    onAfterRender?: (data: T, page: HTMLElement) => void;
+    disableHandlers?: boolean;
+  }) {
+    const viewConfig: Record<string, unknown> = {};
+
+    if (!options.disableHandlers) {
+      viewConfig["handleSaveApply"] = null;
+      viewConfig["handleSave"] = null;
+      viewConfig["handleReset"] = null;
+    }
+
+    viewConfig["load"] = this.load(options.load);
+    viewConfig["render"] = this.render(options.render, options.onAfterRender);
+
+    return viewConfig;
+  },
+
+  createSettingsManager: function <T extends Record<string, string>>(
+    storageKey: string,
+    fields: Record<
+      keyof T,
+      { elementId?: string; selector?: string; default: string }
+    >,
+  ) {
+    const getElement = (config: {
+      elementId?: string;
+      selector?: string;
+      default: string;
+    }): HTMLElement | null => {
+      if (config.elementId) return document.getElementById(config.elementId);
+      if (config.selector) return document.querySelector(config.selector);
+      return null;
+    };
+
+    const manager = {
+      save: (): void => {
+        const settings: Record<string, string> = {};
+        for (const [key, config] of Object.entries(fields)) {
+          const element = getElement(config);
+          settings[key] =
+            (element as HTMLInputElement | HTMLSelectElement)?.value ||
+            config.default;
+        }
+        localStorage.setItem(storageKey, JSON.stringify(settings));
+      },
+
+      load: (): T => {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          return JSON.parse(saved) as T;
+        }
+        const defaults: Record<string, string> = {};
+        for (const [key, config] of Object.entries(fields)) {
+          defaults[key] = config.default;
+        }
+        return defaults as T;
+      },
+
+      restore: (delay = 100): void => {
+        setTimeout(() => {
+          const settings = manager.load();
+          for (const [key, config] of Object.entries(fields)) {
+            const element = getElement(config);
+            if (element) {
+              const value = settings[key as keyof T];
+              if (value !== undefined) {
+                (element as HTMLInputElement | HTMLSelectElement).value = value;
+              }
+            }
+          }
+        }, delay);
+      },
+    };
+    return manager;
+  },
+
   reloadAdbd: async function (): Promise<fs.FileExecResult> {
     return await fs.exec("adb", ["kill-server"]);
   },

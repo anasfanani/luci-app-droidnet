@@ -392,16 +392,18 @@ function renderHttpingSection(m: LuCI.form.Map, data: SettingData): void {
 }
 
 // @ts-expect-error - LuCI baseclass expects a plain object map of methods.
-return view.extend({
-  load: DroidNet.load(loadSettingData),
+return view.extend(
+  DroidNet.createView({
+    load: loadSettingData,
+    render: async (data: SettingData) => {
+      const m = new form.Map("droidnet");
 
-  render: DroidNet.render(async (data: SettingData) => {
-    const m = new form.Map("droidnet");
+      renderBaseSection(m, data);
+      renderMonitoringSection(m, data);
+      renderHttpingSection(m, data);
 
-    renderBaseSection(m, data);
-    renderMonitoringSection(m, data);
-    renderHttpingSection(m, data);
-
-    return [[await m.render()]];
+      return [[await m.render()]];
+    },
+    disableHandlers: true,
   }),
-});
+);

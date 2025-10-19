@@ -16,37 +16,20 @@ interface LogData {
   log_section?: boolean;
 }
 
-interface LogSettings {
+interface LogSettings extends Record<string, string> {
   filter: string;
   direction: string;
   lines: string;
 }
 
-function saveLogSettings(): void {
-  const settings = {
-    filter:
-      (document.getElementById("log-filter") as HTMLSelectElement)?.value ||
-      "all",
-    direction:
-      (document.getElementById("log-direction") as HTMLSelectElement)?.value ||
-      "down",
-    lines:
-      (document.getElementById("log-lines") as HTMLSelectElement)?.value ||
-      "20",
-  };
-  localStorage.setItem("droidnet-log-settings", JSON.stringify(settings));
-}
-
-function loadLogSettings(): LogSettings {
-  const saved = localStorage.getItem("droidnet-log-settings");
-  return saved
-    ? JSON.parse(saved)
-    : {
-        filter: "all",
-        direction: "down",
-        lines: "20",
-      };
-}
+const logSettings = DroidNet.createSettingsManager<LogSettings>(
+  "droidnet-log-settings",
+  {
+    filter: { elementId: "log-filter", default: "all" },
+    direction: { elementId: "log-direction", default: "down" },
+    lines: { elementId: "log-lines", default: "20" },
+  },
+);
 
 async function loadLogData(): Promise<LogData> {
   return {};
@@ -69,7 +52,7 @@ function renderLogControls(): HTMLElement[] {
             { value: "Network", label: "Network" },
             { value: "Power", label: "Power" },
           ],
-          onChange: saveLogSettings,
+          onChange: logSettings.save,
         },
         {
           label: "Log direction",
@@ -79,7 +62,7 @@ function renderLogControls(): HTMLElement[] {
             { value: "down", label: "Down" },
             { value: "up", label: "Up" },
           ],
-          onChange: saveLogSettings,
+          onChange: logSettings.save,
         },
         {
           label: "Lines",
@@ -93,7 +76,7 @@ function renderLogControls(): HTMLElement[] {
             { value: "200", label: "200" },
             { value: "500", label: "500" },
           ],
-          onChange: saveLogSettings,
+          onChange: logSettings.save,
         },
         {
           label: "Clear",
@@ -204,41 +187,21 @@ function startLogPolling(): void {
 }
 
 // @ts-expect-error - LuCI baseclass expects a plain object map of methods.
-return view.extend({
-  handleSaveApply: null,
-  handleSave: null,
-  handleReset: null,
-
-  load: DroidNet.load(loadLogData),
-
-  render: DroidNet.render(
-    () => [
+return view.extend(
+  DroidNet.createView({
+    load: loadLogData,
+    render: () => [
       [
         E("div", { class: "cbi-control" }, renderLogControls()),
         E("div", { class: "cbi-body" }, [renderLogViewer()]),
       ],
     ],
-    () => {
+    onAfterRender: () => {
       // Auto-restore saved settings after render
       setTimeout(() => {
-        const savedSettings = loadLogSettings();
-
-        const filterSelect = document.getElementById(
-          "log-filter",
-        ) as HTMLSelectElement;
-        const directionSelect = document.getElementById(
-          "log-direction",
-        ) as HTMLSelectElement;
-        const linesSelect = document.getElementById(
-          "log-lines",
-        ) as HTMLSelectElement;
-
-        if (filterSelect) filterSelect.value = savedSettings.filter;
-        if (directionSelect) directionSelect.value = savedSettings.direction;
-        if (linesSelect) linesSelect.value = savedSettings.lines;
-
+        logSettings.restore(0);
         startLogPolling();
       }, 100);
     },
-  ),
-});
+  }),
+);

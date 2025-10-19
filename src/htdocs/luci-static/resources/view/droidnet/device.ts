@@ -252,15 +252,12 @@ function renderBatteryInfo(data: DeviceData): HTMLElement[] {
 }
 
 // @ts-expect-error - LuCI baseclass expects a plain object map of methods.
-return view.extend({
-  handleSaveApply: null,
-  handleSave: null,
-  handleReset: null,
-
-  load: DroidNet.load(loadDeviceData),
-
-  render: DroidNet.render((data: DeviceData) => [
-    renderDeviceInfo(data),
-    renderBatteryInfo(data),
-  ]),
-});
+return view.extend(
+  DroidNet.createView({
+    load: loadDeviceData,
+    render: (data: DeviceData) => [
+      renderDeviceInfo(data),
+      renderBatteryInfo(data),
+    ],
+  }),
+);

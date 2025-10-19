@@ -154,35 +154,20 @@ function getRemovalColor(removal: string): string {
   }
 }
 
-interface ServiceSettings {
+interface ServiceSettings extends Record<string, string> {
   filter: string;
   search: string;
   perPage: string;
 }
 
-function saveServiceSettings(): void {
-  const settings = {
-    filter:
-      (document.getElementById("package-type-filter") as HTMLSelectElement)
-        ?.value || "all",
-    search:
-      (document.querySelector(".filter-input") as HTMLInputElement)?.value ||
-      "",
-    perPage: "10", // Keep for future use
-  };
-  localStorage.setItem("droidnet-service-settings", JSON.stringify(settings));
-}
-
-function loadServiceSettings(): ServiceSettings {
-  const saved = localStorage.getItem("droidnet-service-settings");
-  return saved
-    ? JSON.parse(saved)
-    : {
-        filter: "all",
-        search: "",
-        perPage: "10",
-      };
-}
+const serviceSettings = DroidNet.createSettingsManager<ServiceSettings>(
+  "droidnet-service-settings",
+  {
+    filter: { elementId: "package-type-filter", default: "all" },
+    search: { selector: ".filter-input", default: "" },
+    perPage: { elementId: "per-page", default: "10" },
+  },
+);
 
 async function getPackagesByFilter(filter: string): Promise<AppPackage[]> {
   const command = [
@@ -779,7 +764,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
                     "package-type-filter",
                   ) as HTMLSelectElement
                 ).value;
-                saveServiceSettings();
+                serviceSettings.save();
                 currentPage = 1;
 
                 if (filter === "all") {
@@ -808,7 +793,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
                 currentFilter =
                   (event?.target as HTMLInputElement)?.value || "";
                 currentPage = 1;
-                saveServiceSettings();
+                serviceSettings.save();
                 updateApplicationTable(data);
               },
             },
@@ -1048,31 +1033,18 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
 }
 
 // @ts-expect-error - LuCI baseclass expects a plain object map of methods.
-return view.extend({
-  handleSaveApply: null,
-  handleSave: null,
-  handleReset: null,
-
-  load: DroidNet.load(loadServiceData),
-
-  render: DroidNet.render(
-    (data: ServiceData) => [
+return view.extend(
+  DroidNet.createView({
+    load: loadServiceData,
+    render: (data: ServiceData) => [
       renderPowerOptions(),
       renderApplicationManager(data),
     ],
-    (data: ServiceData) => {
+    onAfterRender: (data: ServiceData) => {
       // Auto-restore saved settings after render
       setTimeout(async () => {
-        const savedSettings = loadServiceSettings();
-        const packageTypeFilter = document.getElementById(
-          "package-type-filter",
-        ) as HTMLSelectElement;
-        const searchInput = document.querySelector(
-          ".filter-input",
-        ) as HTMLInputElement;
-
-        if (packageTypeFilter) packageTypeFilter.value = savedSettings.filter;
-        if (searchInput) searchInput.value = savedSettings.search;
+        serviceSettings.restore(0);
+        const savedSettings = serviceSettings.load();
 
         // Load UAD data in background (non-blocking)
         try {
@@ -1106,5 +1078,5 @@ return view.extend({
         }
       }, 100);
     },
-  ),
-});
+  }),
+);
