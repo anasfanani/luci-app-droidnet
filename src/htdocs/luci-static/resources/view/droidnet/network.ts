@@ -124,6 +124,8 @@ const CONNECTIVITY_PATTERNS: ParsePattern[] = [
     key: "upstreamInterface",
     regex: /Current upstream interface\(s\):\s*\[([^\]]+)\]/,
   },
+  { key: "activeDefaultNetwork", regex: /Active default network:\s*(\d+)/ },
+  { key: "restrictBackgroundStatus", regex: /Restrict background:\s*(\w+)/ },
 ];
 
 // Telephony patterns - comprehensive (60+ fields)
@@ -220,6 +222,12 @@ const TELEPHONY_PATTERNS: ParsePattern[] = [
   { key: "defaultPhoneId", regex: /mDefaultPhoneId=(\d+)/ },
   { key: "activeDataSubId", regex: /mActiveDataSubId=(\d+)/ },
   { key: "radioPowerState", regex: /mRadioPowerState=(\d+)/ },
+  { key: "ringingCallState", regex: /mRingingCallState=(\d+)/ },
+  { key: "foregroundCallState", regex: /mForegroundCallState=(\d+)/ },
+  { key: "backgroundCallState", regex: /mBackgroundCallState=(\d+)/ },
+  { key: "carrierNetworkChange", regex: /mCarrierNetworkChangeState=(\w+)/ },
+  { key: "maxActiveData", regex: /maxActiveData=(\d+)/ },
+  { key: "max5G", regex: /max5G=(\d+)/ },
 ];
 
 // Data-driven architecture
@@ -504,6 +512,10 @@ const NETWORK_CONFIG: NetworkConfig = {
           "Upstream Auto": String(conn["upstreamAuto"] || ""),
           "Default DNS": String(conn["defaultDns"] || ""),
           "Upstream Interface": String(conn["upstreamInterface"] || ""),
+          "Active Default Network": String(conn["activeDefaultNetwork"] || ""),
+          "Restrict Background Status": String(
+            conn["restrictBackgroundStatus"] || "",
+          ),
           Capabilities: Array.isArray(capabilities) ? capabilities : [],
         };
       },
@@ -603,6 +615,12 @@ const NETWORK_CONFIG: NetworkConfig = {
           "Default Phone ID": String(tel["defaultPhoneId"] || ""),
           "Active Data Sub ID": String(tel["activeDataSubId"] || ""),
           "Radio Power State": String(tel["radioPowerState"] || ""),
+          "Ringing Call State": String(tel["ringingCallState"] || ""),
+          "Foreground Call State": String(tel["foregroundCallState"] || ""),
+          "Background Call State": String(tel["backgroundCallState"] || ""),
+          "Carrier Network Change": String(tel["carrierNetworkChange"] || ""),
+          "Max Active Data": String(tel["maxActiveData"] || ""),
+          "Max 5G": String(tel["max5G"] || ""),
         };
       },
     },
