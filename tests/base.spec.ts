@@ -30,8 +30,8 @@ test.describe.serial("DroidNet Tests", () => {
   test.afterEach(({ page }, testInfo) => {
     // Report warnings (non-blocking)
     if (consoleWarnings.length > 0) {
-      console.warn(`⚠️  Console warnings (${testInfo.title}):`);
-      consoleWarnings.forEach((warning) => console.warn(`   - ${warning}`));
+      console.log(`⚠️  Console warnings (${testInfo.title}):`);
+      consoleWarnings.forEach((warning) => console.log(`   - ${warning}`));
     }
 
     // Fail on errors

@@ -382,6 +382,63 @@ const DEVICEIDLE_PATTERNS: ParsePattern[] = [
   { key: "waitForUnlock", regex: /wait_for_unlock=(\w+)/ },
 ];
 
+// Battery Extended patterns
+const BATTERY_EXT_PATTERNS: ParsePattern[] = [
+  { key: "batteryMiscEvent", regex: /batteryMiscEvent:\s*(\d+)/ },
+  { key: "batteryCurrentEvent", regex: /batteryCurrentEvent:\s*(\d+)/ },
+  { key: "plugTypeSummary", regex: /mSecPlugTypeSummary:\s*(\d+)/ },
+  {
+    key: "wirelessFastCharger",
+    regex: /mWirelessFastChargingSettingsEnable:\s*(\w+)/,
+  },
+  { key: "savedBatteryAsoc", regex: /mSavedBatteryAsoc:\s*(\d+)/ },
+  { key: "savedBatteryMaxTemp", regex: /mSavedBatteryMaxTemp:\s*(\d+)/ },
+  { key: "savedBatteryMaxCurrent", regex: /mSavedBatteryMaxCurrent:\s*(\d+)/ },
+  { key: "savedBatteryUsage", regex: /mSavedBatteryUsage:\s*(\d+)/ },
+];
+
+// Display patterns
+const DISPLAY_PATTERNS: ParsePattern[] = [
+  { key: "displayState", regex: /mGlobalDisplayState=(\w+)/ },
+  { key: "nextDisplayId", regex: /mNextNonDefaultDisplayId=(\d+)/ },
+  {
+    key: "stableDisplaySize",
+    regex: /mStableDisplaySize=Point\((\d+),\s*(\d+)\)/,
+    transform: (m) => `${m[1]}x${m[2]}`,
+  },
+  { key: "wifiDisplayScanCount", regex: /mWifiDisplayScanRequestCount=(\d+)/ },
+  { key: "wifiDisplayFeatureState", regex: /featureState=(\d+)/ },
+  { key: "wifiDisplayScanState", regex: /scanState=(\d+)/ },
+  { key: "wifiP2pEnabled", regex: /mWifiP2pEnabled=(\w+)/ },
+  { key: "wfdEnabled", regex: /mWfdEnabled=(\w+)/ },
+];
+
+// Power patterns
+const POWER_PATTERNS: ParsePattern[] = [
+  { key: "wakefulness", regex: /mWakefulness=(\w+)/ },
+  { key: "isPowered", regex: /mIsPowered=(\w+)/ },
+  { key: "plugType", regex: /mPlugType=(\d+)/ },
+  { key: "batteryLevel", regex: /mBatteryLevel=(\d+)/ },
+  { key: "stayOn", regex: /mStayOn=(\w+)/ },
+  { key: "bootCompleted", regex: /mBootCompleted=(\w+)/ },
+  { key: "systemReady", regex: /mSystemReady=(\w+)/ },
+  { key: "batteryLevelLow", regex: /mBatteryLevelLow=(\w+)/ },
+  { key: "lightDeviceIdleMode", regex: /mLightDeviceIdleMode=(\w+)/ },
+  { key: "deviceIdleMode", regex: /mDeviceIdleMode=(\w+)/ },
+  { key: "displayReady", regex: /mDisplayReady=(\w+)/ },
+];
+
+// Alarm patterns
+const ALARM_PATTERNS: ParsePattern[] = [
+  { key: "minFuturity", regex: /min_futurity=\+([^\s]+)/ },
+  { key: "minInterval", regex: /min_interval=\+([^\s]+)/ },
+  { key: "maxInterval", regex: /max_interval=\+([^\s]+)/ },
+  { key: "maxAlarmsPerUid", regex: /max_alarms_per_uid=(\d+)/ },
+  { key: "appStandbyEnabled", regex: /app_standby_quotas_enabled=(\w+)/ },
+  { key: "forceAppStandby", regex: /Force all apps standby:\s*(\w+)/ },
+  { key: "pluggedIn", regex: /Plugged In:\s*(\w+)/ },
+];
+
 const NETWORK_CONFIG: NetworkConfig = {
   sections: [
     {
@@ -729,6 +786,110 @@ const NETWORK_CONFIG: NetworkConfig = {
           "Contaminant Status": String(usb["contaminantStatus"] || ""),
           "Connected At (ms)": String(usb["connectedAtMillis"] || ""),
           "ALSA Cards": String(usb["alsaCards"] || ""),
+        };
+      },
+    },
+    {
+      id: "battery_ext_info",
+      title: "Battery Extended",
+      commands: [
+        {
+          id: "battery_ext",
+          shell: "dumpsys battery",
+          parser: (stdout) => parseWithPatterns(stdout, BATTERY_EXT_PATTERNS),
+        },
+      ],
+      renderer: (data) => {
+        const battery = data["battery_ext"] || {};
+        return {
+          "Misc Event": String(battery["batteryMiscEvent"] || ""),
+          "Current Event": String(battery["batteryCurrentEvent"] || ""),
+          "Plug Type Summary": String(battery["plugTypeSummary"] || ""),
+          "Wireless Fast Charger": String(battery["wirelessFastCharger"] || ""),
+          "Saved ASOC": String(battery["savedBatteryAsoc"] || ""),
+          "Saved Max Temp": String(battery["savedBatteryMaxTemp"] || ""),
+          "Saved Max Current": String(battery["savedBatteryMaxCurrent"] || ""),
+          "Saved Usage": String(battery["savedBatteryUsage"] || ""),
+        };
+      },
+    },
+    {
+      id: "display_info",
+      title: "Display Information",
+      commands: [
+        {
+          id: "display",
+          shell: "dumpsys display",
+          parser: (stdout) => parseWithPatterns(stdout, DISPLAY_PATTERNS),
+        },
+      ],
+      renderer: (data) => {
+        const display = data["display"] || {};
+        return {
+          "Display State": String(display["displayState"] || ""),
+          "Next Display ID": String(display["nextDisplayId"] || ""),
+          "Stable Display Size": String(display["stableDisplaySize"] || ""),
+          "WiFi Display Scan Count": String(
+            display["wifiDisplayScanCount"] || "",
+          ),
+          "WiFi Display Feature State": String(
+            display["wifiDisplayFeatureState"] || "",
+          ),
+          "WiFi Display Scan State": String(
+            display["wifiDisplayScanState"] || "",
+          ),
+          "WiFi P2P Enabled": String(display["wifiP2pEnabled"] || ""),
+          "WFD Enabled": String(display["wfdEnabled"] || ""),
+        };
+      },
+    },
+    {
+      id: "power_info",
+      title: "Power Information",
+      commands: [
+        {
+          id: "power",
+          shell: "dumpsys power",
+          parser: (stdout) => parseWithPatterns(stdout, POWER_PATTERNS),
+        },
+      ],
+      renderer: (data) => {
+        const power = data["power"] || {};
+        return {
+          Wakefulness: String(power["wakefulness"] || ""),
+          "Is Powered": String(power["isPowered"] || ""),
+          "Plug Type": String(power["plugType"] || ""),
+          "Battery Level": String(power["batteryLevel"] || ""),
+          "Stay On": String(power["stayOn"] || ""),
+          "Boot Completed": String(power["bootCompleted"] || ""),
+          "System Ready": String(power["systemReady"] || ""),
+          "Battery Level Low": String(power["batteryLevelLow"] || ""),
+          "Light Device Idle Mode": String(power["lightDeviceIdleMode"] || ""),
+          "Device Idle Mode": String(power["deviceIdleMode"] || ""),
+          "Display Ready": String(power["displayReady"] || ""),
+        };
+      },
+    },
+    {
+      id: "alarm_info",
+      title: "Alarm Information",
+      commands: [
+        {
+          id: "alarm",
+          shell: "dumpsys alarm",
+          parser: (stdout) => parseWithPatterns(stdout, ALARM_PATTERNS),
+        },
+      ],
+      renderer: (data) => {
+        const alarm = data["alarm"] || {};
+        return {
+          "Min Futurity": String(alarm["minFuturity"] || ""),
+          "Min Interval": String(alarm["minInterval"] || ""),
+          "Max Interval": String(alarm["maxInterval"] || ""),
+          "Max Alarms Per UID": String(alarm["maxAlarmsPerUid"] || ""),
+          "App Standby Enabled": String(alarm["appStandbyEnabled"] || ""),
+          "Force App Standby": String(alarm["forceAppStandby"] || ""),
+          "Plugged In": String(alarm["pluggedIn"] || ""),
         };
       },
     },
