@@ -11,7 +11,7 @@
 
 // Parser infrastructure
 interface ParsePattern {
-  key: string;
+  label: string;
   regex: RegExp;
   transform?: (match: RegExpMatchArray) => string | number | string[];
 }
@@ -27,7 +27,7 @@ function parseWithPatterns(
   for (const pattern of patterns) {
     const match = stdout.match(pattern.regex);
     if (match && match[1]) {
-      result[pattern.key] = pattern.transform
+      result[pattern.label] = pattern.transform
         ? pattern.transform(match)
         : match[1];
     }
@@ -36,198 +36,224 @@ function parseWithPatterns(
   return result;
 }
 
+// Generic renderer
+function renderFromPatterns(
+  data: ParsedData,
+  patterns: ParsePattern[],
+): Record<string, string> {
+  const result: Record<string, string> = {};
+
+  for (const pattern of patterns) {
+    const value = data[pattern.label];
+    result[pattern.label] = Array.isArray(value)
+      ? value.join(", ")
+      : String(value || "");
+  }
+
+  return result;
+}
+
 // Connectivity patterns - comprehensive (50+ fields)
 const CONNECTIVITY_PATTERNS: ParsePattern[] = [
-  { key: "networkId", regex: /network\{(\d+)\}/ },
-  { key: "nethandle", regex: /nethandle\{(\d+)\}/ },
+  { label: "Network ID", regex: /network\{(\d+)\}/ },
+  { label: "Net Handle", regex: /nethandle\{(\d+)\}/ },
   {
-    key: "networkType",
+    label: "Network Type",
     regex: /type:\s*(\w+)\[(\w+)\]/,
-    transform: (m) => (m[1] ? `${m[1]} (${m[2] || ""})` : ""),
+    transform: (m) => `${m[1] || ""} (${m[2] || ""})`,
   },
   {
-    key: "state",
+    label: "State",
     regex: /state:\s*(\w+)\/(\w+)/,
     transform: (m) => m[1] || "",
   },
-  { key: "reason", regex: /reason:\s*\(([^)]+)\)/ },
-  { key: "extra", regex: /extra:\s*(\w+)/ },
-  { key: "failover", regex: /failover:\s*(\w+)/ },
-  { key: "available", regex: /available:\s*(\w+)/ },
-  { key: "roaming", regex: /roaming:\s*(\w+)/ },
-  { key: "interfaceName", regex: /InterfaceName:\s*(\w+)/ },
+  { label: "Reason", regex: /reason:\s*\(([^)]+)\)/ },
+  { label: "Extra", regex: /extra:\s*(\w+)/ },
+  { label: "Failover", regex: /failover:\s*(\w+)/ },
+  { label: "Available", regex: /available:\s*(\w+)/ },
+  { label: "Roaming", regex: /roaming:\s*(\w+)/ },
+  { label: "Interface", regex: /InterfaceName:\s*(\w+)/ },
   {
-    key: "ipAddress",
+    label: "IP Address",
     regex: /LinkAddresses:\s*\[\s*([^\]]+)\s*\]/,
-    transform: (m) => (m[1] ? m[1].trim() : ""),
+    transform: (m) => (m[1] || "").trim(),
   },
   {
-    key: "dnsServers",
+    label: "DNS Servers",
     regex: /DnsAddresses:\s*\[\s*([^\]]+)\s*\]/,
     transform: (m) =>
-      m[1]
-        ? m[1].split(",").map((s: string) => s.trim().replace(/^\//, ""))
-        : [],
+      (m[1] || "").split(",").map((s: string) => s.trim().replace(/^\//, "")),
   },
-  { key: "domains", regex: /Domains:\s*(\S+)/ },
-  { key: "mtu", regex: /MTU:\s*(\d+)/ },
-  { key: "tcpBufferSizes", regex: /TcpBufferSizes:\s*([^\s]+)/ },
+  { label: "Domains", regex: /Domains:\s*(\S+)/ },
   {
-    key: "routes",
+    label: "Gateway",
     regex: /Routes:\s*\[([^\]]+)\]/,
-    transform: (m) => (m[1] ? m[1].trim() : ""),
+    transform: (m) => (m[1] || "").trim(),
   },
+  { label: "MTU", regex: /MTU:\s*(\d+)/ },
+  { label: "TCP Buffers", regex: /TcpBufferSizes:\s*([^\s]+)/ },
   {
-    key: "capabilities",
+    label: "Capabilities",
     regex: /Capabilities:\s*([^\s]+)/,
-    transform: (m) => (m[1] ? m[1].split("&") : []),
+    transform: (m) => (m[1] || "").split("&"),
   },
-  { key: "transports", regex: /Transports:\s*(\w+)/ },
-  { key: "bandwidthUp", regex: /LinkUpBandwidth>=(\d+)Kbps/ },
-  { key: "bandwidthDown", regex: /LinkDnBandwidth>=(\d+)Kbps/ },
-  { key: "specifier", regex: /Specifier:\s*<(\d+)>/ },
-  { key: "score", regex: /Score\{(\d+)\}/ },
-  { key: "everValidated", regex: /everValidated\{(\w+)\}/ },
-  { key: "lastValidated", regex: /lastValidated\{(\w+)\}/ },
-  { key: "created", regex: /created\{(\w+)\}/ },
-  { key: "lingering", regex: /lingering\{(\w+)\}/ },
-  { key: "explicitlySelected", regex: /explicitlySelected\{(\w+)\}/ },
-  { key: "acceptUnvalidated", regex: /acceptUnvalidated\{(\w+)\}/ },
-  { key: "everCaptivePortal", regex: /everCaptivePortalDetected\{(\w+)\}/ },
-  { key: "lastCaptivePortal", regex: /lastCaptivePortalDetected\{(\w+)\}/ },
+  { label: "Transports", regex: /Transports:\s*(\w+)/ },
   {
-    key: "captivePortalPending",
+    label: "Upload Bandwidth",
+    regex: /LinkUpBandwidth>=(\d+)Kbps/,
+    transform: (m) => `${m[1]} Kbps`,
+  },
+  {
+    label: "Download Bandwidth",
+    regex: /LinkDnBandwidth>=(\d+)Kbps/,
+    transform: (m) => `${m[1]} Kbps`,
+  },
+  { label: "Specifier", regex: /Specifier:\s*<(\d+)>/ },
+  { label: "Score", regex: /Score\{(\d+)\}/ },
+  { label: "Ever Validated", regex: /everValidated\{(\w+)\}/ },
+  { label: "Last Validated", regex: /lastValidated\{(\w+)\}/ },
+  { label: "Created", regex: /created\{(\w+)\}/ },
+  { label: "Lingering", regex: /lingering\{(\w+)\}/ },
+  { label: "Explicitly Selected", regex: /explicitlySelected\{(\w+)\}/ },
+  { label: "Accept Unvalidated", regex: /acceptUnvalidated\{(\w+)\}/ },
+  { label: "Ever Captive Portal", regex: /everCaptivePortalDetected\{(\w+)\}/ },
+  { label: "Last Captive Portal", regex: /lastCaptivePortalDetected\{(\w+)\}/ },
+  {
+    label: "Captive Portal Pending",
     regex: /captivePortalValidationPending\{(\w+)\}/,
   },
-  { key: "partialConnectivity", regex: /partialConnectivity\{(\w+)\}/ },
+  { label: "Partial Connectivity", regex: /partialConnectivity\{(\w+)\}/ },
+  { label: "Accept Partial", regex: /acceptPartialConnectivity\{(\w+)\}/ },
+  { label: "CLAT State", regex: /mState:\s*(\w+)/ },
+  { label: "Restrict Background", regex: /Restrict background:\s*(\w+)/ },
+  { label: "Tether Sub ID", regex: /subId:\s*(\d+)/ },
+  { label: "Tetherable USB", regex: /tetherableUsbRegexs:\s*\[([^\]]+)\]/ },
+  { label: "Tetherable WiFi", regex: /tetherableWifiRegexs:\s*\[([^\]]+)\]/ },
   {
-    key: "acceptPartialConnectivity",
-    regex: /acceptPartialConnectivity\{(\w+)\}/,
-  },
-  { key: "clatState", regex: /mState:\s*(\w+)/ },
-  { key: "restrictBackground", regex: /Restrict background:\s*(\w+)/ },
-  { key: "tetherSubId", regex: /subId:\s*(\d+)/ },
-  { key: "tetherableUsb", regex: /tetherableUsbRegexs:\s*\[([^\]]+)\]/ },
-  { key: "tetherableWifi", regex: /tetherableWifiRegexs:\s*\[([^\]]+)\]/ },
-  {
-    key: "tetherableBluetooth",
+    label: "Tetherable Bluetooth",
     regex: /tetherableBluetoothRegexs:\s*\[([^\]]+)\]/,
   },
   {
-    key: "tetherableEthernet",
+    label: "Tetherable Ethernet",
     regex: /tetherableEthernetRegexs:\s*\[([^\]]+)\]/,
   },
-  { key: "isDunRequired", regex: /isDunRequired:\s*(\w+)/ },
-  { key: "upstreamAuto", regex: /chooseUpstreamAutomatically:\s*(\w+)/ },
-  { key: "defaultDns", regex: /defaultIPv4DNS:\s*\[([^\]]+)\]/ },
+  { label: "DUN Required", regex: /isDunRequired:\s*(\w+)/ },
+  { label: "Upstream Auto", regex: /chooseUpstreamAutomatically:\s*(\w+)/ },
+  { label: "Default DNS", regex: /defaultIPv4DNS:\s*\[([^\]]+)\]/ },
   {
-    key: "upstreamInterface",
+    label: "Upstream Interface",
     regex: /Current upstream interface\(s\):\s*\[([^\]]+)\]/,
   },
-  { key: "activeDefaultNetwork", regex: /Active default network:\s*(\d+)/ },
-  { key: "restrictBackgroundStatus", regex: /Restrict background:\s*(\w+)/ },
+  { label: "Active Default Network", regex: /Active default network:\s*(\d+)/ },
+  {
+    label: "Restrict Background Status",
+    regex: /Restrict background:\s*(\w+)/,
+  },
 ];
 
 // Telephony patterns - comprehensive (60+ fields)
 const TELEPHONY_PATTERNS: ParsePattern[] = [
   {
-    key: "voiceRegState",
+    label: "Voice Registration",
     regex: /mVoiceRegState=(\d+)\(([^)]+)\)/,
     transform: (m) => m[2] || "",
   },
   {
-    key: "dataRegState",
+    label: "Data Registration",
     regex: /mDataRegState=(\d+)\(([^)]+)\)/,
     transform: (m) => m[2] || "",
   },
-  { key: "channelNumber", regex: /mChannelNumber=(\d+)/ },
-  { key: "duplexMode", regex: /duplexMode\(\)=(\d+)/ },
-  { key: "manualSelection", regex: /isManualNetworkSelection=(\w+)/ },
+  { label: "Channel Number", regex: /mChannelNumber=(\d+)/ },
+  { label: "Duplex Mode", regex: /duplexMode\(\)=(\d+)/ },
+  { label: "Manual Selection", regex: /isManualNetworkSelection=(\w+)/ },
   {
-    key: "voiceRadioTech",
+    label: "Voice Radio Tech",
     regex: /getRilVoiceRadioTechnology[=:](\d+)\((\w+)\)/,
     transform: (m) => m[2] || "",
   },
   {
-    key: "dataRadioTech",
+    label: "Data Radio Tech",
     regex: /getRilDataRadioTechnology[=:](\d+)\((\w+)\)/,
     transform: (m) => m[2] || "",
   },
-  { key: "cssIndicator", regex: /mCssIndicator=(\w+)/ },
-  { key: "cdmaRoaming", regex: /mCdmaRoamingIndicator=(-?\d+)/ },
-  { key: "voiceRegType", regex: /VoiceRegType=(\d+)/ },
-  { key: "imsVoiceAvail", regex: /ImsVoiceAvail=(\d+)/ },
-  { key: "snap", regex: /Snap=(\d+)/ },
-  { key: "mobileVoice", regex: /MobileVoice=(\w+)/ },
-  { key: "mobileVoiceRat", regex: /MobileVoiceRat=(\w+)/ },
-  { key: "mobileData", regex: /MobileData=(\w+)/ },
-  { key: "mobileDataRoaming", regex: /MobileDataRoamingType=(\w+)/ },
-  { key: "mobileDataRat", regex: /MobileDataRat=(\w+)/ },
-  { key: "psOnly", regex: /PsOnly=(\w+)/ },
-  { key: "femtocell", regex: /FemtocellInd=(\d+)/ },
-  { key: "endcStatus", regex: /EndcStatus=(\d+)/ },
-  { key: "restrictDcnr", regex: /RestrictDcnr=(\d+)/ },
-  { key: "nrBearerStatus", regex: /NrBearerStatus=(\d+)/ },
-  { key: "fiveGStatus", regex: /5gStatus=(\d+)/ },
-  { key: "rrcState", regex: /RRCState=(-?\d+)/ },
-  { key: "nrIconType", regex: /NrIconType=(\d+)/ },
-  { key: "emergencyOnly", regex: /mIsEmergencyOnly=(\w+)/ },
-  { key: "carrierAggregation", regex: /isUsingCarrierAggregation=(\w+)/ },
-  { key: "lteEarfcnRsrpBoost", regex: /mLteEarfcnRsrpBoost=(\d+)/ },
-  { key: "nrFrequencyRange", regex: /mNrFrequencyRange=(-?\d+)/ },
-  { key: "iwlanPreferred", regex: /mIsIwlanPreferred=(\w+)/ },
-  { key: "registrationState", regex: /registrationState=(\w+)/ },
-  { key: "roamingType", regex: /roamingType=(\w+)/ },
-  { key: "accessNetworkTech", regex: /accessNetworkTechnology=(\w+)/ },
-  { key: "rejectCause", regex: /rejectCause=(\d+)/ },
-  { key: "emergencyEnabled", regex: /emergencyEnabled=(\w+)/ },
-  { key: "availableServices", regex: /availableServices=\[([^\]]*)\]/ },
-  { key: "cellId", regex: /mCi=(\d+)/ },
-  { key: "pci", regex: /mPci=(\d+)/ },
-  { key: "tac", regex: /mTac=(\d+)/ },
-  { key: "earfcn", regex: /mEarfcn=(\d+)/ },
-  { key: "bandwidth", regex: /mBandwidth=(\d+)/ },
-  { key: "mcc", regex: /mMcc=(\d+)/ },
-  { key: "mnc", regex: /mMnc=(\d+)/ },
-  { key: "carrier", regex: /mAlphaLong=(\w+)/ },
-  { key: "carrierShort", regex: /mAlphaShort=(\w+)/ },
-  { key: "cssSupported", regex: /mCssSupported=(\w+)/ },
-  { key: "roamingIndicator", regex: /mRoamingIndicator=(\d+)/ },
-  { key: "systemInPrl", regex: /mSystemIsInPrl=(\d+)/ },
-  { key: "maxDataCalls", regex: /maxDataCalls\s*=\s*(\d+)/ },
-  { key: "dcNrRestricted", regex: /isDcNrRestricted\s*=\s*(\w+)/ },
-  { key: "nrAvailable", regex: /isNrAvailable\s*=\s*(\w+)/ },
-  { key: "enDcAvailable", regex: /isEnDcAvailable\s*=\s*(\w+)/ },
-  { key: "vopsSupport", regex: /mVopsSupport\s*=\s*(\d+)/ },
-  { key: "emcBearerSupport", regex: /mEmcBearerSupport\s*=\s*(\d+)/ },
-  { key: "signalRssi", regex: /rssi=(-?\d+)/ },
-  { key: "signalRsrp", regex: /rsrp=(-?\d+)/ },
-  { key: "signalRsrq", regex: /rsrq=(-?\d+)/ },
-  { key: "signalRssnr", regex: /rssnr=(-?\d+)/ },
-  { key: "signalCqi", regex: /cqi=(\d+)/ },
-  { key: "signalTa", regex: /ta=(\d+)/ },
-  { key: "signalLevel", regex: /level=(\d+)/ },
-  { key: "signalBer", regex: /ber=(\d+)/ },
-  { key: "callState", regex: /mCallState=(\d+)/ },
-  { key: "dataState", regex: /mDataConnectionState=(\d+)/ },
-  { key: "dataActivity", regex: /mDataActivity=(\d+)/ },
-  { key: "messageWaiting", regex: /mMessageWaiting=(\w+)/ },
-  { key: "callForwarding", regex: /mCallForwarding=(\w+)/ },
-  { key: "voiceActivation", regex: /mVoiceActivationState=\s*(\d+)/ },
-  { key: "dataActivation", regex: /mDataActivationState=\s*(\d+)/ },
-  { key: "userMobileData", regex: /mUserMobileDataState=\s*(\w+)/ },
-  { key: "srvccState", regex: /mSrvccState=(-?\d+)/ },
-  { key: "otaspMode", regex: /mOtaspMode=(\d+)/ },
-  { key: "defaultSubId", regex: /mDefaultSubId=(\d+)/ },
-  { key: "defaultPhoneId", regex: /mDefaultPhoneId=(\d+)/ },
-  { key: "activeDataSubId", regex: /mActiveDataSubId=(\d+)/ },
-  { key: "radioPowerState", regex: /mRadioPowerState=(\d+)/ },
-  { key: "ringingCallState", regex: /mRingingCallState=(\d+)/ },
-  { key: "foregroundCallState", regex: /mForegroundCallState=(\d+)/ },
-  { key: "backgroundCallState", regex: /mBackgroundCallState=(\d+)/ },
-  { key: "carrierNetworkChange", regex: /mCarrierNetworkChangeState=(\w+)/ },
-  { key: "maxActiveData", regex: /maxActiveData=(\d+)/ },
-  { key: "max5G", regex: /max5G=(\d+)/ },
+  { label: "CSS Indicator", regex: /mCssIndicator=(\w+)/ },
+  { label: "CDMA Roaming", regex: /mCdmaRoamingIndicator=(-?\d+)/ },
+  { label: "Voice Reg Type", regex: /VoiceRegType=(\d+)/ },
+  { label: "IMS Voice Avail", regex: /ImsVoiceAvail=(\d+)/ },
+  { label: "SNAP", regex: /Snap=(\d+)/ },
+  { label: "Mobile Voice", regex: /MobileVoice=(\w+)/ },
+  { label: "Mobile Voice RAT", regex: /MobileVoiceRat=(\w+)/ },
+  { label: "Mobile Data", regex: /MobileData=(\w+)/ },
+  { label: "Mobile Data Roaming", regex: /MobileDataRoamingType=(\w+)/ },
+  { label: "Mobile Data RAT", regex: /MobileDataRat=(\w+)/ },
+  { label: "PS Only", regex: /PsOnly=(\w+)/ },
+  { label: "Femtocell", regex: /FemtocellInd=(\d+)/ },
+  { label: "EN-DC Status", regex: /EndcStatus=(\d+)/ },
+  { label: "Restrict DC-NR", regex: /RestrictDcnr=(\d+)/ },
+  { label: "NR Bearer Status", regex: /NrBearerStatus=(\d+)/ },
+  { label: "5G Status", regex: /5gStatus=(\d+)/ },
+  { label: "RRC State", regex: /RRCState=(-?\d+)/ },
+  { label: "NR Icon Type", regex: /NrIconType=(\d+)/ },
+  { label: "Emergency Only", regex: /mIsEmergencyOnly=(\w+)/ },
+  { label: "Carrier Aggregation", regex: /isUsingCarrierAggregation=(\w+)/ },
+  { label: "LTE EARFCN RSRP Boost", regex: /mLteEarfcnRsrpBoost=(\d+)/ },
+  { label: "NR Frequency Range", regex: /mNrFrequencyRange=(-?\d+)/ },
+  { label: "IWLAN Preferred", regex: /mIsIwlanPreferred=(\w+)/ },
+  { label: "Registration State", regex: /registrationState=(\w+)/ },
+  { label: "Roaming Type", regex: /roamingType=(\w+)/ },
+  { label: "Access Network Tech", regex: /accessNetworkTechnology=(\w+)/ },
+  { label: "Reject Cause", regex: /rejectCause=(\d+)/ },
+  { label: "Emergency Enabled", regex: /emergencyEnabled=(\w+)/ },
+  { label: "Available Services", regex: /availableServices=\[([^\]]*)\]/ },
+  { label: "Cell ID", regex: /mCi=(\d+)/ },
+  { label: "Physical Cell ID", regex: /mPci=(\d+)/ },
+  { label: "Tracking Area Code", regex: /mTac=(\d+)/ },
+  { label: "EARFCN", regex: /mEarfcn=(\d+)/ },
+  { label: "Bandwidth", regex: /mBandwidth=(\d+)/ },
+  { label: "MCC", regex: /mMcc=(\d+)/ },
+  { label: "MNC", regex: /mMnc=(\d+)/ },
+  { label: "Carrier", regex: /mAlphaLong=(\w+)/ },
+  { label: "Carrier Short", regex: /mAlphaShort=(\w+)/ },
+  { label: "CSS Supported", regex: /mCssSupported=(\w+)/ },
+  { label: "Roaming Indicator", regex: /mRoamingIndicator=(\d+)/ },
+  { label: "System In PRL", regex: /mSystemIsInPrl=(\d+)/ },
+  { label: "Max Data Calls", regex: /maxDataCalls\s*=\s*(\d+)/ },
+  { label: "DC-NR Restricted", regex: /isDcNrRestricted\s*=\s*(\w+)/ },
+  { label: "NR Available", regex: /isNrAvailable\s*=\s*(\w+)/ },
+  { label: "EN-DC Available", regex: /isEnDcAvailable\s*=\s*(\w+)/ },
+  { label: "VoPS Support", regex: /mVopsSupport\s*=\s*(\d+)/ },
+  { label: "EMC Bearer Support", regex: /mEmcBearerSupport\s*=\s*(\d+)/ },
+  { label: "Signal RSSI", regex: /rssi=(-?\d+)/ },
+  { label: "Signal RSRP", regex: /rsrp=(-?\d+)/ },
+  { label: "Signal RSRQ", regex: /rsrq=(-?\d+)/ },
+  { label: "Signal RSSNR", regex: /rssnr=(-?\d+)/ },
+  { label: "Signal CQI", regex: /cqi=(\d+)/ },
+  { label: "Signal TA", regex: /ta=(\d+)/ },
+  { label: "Signal Level", regex: /level=(\d+)/ },
+  { label: "Signal BER", regex: /ber=(\d+)/ },
+  { label: "Call State", regex: /mCallState=(\d+)/ },
+  { label: "Data State", regex: /mDataConnectionState=(\d+)/ },
+  { label: "Data Activity", regex: /mDataActivity=(\d+)/ },
+  { label: "Message Waiting", regex: /mMessageWaiting=(\w+)/ },
+  { label: "Call Forwarding", regex: /mCallForwarding=(\w+)/ },
+  { label: "Voice Activation", regex: /mVoiceActivationState=\s*(\d+)/ },
+  { label: "Data Activation", regex: /mDataActivationState=\s*(\d+)/ },
+  { label: "User Mobile Data", regex: /mUserMobileDataState=\s*(\w+)/ },
+  { label: "SRVCC State", regex: /mSrvccState=(-?\d+)/ },
+  { label: "OTASP Mode", regex: /mOtaspMode=(\d+)/ },
+  { label: "Default Sub ID", regex: /mDefaultSubId=(\d+)/ },
+  { label: "Default Phone ID", regex: /mDefaultPhoneId=(\d+)/ },
+  { label: "Active Data Sub ID", regex: /mActiveDataSubId=(\d+)/ },
+  { label: "Radio Power State", regex: /mRadioPowerState=(\d+)/ },
+  { label: "Ringing Call State", regex: /mRingingCallState=(\d+)/ },
+  { label: "Foreground Call State", regex: /mForegroundCallState=(\d+)/ },
+  { label: "Background Call State", regex: /mBackgroundCallState=(\d+)/ },
+  {
+    label: "Carrier Network Change",
+    regex: /mCarrierNetworkChangeState=(\w+)/,
+  },
+  { label: "Max Active Data", regex: /maxActiveData=(\d+)/ },
+  { label: "Max 5G", regex: /max5G=(\d+)/ },
 ];
 
 // Data-driven architecture
@@ -238,213 +264,186 @@ interface NetworkConfig {
 interface NetworkSection {
   id: string;
   title: string;
-  commands: NetworkCommand[];
-  renderer: (
-    data: Record<string, ParsedData>,
-  ) => Record<string, string[] | string>;
-}
-
-interface NetworkCommand {
-  id: string;
-  shell: string;
-  parser: (stdout: string) => ParsedData;
+  command: string;
+  patterns: ParsePattern[];
 }
 
 // WiFi patterns
 const WIFI_PATTERNS: ParsePattern[] = [
-  { key: "wifiEnabled", regex: /Wi-Fi is (\w+)/ },
-  { key: "verboseLogging", regex: /Verbose logging is (\w+)/ },
-  { key: "stayAwake", regex: /Stay-awake conditions:\s*(\d+)/ },
-  { key: "idleMode", regex: /mInIdleMode\s+(\w+)/ },
-  { key: "scanPending", regex: /mScanPending\s+(\w+)/ },
-  { key: "vendor", regex: /Wi-Fi vendor:\s*([^\n]+)/ },
-  { key: "supportedFeature", regex: /Supported feature:\s*(\d+)/ },
+  { label: "WiFi Status", regex: /Wi-Fi is (\w+)/ },
+  { label: "Verbose Logging", regex: /Verbose logging is (\w+)/ },
+  { label: "Stay Awake", regex: /Stay-awake conditions:\s*(\d+)/ },
+  { label: "Idle Mode", regex: /mInIdleMode\s+(\w+)/ },
+  { label: "Scan Pending", regex: /mScanPending\s+(\w+)/ },
+  { label: "Vendor", regex: /Wi-Fi vendor:\s*([^\n]+)/ },
+  { label: "Supported Feature", regex: /Supported feature:\s*(\d+)/ },
 ];
 
 // Battery patterns
 const BATTERY_PATTERNS: ParsePattern[] = [
-  { key: "acPowered", regex: /AC powered:\s*(\w+)/ },
-  { key: "usbPowered", regex: /USB powered:\s*(\w+)/ },
-  { key: "wirelessPowered", regex: /Wireless powered:\s*(\w+)/ },
-  { key: "maxChargingCurrent", regex: /Max charging current:\s*(\d+)/ },
-  { key: "maxChargingVoltage", regex: /Max charging voltage:\s*(\d+)/ },
-  { key: "chargeCounter", regex: /Charge counter:\s*(\d+)/ },
-  { key: "status", regex: /status:\s*(\d+)/ },
-  { key: "health", regex: /health:\s*(\d+)/ },
-  { key: "present", regex: /present:\s*(\w+)/ },
-  { key: "level", regex: /level:\s*(\d+)/ },
-  { key: "scale", regex: /scale:\s*(\d+)/ },
-  { key: "voltage", regex: /voltage:\s*(\d+)/ },
-  { key: "temperature", regex: /temperature:\s*(\d+)/ },
-  { key: "technology", regex: /technology:\s*(.+)/ },
-  { key: "currentNow", regex: /current now:\s*(-?\d+)/ },
-  { key: "ledCharging", regex: /LED Charging:\s*(\w+)/ },
-  { key: "ledLowBattery", regex: /LED Low Battery:\s*(\w+)/ },
-  { key: "fastCharging", regex: /Adaptive Fast Charging Settings:\s*(\w+)/ },
-  { key: "superFastCharging", regex: /Super Fast Charging Settings:\s*(\w+)/ },
+  { label: "AC Powered", regex: /AC powered:\s*(\w+)/ },
+  { label: "USB Powered", regex: /USB powered:\s*(\w+)/ },
+  { label: "Wireless Powered", regex: /Wireless powered:\s*(\w+)/ },
+  { label: "Max Charging Current", regex: /Max charging current:\s*(\d+)/ },
+  { label: "Max Charging Voltage", regex: /Max charging voltage:\s*(\d+)/ },
+  { label: "Charge Counter", regex: /Charge counter:\s*(\d+)/ },
+  { label: "Status", regex: /status:\s*(\d+)/ },
+  { label: "Health", regex: /health:\s*(\d+)/ },
+  { label: "Present", regex: /present:\s*(\w+)/ },
+  { label: "Level", regex: /level:\s*(\d+)/ },
+  { label: "Scale", regex: /scale:\s*(\d+)/ },
+  { label: "Voltage", regex: /voltage:\s*(\d+)/ },
+  { label: "Temperature", regex: /temperature:\s*(\d+)/ },
+  { label: "Technology", regex: /technology:\s*(.+)/ },
+  { label: "Current Now", regex: /current now:\s*(-?\d+)/ },
+  { label: "LED Charging", regex: /LED Charging:\s*(\w+)/ },
+  { label: "LED Low Battery", regex: /LED Low Battery:\s*(\w+)/ },
+  { label: "Fast Charging", regex: /Adaptive Fast Charging Settings:\s*(\w+)/ },
+  {
+    label: "Super Fast Charging",
+    regex: /Super Fast Charging Settings:\s*(\w+)/,
+  },
 ];
 
 // NetStats patterns
 const NETSTATS_PATTERNS: ParsePattern[] = [
-  { key: "activeInterface", regex: /Active interfaces:\s*\n\s*iface=(\w+)/ },
-  { key: "interfaceType", regex: /type=(\w+)/ },
-  { key: "interfaceSubType", regex: /subType=(\w+)/ },
-  { key: "metered", regex: /metered=(\w+)/ },
-  { key: "defaultNetwork", regex: /defaultNetwork=(\w+)/ },
-  { key: "pendingBytes", regex: /Pending bytes:\s*(\d+)/ },
+  { label: "Active Interface", regex: /Active interfaces:\s*\n\s*iface=(\w+)/ },
+  { label: "Interface Type", regex: /type=(\w+)/ },
+  { label: "Interface SubType", regex: /subType=(\w+)/ },
+  { label: "Metered", regex: /metered=(\w+)/ },
+  { label: "Default Network", regex: /defaultNetwork=(\w+)/ },
+  { label: "Pending Bytes", regex: /Pending bytes:\s*(\d+)/ },
 ];
 
 // NetPolicy patterns
 const NETPOLICY_PATTERNS: ParsePattern[] = [
-  { key: "systemReady", regex: /System ready:\s*(\w+)/ },
-  { key: "restrictBackground", regex: /Restrict background:\s*(\w+)/ },
-  { key: "restrictPower", regex: /Restrict power:\s*(\w+)/ },
-  { key: "deviceIdle", regex: /Device idle:\s*(\w+)/ },
-  { key: "meteredIfaces", regex: /Metered ifaces:\s*\{([^}]+)\}/ },
-  { key: "charging", regex: /Charging:\s*(\w+)/ },
+  { label: "System Ready", regex: /System ready:\s*(\w+)/ },
+  { label: "Restrict Background", regex: /Restrict background:\s*(\w+)/ },
+  { label: "Restrict Power", regex: /Restrict power:\s*(\w+)/ },
+  { label: "Device Idle", regex: /Device idle:\s*(\w+)/ },
+  { label: "Metered Interfaces", regex: /Metered ifaces:\s*\{([^}]+)\}/ },
+  { label: "Charging", regex: /Charging:\s*(\w+)/ },
 ];
 
 // Phone patterns
 const PHONE_PATTERNS: ParsePattern[] = [
-  { key: "phoneId", regex: /PHONE_ID=(\d+)/ },
-  { key: "subscriptionId", regex: /SUBSCRIPTION_ID=(\d+)/ },
-  { key: "sortOrder", regex: /SORT_ORDER=(\d+)/ },
-  { key: "csVideoCalling", regex: /CS_VIDEO_CALLING=(\w+)/ },
-  { key: "psVideoCalling", regex: /PS_VIDEO_CALLING=(\w+)/ },
+  { label: "Phone ID", regex: /PHONE_ID=(\d+)/ },
+  { label: "Subscription ID", regex: /SUBSCRIPTION_ID=(\d+)/ },
+  { label: "Sort Order", regex: /SORT_ORDER=(\d+)/ },
+  { label: "CS Video Calling", regex: /CS_VIDEO_CALLING=(\w+)/ },
+  { label: "PS Video Calling", regex: /PS_VIDEO_CALLING=(\w+)/ },
 ];
 
 // USB patterns
 const USB_PATTERNS: ParsePattern[] = [
-  { key: "bootCompleted", regex: /mBootCompleted:(\w+)/ },
-  { key: "simCount", regex: /All SIM Count:(\d+)/ },
-  { key: "mpsmSupport", regex: /SUPPORT MPSM\s*:(\w+)/ },
-  { key: "mpsmEnabled", regex: /MPSM ON\/OFF\s*:(\w+)/ },
-  { key: "simBlock", regex: /SIM BLOCK ON\/OFF\s*:(\w+)/ },
-  { key: "mdmBlock", regex: /MDM BLOCK ON\/OFF\s*:(\w+)/ },
-  { key: "dexMode", regex: /DexModeObserver state:(\w+)/ },
+  { label: "Boot Completed", regex: /mBootCompleted:(\w+)/ },
+  { label: "SIM Count", regex: /All SIM Count:(\d+)/ },
+  { label: "MPSM Support", regex: /SUPPORT MPSM\s*:(\w+)/ },
+  { label: "MPSM Enabled", regex: /MPSM ON\/OFF\s*:(\w+)/ },
+  { label: "SIM Block", regex: /SIM BLOCK ON\/OFF\s*:(\w+)/ },
+  { label: "MDM Block", regex: /MDM BLOCK ON\/OFF\s*:(\w+)/ },
+  { label: "Dex Mode", regex: /DexModeObserver state:(\w+)/ },
   {
-    key: "notificationReady",
+    label: "Notification Ready",
     regex: /Notification\s*:\s*\n\s*ready\s*:\s*(\w+)/,
   },
-  { key: "connected", regex: /connected=(\w+)/ },
-  { key: "configured", regex: /configured=(\w+)/ },
-  { key: "currentMode", regex: /current_mode=(\w+)/ },
-  { key: "powerRole", regex: /power_role=(\w+)/ },
-  { key: "dataRole", regex: /data_role=(\w+)/ },
-  { key: "usbCharging", regex: /usb_charging=(\w+)/ },
-  { key: "kernelState", regex: /kernel_state=(\w+)/ },
-  { key: "kernelFunctions", regex: /kernel_function_list=([^\s]+)/ },
+  { label: "Connected", regex: /connected=(\w+)/ },
+  { label: "Configured", regex: /configured=(\w+)/ },
+  { label: "Current Mode", regex: /current_mode=(\w+)/ },
+  { label: "Power Role", regex: /power_role=(\w+)/ },
+  { label: "Data Role", regex: /data_role=(\w+)/ },
+  { label: "USB Charging", regex: /usb_charging=(\w+)/ },
+  { label: "Kernel State", regex: /kernel_state=(\w+)/ },
+  { label: "Kernel Functions", regex: /kernel_function_list=([^\s]+)/ },
   {
-    key: "currentFunctions",
+    label: "Current Functions",
     regex: /current_functions=\[\s*([^\]]+)\]/,
     transform: (m) => (m[1] || "").trim().replace(/\s+/g, ", "),
   },
-  { key: "functionsApplied", regex: /current_functions_applied=(\w+)/ },
-  { key: "screenUnlockedFunctions", regex: /screen_unlocked_functions=(\w+)/ },
-  { key: "screenLocked", regex: /screen_locked=(\w+)/ },
-  { key: "hostConnected", regex: /host_connected=(\w+)/ },
-  { key: "sourcePower", regex: /source_power=(\w+)/ },
-  { key: "sinkPower", regex: /sink_power=(\w+)/ },
-  { key: "hideNotification", regex: /hide_usb_notification=(\w+)/ },
-  { key: "audioAccessory", regex: /audio_accessory_connected=(\w+)/ },
-  { key: "numConnects", regex: /num_connects=(\d+)/ },
-  { key: "portId", regex: /id=(port\d+)/ },
-  { key: "supportedModes", regex: /supported_modes=(\w+)/ },
-  { key: "simulationActive", regex: /is_simulation_active=(\w+)/ },
-  { key: "canChangeMode", regex: /can_change_mode=(\w+)/ },
-  { key: "canChangePowerRole", regex: /can_change_power_role=(\w+)/ },
-  { key: "canChangeDataRole", regex: /can_change_data_role=(\w+)/ },
-  { key: "contaminantStatus", regex: /contaminant_presence_status=([^\s]+)/ },
-  { key: "connectedAtMillis", regex: /connected_at_millis=(\d+)/ },
-  { key: "alsaCards", regex: /cards_parser=(-?\d+)/ },
-];
-
-// Location patterns
-const LOCATION_PATTERNS: ParsePattern[] = [
-  { key: "currentUser", regex: /Current user:\s*(\d+)/ },
-  { key: "locationMode", regex: /Location mode:\s*(\w+)/ },
-  { key: "batterySaverMode", regex: /Battery Saver Location Mode:\s*(\S+)/ },
-];
-
-// Device Policy patterns
-const DEVICE_POLICY_PATTERNS: ParsePattern[] = [
-  { key: "provisioningState", regex: /provisioningState:\s*(\d+)/ },
-  { key: "passwordOwner", regex: /mPasswordOwner=(-?\d+)/ },
-  { key: "encryptionStatus", regex: /Encryption Status:\s*(\w+)/ },
+  { label: "Functions Applied", regex: /current_functions_applied=(\w+)/ },
   {
-    key: "screenCaptureDisabled",
-    regex: /Screen capture disabled:\s*\{0=(\w+)\}/,
+    label: "Screen Unlocked Functions",
+    regex: /screen_unlocked_functions=(\w+)/,
   },
-  { key: "passwordQuality", regex: /Password quality:\s*\{0=(\d+)\}/ },
-];
-
-// Device Idle patterns
-const DEVICEIDLE_PATTERNS: ParsePattern[] = [
-  { key: "lightAfterInactive", regex: /light_after_inactive_to=\+([^\s]+)/ },
-  { key: "lightIdleTo", regex: /light_idle_to=\+([^\s]+)/ },
-  { key: "lightMaxIdleTo", regex: /light_max_idle_to=\+([^\s]+)/ },
-  { key: "inactiveTo", regex: /inactive_to=\+([^\s]+)/ },
-  { key: "idleAfterInactive", regex: /idle_after_inactive_to=\+([^\s]+)/ },
-  { key: "idleTo", regex: /idle_to=\+([^\s]+)/ },
-  { key: "maxIdleTo", regex: /max_idle_to=\+([^\s]+)/ },
-  { key: "waitForUnlock", regex: /wait_for_unlock=(\w+)/ },
+  { label: "Screen Locked", regex: /screen_locked=(\w+)/ },
+  { label: "Host Connected", regex: /host_connected=(\w+)/ },
+  { label: "Source Power", regex: /source_power=(\w+)/ },
+  { label: "Sink Power", regex: /sink_power=(\w+)/ },
+  { label: "Hide Notification", regex: /hide_usb_notification=(\w+)/ },
+  { label: "Audio Accessory", regex: /audio_accessory_connected=(\w+)/ },
+  { label: "Num Connects", regex: /num_connects=(\d+)/ },
+  { label: "Port ID", regex: /id=(port\d+)/ },
+  { label: "Supported Modes", regex: /supported_modes=(\w+)/ },
+  { label: "Simulation Active", regex: /is_simulation_active=(\w+)/ },
+  { label: "Can Change Mode", regex: /can_change_mode=(\w+)/ },
+  { label: "Can Change Power Role", regex: /can_change_power_role=(\w+)/ },
+  { label: "Can Change Data Role", regex: /can_change_data_role=(\w+)/ },
+  {
+    label: "Contaminant Status",
+    regex: /contaminant_presence_status=([^\s]+)/,
+  },
+  { label: "Connected At (ms)", regex: /connected_at_millis=(\d+)/ },
+  { label: "ALSA Cards", regex: /cards_parser=(-?\d+)/ },
 ];
 
 // Battery Extended patterns
 const BATTERY_EXT_PATTERNS: ParsePattern[] = [
-  { key: "batteryMiscEvent", regex: /batteryMiscEvent:\s*(\d+)/ },
-  { key: "batteryCurrentEvent", regex: /batteryCurrentEvent:\s*(\d+)/ },
-  { key: "plugTypeSummary", regex: /mSecPlugTypeSummary:\s*(\d+)/ },
+  { label: "Misc Event", regex: /batteryMiscEvent:\s*(\d+)/ },
+  { label: "Current Event", regex: /batteryCurrentEvent:\s*(\d+)/ },
+  { label: "Plug Type Summary", regex: /mSecPlugTypeSummary:\s*(\d+)/ },
   {
-    key: "wirelessFastCharger",
+    label: "Wireless Fast Charger",
     regex: /mWirelessFastChargingSettingsEnable:\s*(\w+)/,
   },
-  { key: "savedBatteryAsoc", regex: /mSavedBatteryAsoc:\s*(\d+)/ },
-  { key: "savedBatteryMaxTemp", regex: /mSavedBatteryMaxTemp:\s*(\d+)/ },
-  { key: "savedBatteryMaxCurrent", regex: /mSavedBatteryMaxCurrent:\s*(\d+)/ },
-  { key: "savedBatteryUsage", regex: /mSavedBatteryUsage:\s*(\d+)/ },
+  { label: "Saved ASOC", regex: /mSavedBatteryAsoc:\s*(\d+)/ },
+  { label: "Saved Max Temp", regex: /mSavedBatteryMaxTemp:\s*(\d+)/ },
+  { label: "Saved Max Current", regex: /mSavedBatteryMaxCurrent:\s*(\d+)/ },
+  { label: "Saved Usage", regex: /mSavedBatteryUsage:\s*(\d+)/ },
 ];
 
 // Display patterns
 const DISPLAY_PATTERNS: ParsePattern[] = [
-  { key: "displayState", regex: /mGlobalDisplayState=(\w+)/ },
-  { key: "nextDisplayId", regex: /mNextNonDefaultDisplayId=(\d+)/ },
+  { label: "Display State", regex: /mGlobalDisplayState=(\w+)/ },
+  { label: "Next Display ID", regex: /mNextNonDefaultDisplayId=(\d+)/ },
   {
-    key: "stableDisplaySize",
+    label: "Stable Display Size",
     regex: /mStableDisplaySize=Point\((\d+),\s*(\d+)\)/,
     transform: (m) => `${m[1]}x${m[2]}`,
   },
-  { key: "wifiDisplayScanCount", regex: /mWifiDisplayScanRequestCount=(\d+)/ },
-  { key: "wifiDisplayFeatureState", regex: /featureState=(\d+)/ },
-  { key: "wifiDisplayScanState", regex: /scanState=(\d+)/ },
-  { key: "wifiP2pEnabled", regex: /mWifiP2pEnabled=(\w+)/ },
-  { key: "wfdEnabled", regex: /mWfdEnabled=(\w+)/ },
+  {
+    label: "WiFi Display Scan Count",
+    regex: /mWifiDisplayScanRequestCount=(\d+)/,
+  },
+  { label: "WiFi Display Feature State", regex: /featureState=(\d+)/ },
+  { label: "WiFi Display Scan State", regex: /scanState=(\d+)/ },
+  { label: "WiFi P2P Enabled", regex: /mWifiP2pEnabled=(\w+)/ },
+  { label: "WFD Enabled", regex: /mWfdEnabled=(\w+)/ },
 ];
 
 // Power patterns
 const POWER_PATTERNS: ParsePattern[] = [
-  { key: "wakefulness", regex: /mWakefulness=(\w+)/ },
-  { key: "isPowered", regex: /mIsPowered=(\w+)/ },
-  { key: "plugType", regex: /mPlugType=(\d+)/ },
-  { key: "batteryLevel", regex: /mBatteryLevel=(\d+)/ },
-  { key: "stayOn", regex: /mStayOn=(\w+)/ },
-  { key: "bootCompleted", regex: /mBootCompleted=(\w+)/ },
-  { key: "systemReady", regex: /mSystemReady=(\w+)/ },
-  { key: "batteryLevelLow", regex: /mBatteryLevelLow=(\w+)/ },
-  { key: "lightDeviceIdleMode", regex: /mLightDeviceIdleMode=(\w+)/ },
-  { key: "deviceIdleMode", regex: /mDeviceIdleMode=(\w+)/ },
-  { key: "displayReady", regex: /mDisplayReady=(\w+)/ },
+  { label: "Wakefulness", regex: /mWakefulness=(\w+)/ },
+  { label: "Is Powered", regex: /mIsPowered=(\w+)/ },
+  { label: "Plug Type", regex: /mPlugType=(\d+)/ },
+  { label: "Battery Level", regex: /mBatteryLevel=(\d+)/ },
+  { label: "Stay On", regex: /mStayOn=(\w+)/ },
+  { label: "Boot Completed", regex: /mBootCompleted=(\w+)/ },
+  { label: "System Ready", regex: /mSystemReady=(\w+)/ },
+  { label: "Battery Level Low", regex: /mBatteryLevelLow=(\w+)/ },
+  { label: "Light Device Idle Mode", regex: /mLightDeviceIdleMode=(\w+)/ },
+  { label: "Device Idle Mode", regex: /mDeviceIdleMode=(\w+)/ },
+  { label: "Display Ready", regex: /mDisplayReady=(\w+)/ },
 ];
 
 // Alarm patterns
 const ALARM_PATTERNS: ParsePattern[] = [
-  { key: "minFuturity", regex: /min_futurity=\+([^\n]+)/ },
-  { key: "minInterval", regex: /min_interval=\+([^\n]+)/ },
-  { key: "maxInterval", regex: /max_interval=\+([^\n]+)/ },
-  { key: "maxAlarmsPerUid", regex: /max_alarms_per_uid=(\d+)/ },
-  { key: "appStandbyEnabled", regex: /app_standby_quotas_enabled=(\w+)/ },
-  { key: "forceAppStandby", regex: /Force all apps standby:\s*(\w+)/ },
-  { key: "pluggedIn", regex: /Plugged In:\s*(\w+)/ },
+  { label: "Min Futurity", regex: /min_futurity=\+([^\n]+)/ },
+  { label: "Min Interval", regex: /min_interval=\+([^\n]+)/ },
+  { label: "Max Interval", regex: /max_interval=\+([^\n]+)/ },
+  { label: "Max Alarms Per UID", regex: /max_alarms_per_uid=(\d+)/ },
+  { label: "App Standby Enabled", regex: /app_standby_quotas_enabled=(\w+)/ },
+  { label: "Force App Standby", regex: /Force all apps standby:\s*(\w+)/ },
+  { label: "Plugged In", regex: /Plugged In:\s*(\w+)/ },
 ];
 
 const NETWORK_CONFIG: NetworkConfig = {
@@ -452,501 +451,110 @@ const NETWORK_CONFIG: NetworkConfig = {
     {
       id: "network_info",
       title: "Network Information",
-      commands: [
-        {
-          id: "connectivity",
-          shell: "dumpsys connectivity",
-          parser: (stdout) => parseWithPatterns(stdout, CONNECTIVITY_PATTERNS),
-        },
-      ],
-      renderer: (data) => {
-        const conn = data["connectivity"] || {};
-        const dnsServers = conn["dnsServers"];
-        const capabilities = conn["capabilities"];
-
-        return {
-          "Network ID": String(conn["networkId"] || ""),
-          "Net Handle": String(conn["nethandle"] || ""),
-          "Network Type": String(conn["networkType"] || ""),
-          State: String(conn["state"] || ""),
-          Reason: String(conn["reason"] || ""),
-          Extra: String(conn["extra"] || ""),
-          Failover: String(conn["failover"] || ""),
-          Available: String(conn["available"] || ""),
-          Roaming: String(conn["roaming"] || ""),
-          Interface: String(conn["interfaceName"] || ""),
-          "IP Address": String(conn["ipAddress"] || ""),
-          "DNS Servers": Array.isArray(dnsServers) ? dnsServers : [],
-          Domains: String(conn["domains"] || ""),
-          Gateway: String(conn["routes"] || ""),
-          MTU: String(conn["mtu"] || ""),
-          "TCP Buffers": String(conn["tcpBufferSizes"] || ""),
-          Transports: String(conn["transports"] || ""),
-          "Upload Bandwidth": conn["bandwidthUp"]
-            ? `${conn["bandwidthUp"]} Kbps`
-            : "",
-          "Download Bandwidth": conn["bandwidthDown"]
-            ? `${conn["bandwidthDown"]} Kbps`
-            : "",
-          Specifier: String(conn["specifier"] || ""),
-          Score: String(conn["score"] || ""),
-          "Ever Validated": String(conn["everValidated"] || ""),
-          "Last Validated": String(conn["lastValidated"] || ""),
-          Created: String(conn["created"] || ""),
-          Lingering: String(conn["lingering"] || ""),
-          "Explicitly Selected": String(conn["explicitlySelected"] || ""),
-          "Accept Unvalidated": String(conn["acceptUnvalidated"] || ""),
-          "Ever Captive Portal": String(conn["everCaptivePortal"] || ""),
-          "Last Captive Portal": String(conn["lastCaptivePortal"] || ""),
-          "Captive Portal Pending": String(conn["captivePortalPending"] || ""),
-          "Partial Connectivity": String(conn["partialConnectivity"] || ""),
-          "Accept Partial": String(conn["acceptPartialConnectivity"] || ""),
-          "CLAT State": String(conn["clatState"] || ""),
-          "Restrict Background": String(conn["restrictBackground"] || ""),
-          "Tether Sub ID": String(conn["tetherSubId"] || ""),
-          "Tetherable USB": String(conn["tetherableUsb"] || ""),
-          "Tetherable WiFi": String(conn["tetherableWifi"] || ""),
-          "Tetherable Bluetooth": String(conn["tetherableBluetooth"] || ""),
-          "Tetherable Ethernet": String(conn["tetherableEthernet"] || ""),
-          "DUN Required": String(conn["isDunRequired"] || ""),
-          "Upstream Auto": String(conn["upstreamAuto"] || ""),
-          "Default DNS": String(conn["defaultDns"] || ""),
-          "Upstream Interface": String(conn["upstreamInterface"] || ""),
-          "Active Default Network": String(conn["activeDefaultNetwork"] || ""),
-          "Restrict Background Status": String(
-            conn["restrictBackgroundStatus"] || "",
-          ),
-          Capabilities: Array.isArray(capabilities) ? capabilities : [],
-        };
-      },
+      command: "dumpsys connectivity",
+      patterns: CONNECTIVITY_PATTERNS,
     },
     {
       id: "cellular_info",
       title: "Cellular Information",
-      commands: [
-        {
-          id: "telephony",
-          shell: "dumpsys telephony.registry",
-          parser: (stdout) => parseWithPatterns(stdout, TELEPHONY_PATTERNS),
-        },
-      ],
-      renderer: (data) => {
-        const tel = data["telephony"] || {};
-
-        return {
-          "Voice Registration": String(tel["voiceRegState"] || ""),
-          "Data Registration": String(tel["dataRegState"] || ""),
-          "Channel Number": String(tel["channelNumber"] || ""),
-          "Duplex Mode": String(tel["duplexMode"] || ""),
-          "Manual Selection": String(tel["manualSelection"] || ""),
-          "Voice Radio Tech": String(tel["voiceRadioTech"] || ""),
-          "Data Radio Tech": String(tel["dataRadioTech"] || ""),
-          "CSS Indicator": String(tel["cssIndicator"] || ""),
-          "CDMA Roaming": String(tel["cdmaRoaming"] || ""),
-          "Voice Reg Type": String(tel["voiceRegType"] || ""),
-          "IMS Voice Avail": String(tel["imsVoiceAvail"] || ""),
-          SNAP: String(tel["snap"] || ""),
-          "Mobile Voice": String(tel["mobileVoice"] || ""),
-          "Mobile Voice RAT": String(tel["mobileVoiceRat"] || ""),
-          "Mobile Data": String(tel["mobileData"] || ""),
-          "Mobile Data Roaming": String(tel["mobileDataRoaming"] || ""),
-          "Mobile Data RAT": String(tel["mobileDataRat"] || ""),
-          "PS Only": String(tel["psOnly"] || ""),
-          Femtocell: String(tel["femtocell"] || ""),
-          "EN-DC Status": String(tel["endcStatus"] || ""),
-          "Restrict DC-NR": String(tel["restrictDcnr"] || ""),
-          "NR Bearer Status": String(tel["nrBearerStatus"] || ""),
-          "5G Status": String(tel["fiveGStatus"] || ""),
-          "RRC State": String(tel["rrcState"] || ""),
-          "NR Icon Type": String(tel["nrIconType"] || ""),
-          "Emergency Only": String(tel["emergencyOnly"] || ""),
-          "Carrier Aggregation": String(tel["carrierAggregation"] || ""),
-          "LTE EARFCN RSRP Boost": String(tel["lteEarfcnRsrpBoost"] || ""),
-          "NR Frequency Range": String(tel["nrFrequencyRange"] || ""),
-          "IWLAN Preferred": String(tel["iwlanPreferred"] || ""),
-          "Registration State": String(tel["registrationState"] || ""),
-          "Roaming Type": String(tel["roamingType"] || ""),
-          "Access Network Tech": String(tel["accessNetworkTech"] || ""),
-          "Reject Cause": String(tel["rejectCause"] || ""),
-          "Emergency Enabled": String(tel["emergencyEnabled"] || ""),
-          "Available Services": String(tel["availableServices"] || ""),
-          "Cell ID": String(tel["cellId"] || ""),
-          "Physical Cell ID": String(tel["pci"] || ""),
-          "Tracking Area Code": String(tel["tac"] || ""),
-          EARFCN: String(tel["earfcn"] || ""),
-          Bandwidth: String(tel["bandwidth"] || ""),
-          MCC: String(tel["mcc"] || ""),
-          MNC: String(tel["mnc"] || ""),
-          Carrier: String(tel["carrier"] || ""),
-          "Carrier Short": String(tel["carrierShort"] || ""),
-          "CSS Supported": String(tel["cssSupported"] || ""),
-          "Roaming Indicator": String(tel["roamingIndicator"] || ""),
-          "System In PRL": String(tel["systemInPrl"] || ""),
-          "Max Data Calls": String(tel["maxDataCalls"] || ""),
-          "DC-NR Restricted": String(tel["dcNrRestricted"] || ""),
-          "NR Available": String(tel["nrAvailable"] || ""),
-          "EN-DC Available": String(tel["enDcAvailable"] || ""),
-          "VoPS Support": String(tel["vopsSupport"] || ""),
-          "EMC Bearer Support": String(tel["emcBearerSupport"] || ""),
-          "Signal RSSI": String(tel["signalRssi"] || ""),
-          "Signal RSRP": String(tel["signalRsrp"] || ""),
-          "Signal RSRQ": String(tel["signalRsrq"] || ""),
-          "Signal RSSNR": String(tel["signalRssnr"] || ""),
-          "Signal CQI": String(tel["signalCqi"] || ""),
-          "Signal TA": String(tel["signalTa"] || ""),
-          "Signal Level": String(tel["signalLevel"] || ""),
-          "Signal BER": String(tel["signalBer"] || ""),
-          "Call State": String(tel["callState"] || ""),
-          "Data State":
-            tel["dataState"] === "2"
-              ? "Connected"
-              : tel["dataState"] === "0"
-                ? "Disconnected"
-                : String(tel["dataState"] || ""),
-          "Data Activity": String(tel["dataActivity"] || ""),
-          "Message Waiting": String(tel["messageWaiting"] || ""),
-          "Call Forwarding": String(tel["callForwarding"] || ""),
-          "Voice Activation": String(tel["voiceActivation"] || ""),
-          "Data Activation": String(tel["dataActivation"] || ""),
-          "User Mobile Data": String(tel["userMobileData"] || ""),
-          "SRVCC State": String(tel["srvccState"] || ""),
-          "OTASP Mode": String(tel["otaspMode"] || ""),
-          "Default Sub ID": String(tel["defaultSubId"] || ""),
-          "Default Phone ID": String(tel["defaultPhoneId"] || ""),
-          "Active Data Sub ID": String(tel["activeDataSubId"] || ""),
-          "Radio Power State": String(tel["radioPowerState"] || ""),
-          "Ringing Call State": String(tel["ringingCallState"] || ""),
-          "Foreground Call State": String(tel["foregroundCallState"] || ""),
-          "Background Call State": String(tel["backgroundCallState"] || ""),
-          "Carrier Network Change": String(tel["carrierNetworkChange"] || ""),
-          "Max Active Data": String(tel["maxActiveData"] || ""),
-          "Max 5G": String(tel["max5G"] || ""),
-        };
-      },
+      command: "dumpsys telephony.registry",
+      patterns: TELEPHONY_PATTERNS,
     },
     {
       id: "wifi_info",
       title: "WiFi Information",
-      commands: [
-        {
-          id: "wifi",
-          shell: "dumpsys wifi",
-          parser: (stdout) => parseWithPatterns(stdout, WIFI_PATTERNS),
-        },
-      ],
-      renderer: (data) => {
-        const wifi = data["wifi"] || {};
-
-        return {
-          "WiFi Status": String(wifi["wifiEnabled"] || ""),
-          "Verbose Logging": String(wifi["verboseLogging"] || ""),
-          "Stay Awake": String(wifi["stayAwake"] || ""),
-          "Idle Mode": String(wifi["idleMode"] || ""),
-          "Scan Pending": String(wifi["scanPending"] || ""),
-          Vendor: String(wifi["vendor"] || ""),
-          "Supported Feature": String(wifi["supportedFeature"] || ""),
-        };
-      },
+      command: "dumpsys wifi",
+      patterns: WIFI_PATTERNS,
     },
     {
       id: "battery_info",
       title: "Battery Information",
-      commands: [
-        {
-          id: "battery",
-          shell: "dumpsys battery",
-          parser: (stdout) => parseWithPatterns(stdout, BATTERY_PATTERNS),
-        },
-      ],
-      renderer: (data) => {
-        const bat = data["battery"] || {};
-
-        return {
-          "AC Powered": String(bat["acPowered"] || ""),
-          "USB Powered": String(bat["usbPowered"] || ""),
-          "Wireless Powered": String(bat["wirelessPowered"] || ""),
-          "Max Charging Current": String(bat["maxChargingCurrent"] || ""),
-          "Max Charging Voltage": String(bat["maxChargingVoltage"] || ""),
-          "Charge Counter": String(bat["chargeCounter"] || ""),
-          Status: String(bat["status"] || ""),
-          Health: String(bat["health"] || ""),
-          Present: String(bat["present"] || ""),
-          Level: bat["level"] && bat["scale"] ? `${bat["level"]}%` : "",
-          Voltage: bat["voltage"] ? `${bat["voltage"]} mV` : "",
-          Temperature: bat["temperature"]
-            ? `${Number(bat["temperature"]) / 10}°C`
-            : "",
-          Technology: String(bat["technology"] || ""),
-          "Current Now": bat["currentNow"] ? `${bat["currentNow"]} mA` : "",
-          "LED Charging": String(bat["ledCharging"] || ""),
-          "LED Low Battery": String(bat["ledLowBattery"] || ""),
-          "Fast Charging": String(bat["fastCharging"] || ""),
-          "Super Fast Charging": String(bat["superFastCharging"] || ""),
-        };
-      },
+      command: "dumpsys battery",
+      patterns: BATTERY_PATTERNS,
     },
     {
       id: "netstats_info",
       title: "Network Statistics",
-      commands: [
-        {
-          id: "netstats",
-          shell: "dumpsys netstats",
-          parser: (stdout) => parseWithPatterns(stdout, NETSTATS_PATTERNS),
-        },
-      ],
-      renderer: (data) => {
-        const stats = data["netstats"] || {};
-
-        return {
-          "Active Interface": String(stats["activeInterface"] || ""),
-          "Interface Type": String(stats["interfaceType"] || ""),
-          "Interface SubType": String(stats["interfaceSubType"] || ""),
-          Metered: String(stats["metered"] || ""),
-          "Default Network": String(stats["defaultNetwork"] || ""),
-          "Pending Bytes": String(stats["pendingBytes"] || ""),
-        };
-      },
+      command: "dumpsys netstats",
+      patterns: NETSTATS_PATTERNS,
     },
     {
       id: "netpolicy_info",
       title: "Network Policy",
-      commands: [
-        {
-          id: "netpolicy",
-          shell: "dumpsys netpolicy",
-          parser: (stdout) => parseWithPatterns(stdout, NETPOLICY_PATTERNS),
-        },
-      ],
-      renderer: (data) => {
-        const policy = data["netpolicy"] || {};
-
-        return {
-          "System Ready": String(policy["systemReady"] || ""),
-          "Restrict Background": String(policy["restrictBackground"] || ""),
-          "Restrict Power": String(policy["restrictPower"] || ""),
-          "Device Idle": String(policy["deviceIdle"] || ""),
-          "Metered Interfaces": String(policy["meteredIfaces"] || ""),
-          Charging: String(policy["charging"] || ""),
-        };
-      },
+      command: "dumpsys netpolicy",
+      patterns: NETPOLICY_PATTERNS,
     },
     {
       id: "phone_info",
       title: "Phone Information",
-      commands: [
-        {
-          id: "phone",
-          shell: "dumpsys phone",
-          parser: (stdout) => parseWithPatterns(stdout, PHONE_PATTERNS),
-        },
-      ],
-      renderer: (data) => {
-        const phone = data["phone"] || {};
-
-        return {
-          "Phone ID": String(phone["phoneId"] || ""),
-          "Subscription ID": String(phone["subscriptionId"] || ""),
-          "Sort Order": String(phone["sortOrder"] || ""),
-          "CS Video Calling": String(phone["csVideoCalling"] || ""),
-          "PS Video Calling": String(phone["psVideoCalling"] || ""),
-        };
-      },
+      command: "dumpsys phone",
+      patterns: PHONE_PATTERNS,
     },
     {
       id: "usb_info",
       title: "USB Information",
-      commands: [
-        {
-          id: "usb",
-          shell: "dumpsys usb",
-          parser: (stdout) => parseWithPatterns(stdout, USB_PATTERNS),
-        },
-      ],
-      renderer: (data) => {
-        const usb = data["usb"] || {};
-
-        return {
-          "Boot Completed": String(usb["bootCompleted"] || ""),
-          "SIM Count": String(usb["simCount"] || ""),
-          "MPSM Support": String(usb["mpsmSupport"] || ""),
-          "MPSM Enabled": String(usb["mpsmEnabled"] || ""),
-          "SIM Block": String(usb["simBlock"] || ""),
-          "MDM Block": String(usb["mdmBlock"] || ""),
-          "Dex Mode": String(usb["dexMode"] || ""),
-          "Notification Ready": String(usb["notificationReady"] || ""),
-          Connected: String(usb["connected"] || ""),
-          Configured: String(usb["configured"] || ""),
-          "Current Mode": String(usb["currentMode"] || ""),
-          "Power Role": String(usb["powerRole"] || ""),
-          "Data Role": String(usb["dataRole"] || ""),
-          "USB Charging": String(usb["usbCharging"] || ""),
-          "Kernel State": String(usb["kernelState"] || ""),
-          "Kernel Functions": String(usb["kernelFunctions"] || ""),
-          "Current Functions": String(usb["currentFunctions"] || ""),
-          "Functions Applied": String(usb["functionsApplied"] || ""),
-          "Screen Unlocked Functions": String(
-            usb["screenUnlockedFunctions"] || "",
-          ),
-          "Screen Locked": String(usb["screenLocked"] || ""),
-          "Host Connected": String(usb["hostConnected"] || ""),
-          "Source Power": String(usb["sourcePower"] || ""),
-          "Sink Power": String(usb["sinkPower"] || ""),
-          "Hide Notification": String(usb["hideNotification"] || ""),
-          "Audio Accessory": String(usb["audioAccessory"] || ""),
-          "Num Connects": String(usb["numConnects"] || ""),
-          "Port ID": String(usb["portId"] || ""),
-          "Supported Modes": String(usb["supportedModes"] || ""),
-          "Simulation Active": String(usb["simulationActive"] || ""),
-          "Can Change Mode": String(usb["canChangeMode"] || ""),
-          "Can Change Power Role": String(usb["canChangePowerRole"] || ""),
-          "Can Change Data Role": String(usb["canChangeDataRole"] || ""),
-          "Contaminant Status": String(usb["contaminantStatus"] || ""),
-          "Connected At (ms)": String(usb["connectedAtMillis"] || ""),
-          "ALSA Cards": String(usb["alsaCards"] || ""),
-        };
-      },
+      command: "dumpsys usb",
+      patterns: USB_PATTERNS,
     },
     {
       id: "battery_ext_info",
       title: "Battery Extended",
-      commands: [
-        {
-          id: "battery_ext",
-          shell: "dumpsys battery",
-          parser: (stdout) => parseWithPatterns(stdout, BATTERY_EXT_PATTERNS),
-        },
-      ],
-      renderer: (data) => {
-        const battery = data["battery_ext"] || {};
-        return {
-          "Misc Event": String(battery["batteryMiscEvent"] || ""),
-          "Current Event": String(battery["batteryCurrentEvent"] || ""),
-          "Plug Type Summary": String(battery["plugTypeSummary"] || ""),
-          "Wireless Fast Charger": String(battery["wirelessFastCharger"] || ""),
-          "Saved ASOC": String(battery["savedBatteryAsoc"] || ""),
-          "Saved Max Temp": String(battery["savedBatteryMaxTemp"] || ""),
-          "Saved Max Current": String(battery["savedBatteryMaxCurrent"] || ""),
-          "Saved Usage": String(battery["savedBatteryUsage"] || ""),
-        };
-      },
+      command: "dumpsys battery",
+      patterns: BATTERY_EXT_PATTERNS,
     },
     {
       id: "display_info",
       title: "Display Information",
-      commands: [
-        {
-          id: "display",
-          shell: "dumpsys display",
-          parser: (stdout) => parseWithPatterns(stdout, DISPLAY_PATTERNS),
-        },
-      ],
-      renderer: (data) => {
-        const display = data["display"] || {};
-        return {
-          "Display State": String(display["displayState"] || ""),
-          "Next Display ID": String(display["nextDisplayId"] || ""),
-          "Stable Display Size": String(display["stableDisplaySize"] || ""),
-          "WiFi Display Scan Count": String(
-            display["wifiDisplayScanCount"] || "",
-          ),
-          "WiFi Display Feature State": String(
-            display["wifiDisplayFeatureState"] || "",
-          ),
-          "WiFi Display Scan State": String(
-            display["wifiDisplayScanState"] || "",
-          ),
-          "WiFi P2P Enabled": String(display["wifiP2pEnabled"] || ""),
-          "WFD Enabled": String(display["wfdEnabled"] || ""),
-        };
-      },
+      command: "dumpsys display",
+      patterns: DISPLAY_PATTERNS,
     },
     {
       id: "power_info",
       title: "Power Information",
-      commands: [
-        {
-          id: "power",
-          shell: "dumpsys power",
-          parser: (stdout) => parseWithPatterns(stdout, POWER_PATTERNS),
-        },
-      ],
-      renderer: (data) => {
-        const power = data["power"] || {};
-        return {
-          Wakefulness: String(power["wakefulness"] || ""),
-          "Is Powered": String(power["isPowered"] || ""),
-          "Plug Type": String(power["plugType"] || ""),
-          "Battery Level": String(power["batteryLevel"] || ""),
-          "Stay On": String(power["stayOn"] || ""),
-          "Boot Completed": String(power["bootCompleted"] || ""),
-          "System Ready": String(power["systemReady"] || ""),
-          "Battery Level Low": String(power["batteryLevelLow"] || ""),
-          "Light Device Idle Mode": String(power["lightDeviceIdleMode"] || ""),
-          "Device Idle Mode": String(power["deviceIdleMode"] || ""),
-          "Display Ready": String(power["displayReady"] || ""),
-        };
-      },
+      command: "dumpsys power",
+      patterns: POWER_PATTERNS,
     },
     {
       id: "alarm_info",
       title: "Alarm Information",
-      commands: [
-        {
-          id: "alarm",
-          shell: "dumpsys alarm",
-          parser: (stdout) => parseWithPatterns(stdout, ALARM_PATTERNS),
-        },
-      ],
-      renderer: (data) => {
-        const alarm = data["alarm"] || {};
-        return {
-          "Min Futurity": String(alarm["minFuturity"] || ""),
-          "Min Interval": String(alarm["minInterval"] || ""),
-          "Max Interval": String(alarm["maxInterval"] || ""),
-          "Max Alarms Per UID": String(alarm["maxAlarmsPerUid"] || ""),
-          "App Standby Enabled": String(alarm["appStandbyEnabled"] || ""),
-          "Force App Standby": String(alarm["forceAppStandby"] || ""),
-          "Plugged In": String(alarm["pluggedIn"] || ""),
-        };
-      },
+      command: "dumpsys alarm",
+      patterns: ALARM_PATTERNS,
     },
   ],
 };
 
 // Generic engine
-async function loadDataDriven(): Promise<
-  Record<string, Record<string, ParsedData>>
-> {
-  const sectionData: Record<string, Record<string, ParsedData>> = {};
+async function loadDataDriven(): Promise<Record<string, ParsedData>> {
+  const sectionData: Record<string, ParsedData> = {};
 
   for (const section of NETWORK_CONFIG.sections) {
-    const commandResults: Record<string, ParsedData> = {};
-
-    for (const command of section.commands) {
-      const result = await DroidNet.exec(command.shell.split(" "));
-      commandResults[command.id] = command.parser(result.stdout || "");
-    }
-
-    sectionData[section.id] = commandResults;
+    const result = await DroidNet.exec(section.command.split(" "));
+    sectionData[section.id] = parseWithPatterns(
+      result.stdout || "",
+      section.patterns,
+    );
   }
 
   return sectionData;
 }
 
-function renderDataDriven(
-  data: Record<string, Record<string, ParsedData>>,
-): HTMLElement[] {
+function renderDataDriven(data: Record<string, ParsedData>): HTMLElement[] {
   const results = NETWORK_CONFIG.sections
     .map((section) => {
-      const sectionData = section.renderer(data[section.id] || {});
+      const sectionData = renderFromPatterns(
+        data[section.id] || {},
+        section.patterns,
+      );
       const rows = Object.entries(sectionData).map(([label, value]) => ({
         label,
-        value: Array.isArray(value) ? value.join(", ") : String(value),
+        value,
       }));
 
       return rows.length > 0
-        ? [UIRenderer.renderTitle(section.title), UIRenderer.renderTable(rows)]
+        ? [
+            UIRenderer.renderTitle(section.title),
+            UIRenderer.renderTable(rows, { col: 6 }),
+          ]
         : null;
     })
     .filter(Boolean);
@@ -958,8 +566,8 @@ function renderDataDriven(
 return view.extend(
   DroidNet.createView({
     load: loadDataDriven,
-    render: (
-      data: Record<string, Record<string, ParsedData>> & DeviceStatus,
-    ) => [renderDataDriven(data)],
+    render: (data: Record<string, ParsedData> & DeviceStatus) => [
+      renderDataDriven(data),
+    ],
   }),
 );
