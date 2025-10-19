@@ -1,0 +1,300 @@
+DUMP OF SERVICE connectivity:
+NetworkFactories for: UntrustedWifiNetworkFactory Ethernet TelephonyNetworkFactory[0] WifiNetworkFactory WIFI_AWARE_FACTORY PhoneSwitcherNetworkRequstListener TelephonyNetworkFactory[1]
+
+Active default network: 1835
+
+Current Networks:
+  NetworkAgentInfo{ ni{[type: MOBILE[LTE], state: CONNECTED/CONNECTED, reason: (unspecified), extra: internet, failover: false, available: true, roaming: false]}  network{1835}  nethandle{7884670685197}  lp{{InterfaceName: rmnet0 LinkAddresses: [ 10.122.202.243/24 ] DnsAddresses: [ /112.215.203.246 ] Domains: null MTU: 1500 TcpBufferSizes: 2097152,4194304,8388608,1048576,3145728,4194304 Routes: [ 0.0.0.0/0 -> 10.122.202.1 rmnet0,10.122.202.0/24 -> 0.0.0.0 rmnet0 ]}}  nc{[ Transports: CELLULAR Capabilities: SUPL&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED LinkUpBandwidth>=15000Kbps LinkDnBandwidth>=30000Kbps Specifier: <4>]}  Score{50}  everValidated{true}  lastValidated{true}  created{true} lingering{false} explicitlySelected{false} acceptUnvalidated{false} everCaptivePortalDetected{false} lastCaptivePortalDetected{false} captivePortalValidationPending{false} partialConnectivity{false} acceptPartialConnectivity{false} clat{mBaseIface: null, mIface: null, mState: IDLE} }
+    Requests: REQUEST:2 LISTEN:25 BACKGROUND_REQUEST:0 total:27
+      NetworkRequest [ REQUEST id=1, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN] ]
+      NetworkRequest [ LISTEN id=4, [ Capabilities: FOREGROUND] ]
+      NetworkRequest [ LISTEN id=5, [ Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN&FOREGROUND Uid: 1000] ]
+      NetworkRequest [ LISTEN id=8, [ Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN&FOREGROUND Uid: 1000] ]
+      NetworkRequest [ REQUEST id=9, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN] ]
+      NetworkRequest [ LISTEN id=10, [ Transports: CELLULAR Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN Uid: 1000] ]
+      NetworkRequest [ LISTEN id=11, [ Transports: CELLULAR Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN] ]
+      NetworkRequest [ TRACK_DEFAULT id=13, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 1000] ]
+      NetworkRequest [ LISTEN id=14, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&VALIDATED Uid: 1000] ]
+      NetworkRequest [ TRACK_DEFAULT id=16, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 1000] ]
+      NetworkRequest [ TRACK_DEFAULT id=21, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10103] ]
+      NetworkRequest [ LISTEN id=23, [] ]
+      NetworkRequest [ TRACK_DEFAULT id=25, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 1000] ]
+      NetworkRequest [ LISTEN id=26, [ Transports: CELLULAR Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN Specifier: <4> Uid: 1000] ]
+      NetworkRequest [ LISTEN id=37, [ Transports: CELLULAR|WIFI|ETHERNET Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&FOREGROUND Uid: 10166] ]
+      NetworkRequest [ LISTEN id=44, [ Transports: CELLULAR Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN&FOREGROUND Uid: 5013] ]
+      NetworkRequest [ LISTEN id=9600, [] ]
+      NetworkRequest [ LISTEN id=9885, [ Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&FOREGROUND Uid: 10233] ]
+      NetworkRequest [ TRACK_DEFAULT id=9937, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10132] ]
+      NetworkRequest [ LISTEN id=9938, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10132] ]
+      NetworkRequest [ LISTEN id=9941, [ Capabilities: INTERNET&TRUSTED Uid: 10095] ]
+      NetworkRequest [ TRACK_DEFAULT id=9942, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10095] ]
+      NetworkRequest [ TRACK_DEFAULT id=9943, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10095] ]
+      NetworkRequest [ LISTEN id=9944, [ Transports: CELLULAR|WIFI Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN Uid: 10095] ]
+      NetworkRequest [ TRACK_DEFAULT id=9947, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10095] ]
+      NetworkRequest [ LISTEN id=9948, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10095] ]
+      NetworkRequest [ TRACK_DEFAULT id=10351, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10221] ]
+    Lingered:
+
+Restrict background: false
+
+Status for known UIDs:
+  UID=10067 rules=64 (NONE|REJECT_ALL)
+  UID=10095 rules=1 (ALLOW_METERED|NONE)
+  UID=10099 rules=64 (NONE|REJECT_ALL)
+  
+Network Requests:
+  uid/pid:1000/4610 NetworkRequest [ REQUEST id=1, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN] ]
+  uid/pid:1000/4610 NetworkRequest [ LISTEN id=4, [ Capabilities: FOREGROUND] ]
+  uid/pid:1000/4610 NetworkRequest [ LISTEN id=5, [ Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN&FOREGROUND Uid: 1000] ]
+  uid/pid:1000/4610 NetworkRequest [ LISTEN id=6, [ Transports: WIFI Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN&FOREGROUND Uid: 1000] ]
+  uid/pid:1000/4610 NetworkRequest [ LISTEN id=7, [ Transports: WIFI Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN&FOREGROUND Uid: 1000] ]
+  uid/pid:1000/4610 NetworkRequest [ LISTEN id=8, [ Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN&FOREGROUND Uid: 1000] ]
+  uid/pid:1000/4610 NetworkRequest [ REQUEST id=9, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN] ]
+  uid/pid:1000/4610 NetworkRequest [ LISTEN id=10, [ Transports: CELLULAR Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN Uid: 1000] ]
+  uid/pid:1000/4610 NetworkRequest [ LISTEN id=11, [ Transports: CELLULAR Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN] ]
+  uid/pid:1000/4610 NetworkRequest [ LISTEN id=12, [ Transports: WIFI Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN] ]
+  uid/pid:1000/4610 NetworkRequest [ TRACK_DEFAULT id=13, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 1000] ]
+  uid/pid:1000/4610 NetworkRequest [ LISTEN id=14, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&VALIDATED Uid: 1000] ]
+  uid/pid:1001/5359 NetworkRequest [ LISTEN id=15, [ Transports: WIFI Capabilities: INTERNET&TRUSTED&NOT_VPN Uid: 1001] ]
+  uid/pid:1000/4610 NetworkRequest [ TRACK_DEFAULT id=16, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 1000] ]
+  uid/pid:1000/4610 NetworkRequest [ LISTEN id=17, [ Transports: WIFI Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN Uid: 1000] ]
+  uid/pid:1001/5359 NetworkRequest [ LISTEN id=18, [ Transports: WIFI Capabilities: INTERNET&TRUSTED&NOT_VPN Uid: 1001] ]
+  uid/pid:1000/5855 NetworkRequest [ LISTEN id=19, [ Transports: WIFI Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN Uid: 1000] ]
+  uid/pid:10103/5592 NetworkRequest [ LISTEN id=20, [ Transports: WIFI Capabilities: NOT_VPN] ]
+  uid/pid:10103/5592 NetworkRequest [ TRACK_DEFAULT id=21, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10103] ]
+  uid/pid:10103/5592 NetworkRequest [ LISTEN id=23, [] ]
+  uid/pid:1000/5855 NetworkRequest [ LISTEN id=24, [ Transports: WIFI Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN Uid: 1000] ]
+  uid/pid:1000/5855 NetworkRequest [ TRACK_DEFAULT id=25, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 1000] ]
+  uid/pid:1000/5855 NetworkRequest [ LISTEN id=26, [ Transports: CELLULAR Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN Specifier: <4> Uid: 1000] ]
+  uid/pid:1000/5855 NetworkRequest [ LISTEN id=27, [ Transports: WIFI Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN Uid: 1000] ]
+  uid/pid:1000/5855 NetworkRequest [ LISTEN id=28, [ Transports: CELLULAR Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN Specifier: <1> Uid: 1000] ]
+  uid/pid:1000/5855 NetworkRequest [ LISTEN id=29, [ Transports: WIFI Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN Uid: 1000] ]
+  uid/pid:10166/10755 NetworkRequest [ LISTEN id=37, [ Transports: CELLULAR|WIFI|ETHERNET Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&FOREGROUND Uid: 10166] ]
+  uid/pid:5013/5713 NetworkRequest [ LISTEN id=44, [ Transports: CELLULAR Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN&FOREGROUND Uid: 5013] ]
+  uid/pid:5013/5713 NetworkRequest [ LISTEN id=45, [ Transports: WIFI Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN&FOREGROUND Uid: 5013] ]
+  uid/pid:5013/5713 NetworkRequest [ LISTEN id=46, [ Transports: BLUETOOTH Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN&FOREGROUND Uid: 5013] ]
+  uid/pid:1000/4610 NetworkRequest [ LISTEN id=9600, [] ]
+  uid/pid:10233/16639 NetworkRequest [ LISTEN id=9885, [ Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&FOREGROUND Uid: 10233] ]
+  uid/pid:10132/28418 NetworkRequest [ TRACK_DEFAULT id=9937, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10132] ]
+  uid/pid:10132/28418 NetworkRequest [ LISTEN id=9938, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10132] ]
+  uid/pid:10095/11241 NetworkRequest [ LISTEN id=9941, [ Capabilities: INTERNET&TRUSTED Uid: 10095] ]
+  uid/pid:10095/11241 NetworkRequest [ TRACK_DEFAULT id=9942, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10095] ]
+  uid/pid:10095/11241 NetworkRequest [ TRACK_DEFAULT id=9943, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10095] ]
+  uid/pid:10095/11241 NetworkRequest [ LISTEN id=9944, [ Transports: CELLULAR|WIFI Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN Uid: 10095] ]
+  uid/pid:10095/11241 NetworkRequest [ TRACK_DEFAULT id=9947, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10095] ]
+  uid/pid:10095/11241 NetworkRequest [ LISTEN id=9948, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10095] ]
+  uid/pid:10095/11241 NetworkRequest [ LISTEN id=10254, [ Transports: WIFI Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN Uid: 10095] ]
+  uid/pid:10056/13648 NetworkRequest [ LISTEN id=10256, [ Transports: WIFI Capabilities: NOT_RESTRICTED&TRUSTED&NOT_VPN Uid: 10056] ]
+  uid/pid:10221/10971 NetworkRequest [ TRACK_DEFAULT id=10351, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED Uid: 10221] ]
+  uid/pid:1000/5855 NetworkRequest [ REQUEST id=10358, [ Transports: CELLULAR Capabilities: IMS&TRUSTED&NOT_VPN Specifier: <4> Uid: 1000] ]
+
+mLegacyTypeTracker:
+  Supported types: 0 1 2 3 4 5 7 9 10 11 12 13 14 15 17 23 24 27 28 30 31 32
+  Current state:
+    0 NetworkAgentInfo [MOBILE (LTE) - 1835] CONNECTED/CONNECTED
+
+
+Tethering:
+  Configuration:
+    subId: 4
+    tetherableUsbRegexs: [usb\d, rndis\d]
+    tetherableWifiRegexs: [swlan0]
+    tetherableBluetoothRegexs: [bt-pan]
+    tetherableEthernetRegexs: [eth\d]
+    tetherableNcmRegexs: [ncm\d]
+    isDunRequired: false
+    chooseUpstreamAutomatically: false
+    preferredUpstreamIfaceTypes: [ETHERNET, WIFI, BLUETOOTH, MOBILE]
+    legacyDhcpRanges: [192.168.42.2, 192.168.42.254, 192.168.43.2, 192.168.43.254, 192.168.44.2, 192.168.44.254, 192.168.45.2, 192.168.45.254, 192.168.46.2, 192.168.46.254, 192.168.47.2, 192.168.47.254, 192.168.48.2, 192.168.48.254, 192.168.49.2, 192.168.49.254, 192.168.60.2, 192.168.60.254]
+    defaultIPv4DNS: [8.8.4.4, 8.8.8.8]
+    provisioningApp: []
+    provisioningAppNoUi: 
+    enableLegacyDhcpServer: true
+  Entitlement:
+    mCellularUpstreamPermitted: true
+    Type: TETHERING_WIFI, Value: empty
+  Tether state:
+    rndis0 - TetheredState - lastError = 0
+    swlan0 - AvailableState - lastError = 0
+    Upstream wanted: true
+    Current upstream interface(s): [rmnet0]
+  Hardware offload:
+    Offload HALs not started
+    Current upstream: null
+    Exempt prefixes: []
+    NAT timeout update callbacks received during the last offload session: 0
+    NAT timeout update netlink errors during the last offload session: 0
+  Log:
+    2025-10-19T09:44:21.634 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:44:21.862 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:44:21.862 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:44:21.862 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:44:21.862 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:44:21.862 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:57:55.653 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:57:55.653 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:57:55.653 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:57:55.653 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:57:55.654 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:57:55.654 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:57:55.694 - TetherModeAliveState got CMD_UPSTREAM_CHANGED
+    2025-10-19T09:57:55.698 - [UpstreamNetworkMonitor] preferred upstream type: NONE
+    2025-10-19T09:57:55.698 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:57:55.699 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:57:55.699 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:57:55.755 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:57:55.755 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:57:55.755 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:57:57.559 - wlan0 is not a tetherable iface, ignoring
+    2025-10-19T09:57:57.768 - rmnet0 is not a tetherable iface, ignoring
+    2025-10-19T09:57:57.856 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:57:57.884 - [UpstreamNetworkMonitor] preferred upstream type: MOBILE
+    2025-10-19T09:57:57.884 - Looking for default routes on: {InterfaceName: rmnet0 LinkAddresses: [ 10.12.66.216/24 ] DnsAddresses: [ /112.215.203.246 ] Domains: null MTU: 1500 TcpBufferSizes: 2097152,4194304,8388608,1048576,3145728,4194304 Routes: [ 0.0.0.0/0 -> 10.12.66.1 rmnet0,10.12.66.0/24 -> 0.0.0.0 rmnet0 ]}
+    2025-10-19T09:57:57.884 - Found upstream interface(s): [rmnet0]
+    2025-10-19T09:57:57.889 - SET DNS forwarders: network=1827 dnsServers=[112.215.203.246]
+    2025-10-19T09:57:57.889 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:57:57.889 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:57:57.896 - [UpstreamNetworkMonitor] preferred upstream type: MOBILE
+    2025-10-19T09:57:57.896 - Looking for default routes on: {InterfaceName: rmnet0 LinkAddresses: [ 10.12.66.216/24 ] DnsAddresses: [ /112.215.203.246 ] Domains: null MTU: 1500 TcpBufferSizes: 2097152,4194304,8388608,1048576,3145728,4194304 Routes: [ 0.0.0.0/0 -> 10.12.66.1 rmnet0,10.12.66.0/24 -> 0.0.0.0 rmnet0 ]}
+    2025-10-19T09:57:57.896 - Found upstream interface(s): [rmnet0]
+    2025-10-19T09:57:57.896 - SET DNS forwarders: network=1827 dnsServers=[112.215.203.246]
+    2025-10-19T09:57:57.896 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:57:57.897 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:57:57.897 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:57:57.897 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:57:57.897 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:57:57.898 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:57:57.898 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:57:57.898 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:57:57.898 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:57:57.898 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:57:57.900 - TetherModeAliveState got CMD_UPSTREAM_CHANGED
+    2025-10-19T09:57:57.916 - [UpstreamNetworkMonitor] preferred upstream type: MOBILE
+    2025-10-19T09:57:57.917 - Looking for default routes on: {InterfaceName: rmnet0 LinkAddresses: [ 10.12.66.216/24 ] DnsAddresses: [ /112.215.203.246 ] Domains: null MTU: 1500 TcpBufferSizes: 2097152,4194304,8388608,1048576,3145728,4194304 Routes: [ 0.0.0.0/0 -> 10.12.66.1 rmnet0,10.12.66.0/24 -> 0.0.0.0 rmnet0 ]}
+    2025-10-19T09:57:57.917 - Found upstream interface(s): [rmnet0]
+    2025-10-19T09:57:57.917 - SET DNS forwarders: network=1827 dnsServers=[112.215.203.246]
+    2025-10-19T09:57:57.917 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:57:57.917 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:57:57.917 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:57:57.917 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:57:57.917 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:57:57.918 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:57:57.918 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:57:57.918 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:58:00.256 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:58:00.257 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:58:00.257 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:58:00.258 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:58:00.258 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:58:40.266 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:58:40.266 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:58:40.266 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:58:40.266 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:58:40.266 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:58:40.266 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:58:40.292 - TetherModeAliveState got CMD_UPSTREAM_CHANGED
+    2025-10-19T09:58:40.297 - [UpstreamNetworkMonitor] preferred upstream type: NONE
+    2025-10-19T09:58:40.297 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:58:40.297 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:58:40.297 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:58:40.327 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:58:40.328 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:58:40.328 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:58:42.059 - wlan0 is not a tetherable iface, ignoring
+    2025-10-19T09:58:42.519 - rmnet0 is not a tetherable iface, ignoring
+    2025-10-19T09:58:42.621 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:58:42.643 - [UpstreamNetworkMonitor] preferred upstream type: MOBILE
+    2025-10-19T09:58:42.643 - Looking for default routes on: {InterfaceName: rmnet0 LinkAddresses: [ 10.114.199.24/24 ] DnsAddresses: [ /112.215.203.246 ] Domains: null MTU: 1500 TcpBufferSizes: 2097152,4194304,8388608,1048576,3145728,4194304 Routes: [ 0.0.0.0/0 -> 10.114.199.1 rmnet0,10.114.199.0/24 -> 0.0.0.0 rmnet0 ]}
+    2025-10-19T09:58:42.643 - Found upstream interface(s): [rmnet0]
+    2025-10-19T09:58:42.644 - SET DNS forwarders: network=1828 dnsServers=[112.215.203.246]
+    2025-10-19T09:58:42.644 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:58:42.644 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:58:42.651 - [UpstreamNetworkMonitor] preferred upstream type: MOBILE
+    2025-10-19T09:58:42.651 - Looking for default routes on: {InterfaceName: rmnet0 LinkAddresses: [ 10.114.199.24/24 ] DnsAddresses: [ /112.215.203.246 ] Domains: null MTU: 1500 TcpBufferSizes: 2097152,4194304,8388608,1048576,3145728,4194304 Routes: [ 0.0.0.0/0 -> 10.114.199.1 rmnet0,10.114.199.0/24 -> 0.0.0.0 rmnet0 ]}
+    2025-10-19T09:58:42.652 - Found upstream interface(s): [rmnet0]
+    2025-10-19T09:58:42.654 - SET DNS forwarders: network=1828 dnsServers=[112.215.203.246]
+    2025-10-19T09:58:42.654 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:58:42.654 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:58:42.654 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:58:42.654 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:58:42.656 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:58:42.656 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:58:42.656 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:58:42.656 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:58:42.656 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:58:42.656 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:58:42.660 - TetherModeAliveState got CMD_UPSTREAM_CHANGED
+    2025-10-19T09:58:42.662 - [UpstreamNetworkMonitor] preferred upstream type: MOBILE
+    2025-10-19T09:58:42.662 - Looking for default routes on: {InterfaceName: rmnet0 LinkAddresses: [ 10.114.199.24/24 ] DnsAddresses: [ /112.215.203.246 ] Domains: null MTU: 1500 TcpBufferSizes: 2097152,4194304,8388608,1048576,3145728,4194304 Routes: [ 0.0.0.0/0 -> 10.114.199.1 rmnet0,10.114.199.0/24 -> 0.0.0.0 rmnet0 ]}
+    2025-10-19T09:58:42.662 - Found upstream interface(s): [rmnet0]
+    2025-10-19T09:58:42.663 - SET DNS forwarders: network=1828 dnsServers=[112.215.203.246]
+    2025-10-19T09:58:42.663 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:58:42.663 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:58:42.663 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:58:42.663 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:58:42.663 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:58:42.663 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:58:42.664 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:58:42.664 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:58:42.958 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:58:42.958 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:58:42.958 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:58:42.958 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:58:42.958 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:59:32.790 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:59:32.790 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:59:32.790 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:59:32.790 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:59:32.790 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:59:32.790 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:59:32.822 - TetherModeAliveState got CMD_UPSTREAM_CHANGED
+    2025-10-19T09:59:32.835 - [UpstreamNetworkMonitor] preferred upstream type: NONE
+    2025-10-19T09:59:32.836 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:59:32.836 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:59:32.836 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:59:32.874 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:59:32.874 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:59:32.874 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:59:34.651 - wlan0 is not a tetherable iface, ignoring
+    2025-10-19T09:59:35.102 - rmnet0 is not a tetherable iface, ignoring
+    2025-10-19T09:59:35.182 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:59:35.199 - [UpstreamNetworkMonitor] preferred upstream type: MOBILE
+    2025-10-19T09:59:35.200 - Looking for default routes on: {InterfaceName: rmnet0 LinkAddresses: [ 10.119.124.209/24 ] DnsAddresses: [ /112.215.203.246 ] Domains: null MTU: 1500 TcpBufferSizes: 2097152,4194304,8388608,1048576,3145728,4194304 Routes: [ 0.0.0.0/0 -> 10.119.124.1 rmnet0,10.119.124.0/24 -> 0.0.0.0 rmnet0 ]}
+    2025-10-19T09:59:35.200 - Found upstream interface(s): [rmnet0]
+    2025-10-19T09:59:35.202 - SET DNS forwarders: network=1829 dnsServers=[112.215.203.246]
+    2025-10-19T09:59:35.202 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:59:35.202 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:59:35.207 - [UpstreamNetworkMonitor] preferred upstream type: MOBILE
+    2025-10-19T09:59:35.207 - Looking for default routes on: {InterfaceName: rmnet0 LinkAddresses: [ 10.119.124.209/24 ] DnsAddresses: [ /112.215.203.246 ] Domains: null MTU: 1500 TcpBufferSizes: 2097152,4194304,8388608,1048576,3145728,4194304 Routes: [ 0.0.0.0/0 -> 10.119.124.1 rmnet0,10.119.124.0/24 -> 0.0.0.0 rmnet0 ]}
+    2025-10-19T09:59:35.207 - Found upstream interface(s): [rmnet0]
+    2025-10-19T09:59:35.208 - SET DNS forwarders: network=1829 dnsServers=[112.215.203.246]
+    2025-10-19T09:59:35.208 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:59:35.208 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:59:35.208 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:59:35.208 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:59:35.211 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:59:35.211 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:59:35.211 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:59:35.211 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:59:35.211 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:59:35.211 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:59:35.213 - TetherModeAliveState got CMD_UPSTREAM_CHANGED
+    2025-10-19T09:59:35.215 - [UpstreamNetworkMonitor] preferred upstream type: MOBILE
+    2025-10-19T09:59:35.215 - Looking for default routes on: {InterfaceName: rmnet0 LinkAddresses: [ 10.119.124.209/24 ] DnsAddresses: [ /112.215.203.246 ] Domains: null MTU: 1500 TcpBufferSizes: 2097152,4194304,8388608,1048576,3145728,4194304 Routes: [ 0.0.0.0/0 -> 10.119.124.1 rmnet0,10.119.124.0/24 -> 0.0.0.0 rmnet0 ]}
+    2025-10-19T09:59:35.215 - Found upstream interface(s): [rmnet0]
+    2025-10-19T09:59:35.216 - SET DNS forwarders: network=1829 dnsServers=[112.215.203.246]
+    2025-10-19T09:59:35.216 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:59:35.216 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:59:35.216 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:59:35.216 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:59:35.216 - [rndis0] TetheredState got CMD_TETHER_CONNECTION_CHANGED
+    2025-10-19T09:59:35.216 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:59:35.216 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:59:35.216 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T09:59:36.748 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T09:59:36.748 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}
+    2025-10-19T09:59:36.748 - [rndis0] TetheredState got CMD_IPV6_TETHER_UPDATE
+    2025-10-19T09:59:36.748 - OBSERVED LinkProperties update iface=rndis0 state=TETHERED lp={InterfaceName: rndis0 LinkAddresses: [ 192.168.42.129/24 ] DnsAddresses: [ ] Domains: null MTU: 0 Routes: [ 192.168.42.0/24 -> 0.0.0.0 rndis0 ]}
+    2025-10-19T09:59:36.748 - TetherModeAliveState got EVENT_IFACE_UPDATE_LINKPROPERTIES
+    2025-10-19T10:07:03.622 - TetherModeAliveState got EVENT_UPSTREAM_CALLBACK
+    2025-10-19T10:07:03.622 - [IPv6TetheringCoordinator] setUpstreamNetworkState: NetworkState{null}

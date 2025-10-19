@@ -53,7 +53,7 @@ const UIRenderer = baseclass.extend({
           .filter((item) => item.isEmpty && item.header);
 
         if (emptyCells.length > 0) {
-          console.error(
+          console.warn(
             `DroidNet: Missing data for:`,
             emptyCells.map((item) => item.header).join(", "),
           );
@@ -107,7 +107,7 @@ const UIRenderer = baseclass.extend({
       (r) => !r.value || r.value === "-" || r.value === "",
     );
     if (emptyRows.length > 0) {
-      console.error(
+      console.warn(
         "DroidNet: Missing data for:",
         emptyRows.map((r) => r.label).join(", "),
       );

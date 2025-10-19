@@ -1,0 +1,200 @@
+DUMP OF SERVICE wifi:
+Wi-Fi is disabled
+Verbose logging is off
+Stay-awake conditions: 0
+mInIdleMode false
+mScanPending false
+Wi-Fi vendor: Broadcom
+Supported feature: 0 
+Wi-Fi api call history:
+[25/10/15 23:05:14  WifiManager.setWifiEnabled(true) : com.android.shell
+, 25/10/15 23:05:24  WifiManager.setWifiEnabled(false) : com.android.shell
+, 25/10/16 01:57:57  WifiManager.setWifiEnabled(true) : com.android.shell
+, 25/10/16 01:58:24  WifiManager.setWifiEnabled(false) : com.android.shell
+, 25/10/17 10:20:24  WifiManager.setWifiEnabled(true) : com.android.shell
+, 25/10/17 10:21:36  WifiManager.setWifiEnabled(false) : com.android.shell
+, 25/10/17 10:32:25  WifiManager.setWifiEnabled(true) : com.android.shell
+, 25/10/17 10:32:32  WifiManager.setWifiEnabled(true) : com.android.shell
+, 25/10/17 10:32:43  WifiManager.setWifiEnabled(false) : com.android.shell
+, 25/10/17 14:03:36  WifiManager.setWifiEnabled(true) : com.android.shell
+, 25/10/17 14:03:47  WifiManager.setWifiEnabled(false) : com.android.shell
+, 25/10/17 14:24:46  WifiManager.setWifiEnabled(true) : com.android.shell
+, 25/10/17 14:26:42  WifiManager.setWifiEnabled(false) : com.android.shell
+, 25/10/17 14:26:59  WifiManager.setWifiEnabled(true) : com.android.shell
+, 25/10/17 14:29:59  WifiManager.setWifiEnabled(false) : com.android.shell
+, 25/10/17 14:30:20  WifiManager.setWifiEnabled(true) : com.android.shell
+, 25/10/17 14:31:26  WifiManager.setWifiEnabled(false) : com.android.shell
+, 25/10/17 14:32:51  WifiManager.setWifiEnabled(true) : com.android.shell
+, 25/10/17 14:35:47  WifiManager.setWifiEnabled(false) : com.android.shell
+, 25/10/17 14:37:18  WifiManager.setWifiEnabled(true) : com.android.shell
+, 25/10/17 14:44:22  WifiManager.setWifiEnabled(false) : com.android.shell
+]
+Wi-Fi control history from provider:
+lastControlTime: 25/09/18 05:55:34 , packageName: com.android.systemui, lastControl: true
+lastControlTime: 25/09/19 08:27:40 , packageName: com.android.settings, lastControl: false
+lastControlTime: 25/10/17 14:44:22 , packageName: com.android.shell, lastControl: false
+WifiController:
+ total records=1464
+ rec[0]: time=10-04 06:45:43.797 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[1]: time=10-04 06:45:45.097 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[2]: time=10-04 06:46:36.708 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[3]: time=10-04 06:46:37.978 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[4]: time=10-04 06:47:29.589 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[5]: time=10-04 06:47:30.860 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[6]: time=10-04 06:48:12.648 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[7]: time=10-04 06:48:13.928 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[8]: time=10-04 06:49:04.706 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[9]: time=10-04 06:49:05.975 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[10]: time=10-04 06:50:11.195 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[11]: time=10-04 06:50:12.478 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[12]: time=10-04 06:51:04.814 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[13]: time=10-04 06:51:06.077 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[14]: time=10-04 06:51:58.221 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[15]: time=10-04 06:51:59.483 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[16]: time=10-04 06:52:52.106 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[17]: time=10-04 06:52:53.414 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[18]: time=10-04 06:53:45.092 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[19]: time=10-04 06:53:46.364 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[20]: time=10-04 06:54:37.730 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[21]: time=10-04 06:54:39.003 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[22]: time=10-04 06:55:29.761 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[23]: time=10-04 06:55:31.026 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[24]: time=10-04 06:57:22.106 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[25]: time=10-04 06:57:23.388 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[26]: time=10-04 06:58:16.869 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[27]: time=10-04 06:58:18.145 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[28]: time=10-04 06:59:10.255 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[29]: time=10-04 06:59:11.527 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[30]: time=10-04 07:00:03.836 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[31]: time=10-04 07:00:05.105 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[32]: time=10-04 07:00:57.938 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[33]: time=10-04 07:00:59.205 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[34]: time=10-04 07:01:50.240 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[35]: time=10-04 07:01:51.510 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[36]: time=10-04 07:02:33.833 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[37]: time=10-04 07:02:35.101 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[38]: time=10-04 07:04:55.579 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[39]: time=10-04 07:04:56.854 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[40]: time=10-04 07:05:03.118 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[41]: time=10-04 07:05:04.392 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[42]: time=10-04 07:05:46.671 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[43]: time=10-04 07:05:47.932 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[44]: time=10-04 07:06:38.461 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[45]: time=10-04 07:06:39.736 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[46]: time=10-04 07:07:52.719 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[47]: time=10-04 07:07:54.013 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[48]: time=10-04 07:09:56.186 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[49]: time=10-04 07:09:57.454 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[50]: time=10-04 07:10:51.048 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[51]: time=10-04 07:10:52.313 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[52]: time=10-04 07:11:45.946 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[53]: time=10-04 07:11:47.218 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[54]: time=10-04 07:12:39.288 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[55]: time=10-04 07:12:40.554 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[56]: time=10-04 07:13:23.673 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[57]: time=10-04 07:13:24.946 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[58]: time=10-04 07:14:15.394 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[59]: time=10-04 07:14:16.679 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[60]: time=10-04 07:14:59.106 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[61]: time=10-04 07:15:00.367 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[62]: time=10-04 07:15:52.573 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[63]: time=10-04 07:15:54.206 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[64]: time=10-04 07:16:46.285 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[65]: time=10-04 07:16:48.118 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[66]: time=10-04 07:17:23.810 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[67]: time=10-04 07:17:25.526 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[68]: time=10-04 19:17:43.085 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[69]: time=10-04 19:17:44.383 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[70]: time=10-04 21:17:46.047 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[71]: time=10-04 21:17:47.377 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[72]: time=10-05 15:38:34.531 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[73]: time=10-05 15:38:35.871 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[74]: time=10-05 16:01:18.733 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[75]: time=10-05 16:01:20.140 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[76]: time=10-05 23:55:01.720 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[77]: time=10-05 23:55:02.548 processed=DefaultState org=StaDisabledState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[78]: time=10-05 23:55:03.962 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[79]: time=10-06 07:55:40.113 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[80]: time=10-06 07:55:41.484 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[81]: time=10-07 18:04:07.736 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[82]: time=10-07 18:04:09.243 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[83]: time=10-08 06:04:12.768 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[84]: time=10-08 06:04:14.087 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[85]: time=10-09 18:10:00.207 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[86]: time=10-09 18:10:01.505 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[87]: time=10-09 19:49:20.284 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[88]: time=10-09 19:49:21.547 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[89]: time=10-10 18:45:26.265 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[90]: time=10-10 18:45:27.597 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[91]: time=10-12 08:45:38.710 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[92]: time=10-12 08:45:40.027 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[93]: time=10-12 12:45:42.103 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[94]: time=10-12 12:45:43.443 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[95]: time=10-13 05:29:31.844 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[96]: time=10-13 05:29:33.154 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[97]: time=10-14 09:29:43.078 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[98]: time=10-14 09:29:44.365 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[99]: time=10-14 18:00:05.824 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[100]: time=10-14 18:00:07.132 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[101]: time=10-15 03:38:07.420 processed=StaDisabledWithScanState org=StaDisabledWithScanState dest=StaEnabledState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[102]: time=10-15 03:38:18.420 processed=StaEnabledState org=StaEnabledState dest=StaDisabledWithScanState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[103]: time=10-15 19:51:31.154 processed=StaDisabledWithScanState org=StaDisabledWithScanState dest=StaEnabledState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[104]: time=10-15 19:51:40.076 processed=StaEnabledState org=StaEnabledState dest=StaDisabledWithScanState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[105]: time=10-15 20:57:25.634 processed=StaDisabledWithScanState org=StaDisabledWithScanState dest=StaEnabledState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[106]: time=10-15 20:57:32.521 processed=StaEnabledState org=StaEnabledState dest=StaDisabledWithScanState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[107]: time=10-15 21:11:07.442 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[108]: time=10-15 21:11:08.867 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[109]: time=10-15 21:11:28.744 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[110]: time=10-15 21:11:30.066 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[111]: time=10-15 23:05:14.255 processed=StaDisabledWithScanState org=StaDisabledWithScanState dest=StaEnabledState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[112]: time=10-15 23:05:24.228 processed=StaEnabledState org=StaEnabledState dest=StaDisabledWithScanState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[113]: time=10-16 01:57:57.226 processed=StaDisabledWithScanState org=StaDisabledWithScanState dest=StaEnabledState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[114]: time=10-16 01:58:24.542 processed=StaEnabledState org=StaEnabledState dest=StaDisabledWithScanState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[115]: time=10-16 11:11:34.942 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[116]: time=10-16 11:11:36.259 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[117]: time=10-16 19:09:05.301 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[118]: time=10-16 19:09:07.450 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[119]: time=10-16 20:27:37.720 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[120]: time=10-16 20:27:39.074 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[121]: time=10-17 10:20:24.671 processed=StaDisabledWithScanState org=StaDisabledWithScanState dest=StaEnabledState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[122]: time=10-17 10:21:36.558 processed=StaEnabledState org=StaEnabledState dest=StaDisabledWithScanState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[123]: time=10-17 10:32:25.578 processed=StaDisabledWithScanState org=StaDisabledWithScanState dest=StaEnabledState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[124]: time=10-17 10:32:32.672 processed=StaEnabledState org=StaEnabledState dest=<null> what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[125]: time=10-17 10:32:43.235 processed=StaEnabledState org=StaEnabledState dest=StaDisabledWithScanState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[126]: time=10-17 14:03:36.383 processed=StaDisabledWithScanState org=StaDisabledWithScanState dest=StaEnabledState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[127]: time=10-17 14:03:47.178 processed=StaEnabledState org=StaEnabledState dest=StaDisabledWithScanState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[128]: time=10-17 14:24:46.375 processed=StaDisabledWithScanState org=StaDisabledWithScanState dest=StaEnabledState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[129]: time=10-17 14:26:42.102 processed=StaEnabledState org=StaEnabledState dest=StaDisabledWithScanState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[130]: time=10-17 14:26:59.978 processed=StaDisabledWithScanState org=StaDisabledWithScanState dest=StaEnabledState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[131]: time=10-17 14:29:59.529 processed=StaEnabledState org=StaEnabledState dest=StaDisabledWithScanState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[132]: time=10-17 14:30:20.166 processed=StaDisabledWithScanState org=StaDisabledWithScanState dest=StaEnabledState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[133]: time=10-17 14:31:26.746 processed=StaEnabledState org=StaEnabledState dest=StaDisabledWithScanState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[134]: time=10-17 14:32:51.453 processed=StaDisabledWithScanState org=StaDisabledWithScanState dest=StaEnabledState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[135]: time=10-17 14:35:47.539 processed=StaEnabledState org=StaEnabledState dest=StaDisabledWithScanState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[136]: time=10-17 14:37:18.132 processed=StaDisabledWithScanState org=StaDisabledWithScanState dest=StaEnabledState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[137]: time=10-17 14:44:22.412 processed=StaEnabledState org=StaEnabledState dest=StaDisabledWithScanState what=155656(0x26008) CMD_WIFI_TOGGLED 0 0
+ rec[138]: time=10-17 20:36:05.081 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[139]: time=10-17 20:36:06.412 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[140]: time=10-18 08:36:08.736 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[141]: time=10-18 08:36:10.043 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[142]: time=10-18 16:11:48.247 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[143]: time=10-18 16:11:49.577 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[144]: time=10-18 17:26:21.888 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[145]: time=10-18 17:26:23.200 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[146]: time=10-19 03:26:26.986 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[147]: time=10-19 03:26:28.317 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[148]: time=10-19 05:23:00.052 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[149]: time=10-19 05:23:01.334 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[150]: time=10-19 05:23:03.692 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[151]: time=10-19 05:23:04.965 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[152]: time=10-19 05:23:07.369 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[153]: time=10-19 05:23:08.668 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[154]: time=10-19 05:23:14.953 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[155]: time=10-19 05:23:16.229 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[156]: time=10-19 05:23:22.525 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[157]: time=10-19 05:23:23.795 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[158]: time=10-19 05:23:30.081 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[159]: time=10-19 05:23:31.350 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[160]: time=10-19 05:23:37.635 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[161]: time=10-19 05:23:38.906 processed=DefaultState org=StaDisabledState dest=StaDisabledWithScanState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
+ rec[162]: time=10-19 05:23:41.314 processed=DefaultState org=StaDisabledWithScanState dest=StaDisabledState what=155657(0x26009) CMD_AIRPLANE_TOGGLED 0 0
