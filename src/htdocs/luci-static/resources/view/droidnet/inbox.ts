@@ -212,66 +212,64 @@ function renderMessageTable(
       inbox.body.length > 50 ? inbox.body.substring(0, 50) + "..." : inbox.body;
     const messageHtml = inbox.body.replace(/\n/g, "<br>");
 
-    const viewButton = E(
-      "button",
-      {
-        class: "btn cbi-button cbi-button-action",
-        style: "margin-right: 5px;",
-        click: () => {
-          ui.showModal(inbox.address, [
-            E("div", { style: "margin-bottom: 10px;" }, [
-              E("strong", `From: ${inbox.address}`),
-              E("br"),
-              E("em", `Received: ${inbox.received.date}`),
-              E("br"),
-              E(
-                "span",
-                { style: inbox.read ? "" : "font-weight: bold;" },
-                inbox.read ? "Read" : "Unread",
-              ),
-            ]),
-            E("div", {
-              style: "border-top: 1px solid #ccc; padding-top: 10px;",
-            }),
+    const viewButton = UIRenderer.renderButton({
+      label: "View",
+      type: "action",
+      size: "normal",
+      style: "margin-right: 5px;",
+      onClick: () => {
+        ui.showModal(inbox.address, [
+          E("div", { style: "margin-bottom: 10px;" }, [
+            E("strong", `From: ${inbox.address}`),
+            E("br"),
+            E("em", `Received: ${inbox.received.date}`),
+            E("br"),
             E(
-              "p",
-              {},
-              messageHtml
-                .split("<br>")
-                .map((line, i, arr) =>
-                  i < arr.length - 1 ? [line, E("br")] : line,
-                )
-                .flat(),
+              "span",
+              { style: inbox.read ? "" : "font-weight: bold;" },
+              inbox.read ? "Read" : "Unread",
             ),
-            E("div", { class: "right" }, [
-              E("button", { class: "btn", click: ui.hideModal }, _("OK")),
-            ]),
-          ]);
-        },
+          ]),
+          E("div", {
+            style: "border-top: 1px solid #ccc; padding-top: 10px;",
+          }),
+          E(
+            "p",
+            {},
+            messageHtml
+              .split("<br>")
+              .map((line, i, arr) =>
+                i < arr.length - 1 ? [line, E("br")] : line,
+              )
+              .flat(),
+          ),
+          E("div", { class: "right" }, [
+            UIRenderer.renderButton({
+              label: "OK",
+              onClick: ui.hideModal,
+            }),
+          ]),
+        ]);
       },
-      _("View"),
-    );
+    });
 
     const markReadButton = !inbox.read
-      ? E(
-          "button",
-          {
-            class: "btn cbi-button cbi-button-neutral",
-            style: "font-size: 11px; padding: 2px 6px;",
-            click: async () => {
-              await DroidNet.exec([
-                "content",
-                "update",
-                "--uri",
-                `content://sms/${inbox._id}`,
-                "--bind",
-                "read:i:1",
-              ]);
-              location.reload();
-            },
+      ? UIRenderer.renderButton({
+          label: "Read",
+          type: "neutral",
+          size: "small",
+          onClick: async () => {
+            await DroidNet.exec([
+              "content",
+              "update",
+              "--uri",
+              `content://sms/${inbox._id}`,
+              "--bind",
+              "read:i:1",
+            ]);
+            location.reload();
           },
-          _("Read"),
-        )
+        })
       : null;
 
     return [
@@ -429,23 +427,21 @@ function renderInboxControls(
           "display: flex; flex-wrap: wrap; justify-content: space-around; padding: 1em 0;",
       },
       [
-        E(
-          "button",
-          {
-            class: "btn cbi-button-neutral prev",
-            style: "flex-basis: 20%; text-align: center;",
-            disabled: true,
-            click: () => {
-              inboxCurrentPage--;
-              const newDisplay = parseInt(
-                (document.getElementById("per-page") as HTMLSelectElement)
-                  ?.value || display.toString(),
-              );
-              updateMessageTable(getFilteredMessages(messages), newDisplay);
-            },
+        UIRenderer.renderButton({
+          label: "«",
+          type: "neutral",
+          class: "btn cbi-button-neutral prev",
+          style: "flex-basis: 20%; text-align: center;",
+          disabled: true,
+          onClick: () => {
+            inboxCurrentPage--;
+            const newDisplay = parseInt(
+              (document.getElementById("per-page") as HTMLSelectElement)
+                ?.value || display.toString(),
+            );
+            updateMessageTable(getFilteredMessages(messages), newDisplay);
           },
-          "«",
-        ),
+        }),
         E(
           "div",
           {
@@ -466,22 +462,20 @@ function renderInboxControls(
             messages.length,
           ),
         ),
-        E(
-          "button",
-          {
-            class: "btn cbi-button-neutral next",
-            style: "flex-basis: 20%; text-align: center;",
-            click: () => {
-              inboxCurrentPage++;
-              const newDisplay = parseInt(
-                (document.getElementById("per-page") as HTMLSelectElement)
-                  ?.value || display.toString(),
-              );
-              updateMessageTable(getFilteredMessages(messages), newDisplay);
-            },
+        UIRenderer.renderButton({
+          label: "»",
+          type: "neutral",
+          class: "btn cbi-button-neutral next",
+          style: "flex-basis: 20%; text-align: center;",
+          onClick: () => {
+            inboxCurrentPage++;
+            const newDisplay = parseInt(
+              (document.getElementById("per-page") as HTMLSelectElement)
+                ?.value || display.toString(),
+            );
+            updateMessageTable(getFilteredMessages(messages), newDisplay);
           },
-          "»",
-        ),
+        }),
       ],
     ),
     E("div", { class: "table-container" }, [

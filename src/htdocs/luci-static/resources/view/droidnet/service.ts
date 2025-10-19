@@ -453,15 +453,12 @@ function renderPowerOptions(): HTMLElement[] {
         { class: "tr", style: "border: none;" },
         powerActions.map(({ label, action }) =>
           E("td", { class: "td center", style: "border: none;" }, [
-            E(
-              "button",
-              {
-                class: "btn cbi-button cbi-button-save",
-                style: "margin: 10px 0!important;",
-                click: action,
-              },
-              _(label),
-            ),
+            UIRenderer.renderButton({
+              label,
+              type: "save",
+              style: "margin: 10px 0!important;",
+              onClick: action,
+            }),
           ]),
         ),
       ),
@@ -527,151 +524,145 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
       : E("span", { style: "color: #999; font-size: 11px;" }, "Unknown");
 
     const infoBtn = uadInfo
-      ? E(
-          "button",
-          {
-            class: "btn cbi-button cbi-button-neutral",
-            style: "font-size: 11px; padding: 2px 6px; margin-right: 5px;",
-            click: () => {
-              const desc = uadInfo.description
-                .split("\n")
-                .map((line, i, arr) =>
-                  i < arr.length - 1 ? [line, E("br")] : line,
-                )
-                .flat();
+      ? UIRenderer.renderButton({
+          label: "Info",
+          type: "neutral",
+          size: "small",
+          style: "margin-right: 5px;",
+          onClick: () => {
+            const desc = uadInfo.description
+              .split("\n")
+              .map((line, i, arr) =>
+                i < arr.length - 1 ? [line, E("br")] : line,
+              )
+              .flat();
 
-              ui.showModal(
-                _("Package Information"),
-                [
-                  E("div", { style: "margin-bottom: 10px;" }, [
-                    E("strong", pkg.name),
-                    E("br"),
-                    E("span", `Version: ${pkg.versionCode} | UID: ${pkg.uid}`),
-                    E("br"),
-                    E(
-                      "span",
-                      { style: `color: ${getRemovalColor(uadInfo.removal)};` },
-                      `Removal: ${uadInfo.removal}`,
-                    ),
-                  ]),
-                  E("div", {
-                    style: "border-top: 1px solid #ccc; padding-top: 10px;",
+            ui.showModal(
+              _("Package Information"),
+              [
+                E("div", { style: "margin-bottom: 10px;" }, [
+                  E("strong", pkg.name),
+                  E("br"),
+                  E("span", `Version: ${pkg.versionCode} | UID: ${pkg.uid}`),
+                  E("br"),
+                  E(
+                    "span",
+                    { style: `color: ${getRemovalColor(uadInfo.removal)};` },
+                    `Removal: ${uadInfo.removal}`,
+                  ),
+                ]),
+                E("div", {
+                  style: "border-top: 1px solid #ccc; padding-top: 10px;",
+                }),
+                E("p", {}, desc),
+                uadInfo.dependencies.length > 0
+                  ? E("div", [
+                      E("strong", "Dependencies: "),
+                      E("span", uadInfo.dependencies.join(", ")),
+                    ])
+                  : null,
+                E("div", { class: "right" }, [
+                  UIRenderer.renderButton({
+                    label: "OK",
+                    onClick: ui.hideModal,
                   }),
-                  E("p", {}, desc),
-                  uadInfo.dependencies.length > 0
-                    ? E("div", [
-                        E("strong", "Dependencies: "),
-                        E("span", uadInfo.dependencies.join(", ")),
-                      ])
-                    : null,
-                  E("div", { class: "right" }, [
-                    E("button", { class: "btn", click: ui.hideModal }, _("OK")),
-                  ]),
-                ].filter(Boolean),
-              );
-            },
+                ]),
+              ].filter(Boolean),
+            );
           },
-          _("Info"),
-        )
+        })
       : null;
 
-    const disableBtn = E(
-      "button",
-      {
-        class: "btn cbi-button cbi-button-neutral",
-        style: "font-size: 11px; padding: 2px 6px; margin-right: 5px;",
-        click: () => {
-          const toggleAction = UIRenderer.createToggleAction(
-            `package ${pkg.name}`,
-            ["pm", "enable", "--user", "0", pkg.name],
-            ["pm", "disable", "--user", "0", pkg.name],
-            async (cmd: string[]) => {
-              const result = await DroidNet.exec(cmd, { su: true });
-              return {
-                code: result.code || 0,
-                stdout: result.stdout || "",
-                stderr: result.stderr || "",
-              };
+    const disableBtn = UIRenderer.renderButton({
+      label: "Disable",
+      type: "neutral",
+      size: "small",
+      style: "margin-right: 5px;",
+      onClick: () => {
+        const toggleAction = UIRenderer.createToggleAction(
+          `package ${pkg.name}`,
+          ["pm", "enable", "--user", "0", pkg.name],
+          ["pm", "disable", "--user", "0", pkg.name],
+          async (cmd: string[]) => {
+            const result = await DroidNet.exec(cmd, { su: true });
+            return {
+              code: result.code || 0,
+              stdout: result.stdout || "",
+              stderr: result.stderr || "",
+            };
+          },
+          {
+            onSuccess: (message) => {
+              UIRenderer.modalSuccess(message);
+              DroidNet.log(message);
             },
-            {
-              onSuccess: (message) => {
-                UIRenderer.modalSuccess(message);
-                DroidNet.log(message);
-              },
-              onFailed: (error) => {
-                UIRenderer.modalError("Package operation failed", error);
-                DroidNet.log(error);
-              },
-              validator: (result) =>
-                result.code === 0 &&
-                !result.stdout?.includes("Security exception"),
+            onFailed: (error) => {
+              UIRenderer.modalError("Package operation failed", error);
+              DroidNet.log(error);
             },
-          );
-          toggleAction.onEnable();
-        },
+            validator: (result) =>
+              result.code === 0 &&
+              !result.stdout?.includes("Security exception"),
+          },
+        );
+        toggleAction.onEnable();
       },
-      _("Disable"),
-    );
+    });
 
-    const suspendBtn = E(
-      "button",
-      {
-        class: "btn cbi-button cbi-button-neutral",
-        style: "font-size: 11px; padding: 2px 6px; margin-right: 5px;",
-        click: () => {
-          const toggleAction = UIRenderer.createToggleAction(
-            `package ${pkg.name}`,
-            ["pm", "unsuspend", "--user", "0", pkg.name],
-            ["pm", "suspend", "--user", "0", pkg.name],
-            async (cmd: string[]) => {
-              const result = await DroidNet.exec(cmd, { su: true });
-              return {
-                code: result.code || 0,
-                stdout: result.stdout || "",
-                stderr: result.stderr || "",
-              };
+    const suspendBtn = UIRenderer.renderButton({
+      label: "Suspend",
+      type: "neutral",
+      size: "small",
+      style: "margin-right: 5px;",
+      onClick: () => {
+        const toggleAction = UIRenderer.createToggleAction(
+          `package ${pkg.name}`,
+          ["pm", "unsuspend", "--user", "0", pkg.name],
+          ["pm", "suspend", "--user", "0", pkg.name],
+          async (cmd: string[]) => {
+            const result = await DroidNet.exec(cmd, { su: true });
+            return {
+              code: result.code || 0,
+              stdout: result.stdout || "",
+              stderr: result.stderr || "",
+            };
+          },
+          {
+            onSuccess: (message) => {
+              UIRenderer.modalSuccess(message);
+              DroidNet.log(message);
             },
-            {
-              onSuccess: (message) => {
-                UIRenderer.modalSuccess(message);
-                DroidNet.log(message);
-              },
-              onFailed: (error) => {
-                UIRenderer.modalError("Package operation failed", error);
-                DroidNet.log(error);
-              },
-              validator: (result) =>
-                result.code === 0 &&
-                !result.stdout?.includes("Security exception"),
+            onFailed: (error) => {
+              UIRenderer.modalError("Package operation failed", error);
+              DroidNet.log(error);
             },
-          );
-          toggleAction.onEnable();
-        },
+            validator: (result) =>
+              result.code === 0 &&
+              !result.stdout?.includes("Security exception"),
+          },
+        );
+        toggleAction.onEnable();
       },
-      _("Suspend"),
-    );
+    });
 
-    const removeBtn = E(
-      "button",
-      {
-        class: "btn cbi-button cbi-button-remove",
-        style: "font-size: 11px; padding: 2px 6px;",
-        click: () => {
-          const warning =
-            uadInfo && uadInfo.removal === "Unsafe"
-              ? _(
-                  "\n⚠️ WARNING: This package is marked as UNSAFE to remove and may cause system instability!",
-                )
-              : "";
-          UIRenderer.confirmAction(
-            `Remove application ${pkg.name}`,
-            _("Are you sure you want to remove this application?") + warning,
-            () => removeApplication(pkg.name),
-          );
-        },
+    const removeBtn = UIRenderer.renderButton({
+      label: "Remove",
+      type: "remove",
+      size: "small",
+      onClick: () => {
+        const warning =
+          uadInfo && uadInfo.removal === "Unsafe"
+            ? _(
+                "\n⚠️ WARNING: This package is marked as UNSAFE to remove and may cause system instability!",
+              )
+            : "";
+        UIRenderer.confirmAction(
+          `Remove application ${pkg.name}`,
+          _("Are you sure you want to remove this application?") + warning,
+          () => removeApplication(pkg.name),
+        );
       },
-      _("Remove"),
-    );
+    });
 
     return [
       packageName,
@@ -899,120 +890,114 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
       E("div", { class: "action-application", style: "padding: .25em;" }, [
         E("label", _("Actions") + " : "),
         E("span", { class: "control-group", style: "display: flex;" }, [
-          E(
-            "button",
-            {
-              class: "btn cbi-button cbi-button-save",
-              style: "margin-right: 10px",
-              click: () => {
-                UIRenderer.modalLoading("Updating application list...");
-                setTimeout(() => {
-                  UIRenderer.modalSuccess(
-                    "Update completed",
-                    "Application list has been successfully updated.",
-                  );
-                  setTimeout(() => window.location.reload(), 2000);
-                }, 2000);
-              },
+          UIRenderer.renderButton({
+            label: "Update list",
+            type: "save",
+            style: "margin-right: 10px",
+            onClick: () => {
+              UIRenderer.modalLoading("Updating application list...");
+              setTimeout(() => {
+                UIRenderer.modalSuccess(
+                  "Update completed",
+                  "Application list has been successfully updated.",
+                );
+                setTimeout(() => window.location.reload(), 2000);
+              }, 2000);
             },
-            _("Update list"),
-          ),
-          E(
-            "button",
-            {
-              class: "btn cbi-button cbi-button-action",
-              click: async () => {
-                try {
-                  const result = await ui.uploadFile(apkFile);
+          }),
+          UIRenderer.renderButton({
+            label: "Upload application",
+            type: "action",
+            onClick: async () => {
+              try {
+                const result = await ui.uploadFile(apkFile);
 
-                  const fileInfo = [
-                    result.size
-                      ? E(
-                          "li",
-                          `${_("Size")}: ${(result.size / 1024 / 1024).toFixed(2)}MB`,
-                        )
-                      : "",
-                    result.checksum
-                      ? E("li", `${_("MD5")}: ${result.checksum}`)
-                      : "",
-                    result.sha256sum
-                      ? E("li", `${_("SHA256")}: ${result.sha256sum}`)
-                      : "",
-                  ].filter(Boolean);
+                const fileInfo = [
+                  result.size
+                    ? E(
+                        "li",
+                        `${_("Size")}: ${(result.size / 1024 / 1024).toFixed(2)}MB`,
+                      )
+                    : "",
+                  result.checksum
+                    ? E("li", `${_("MD5")}: ${result.checksum}`)
+                    : "",
+                  result.sha256sum
+                    ? E("li", `${_("SHA256")}: ${result.sha256sum}`)
+                    : "",
+                ].filter(Boolean);
 
-                  UIRenderer.confirmAction(
-                    "Install application",
-                    E("div", [
-                      E(
-                        "p",
-                        _(
-                          "Installing application from untrusted sources is a potential security risk, really attempt to install %s?",
-                        ).format(result.name),
-                      ),
-                      fileInfo.length > 0 ? E("ul", fileInfo) : "",
-                    ]),
-                    async () => {
-                      UIRenderer.modalLoading("Installing application...");
-                      try {
-                        const deviceId = await DroidNet.getDeviceId();
-                        if (!deviceId) throw new Error("Device not found");
-                        const installResult = await fs.exec_direct("adb", [
-                          "-s",
-                          deviceId,
-                          "install",
-                          apkFile,
-                        ]);
+                UIRenderer.confirmAction(
+                  "Install application",
+                  E("div", [
+                    E(
+                      "p",
+                      _(
+                        "Installing application from untrusted sources is a potential security risk, really attempt to install %s?",
+                      ).format(result.name),
+                    ),
+                    fileInfo.length > 0 ? E("ul", fileInfo) : "",
+                  ]),
+                  async () => {
+                    UIRenderer.modalLoading("Installing application...");
+                    try {
+                      const deviceId = await DroidNet.getDeviceId();
+                      if (!deviceId) throw new Error("Device not found");
+                      const installResult = await fs.exec_direct("adb", [
+                        "-s",
+                        deviceId,
+                        "install",
+                        apkFile,
+                      ]);
 
-                        if (installResult.trim() === "Success") {
-                          UIRenderer.modalSuccess(
-                            "Installation completed",
-                            `Application ${result.name} has been successfully installed.`,
-                          );
-                          DroidNet.log(
-                            _(
-                              "Application %s has been successfully installed.",
-                            ).format(result.name),
-                          );
-                        } else {
-                          UIRenderer.modalError(
-                            "Installation failed",
-                            E("div", [
-                              E(
-                                "p",
-                                _("Failed to install %s application.").format(
-                                  result.name,
-                                ),
+                      if (installResult.trim() === "Success") {
+                        UIRenderer.modalSuccess(
+                          "Installation completed",
+                          `Application ${result.name} has been successfully installed.`,
+                        );
+                        DroidNet.log(
+                          _(
+                            "Application %s has been successfully installed.",
+                          ).format(result.name),
+                        );
+                      } else {
+                        UIRenderer.modalError(
+                          "Installation failed",
+                          E("div", [
+                            E(
+                              "p",
+                              _("Failed to install %s application.").format(
+                                result.name,
                               ),
-                              E("em", { style: "color: red;" }, installResult),
-                            ]),
-                          );
-                          DroidNet.log(
-                            _("Failed to install %s application: %s").format(
-                              result.name,
-                              installResult,
                             ),
-                          );
-                        }
-                      } finally {
-                        await fs.remove(apkFile);
+                            E("em", { style: "color: red;" }, installResult),
+                          ]),
+                        );
+                        DroidNet.log(
+                          _("Failed to install %s application: %s").format(
+                            result.name,
+                            installResult,
+                          ),
+                        );
                       }
-                    },
+                    } finally {
+                      await fs.remove(apkFile);
+                    }
+                  },
+                );
+              } catch (error) {
+                if (String(error) !== "Upload has been cancelled") {
+                  UIRenderer.modalError(
+                    "Upload failed",
+                    E("div", [
+                      E("p", _("Failed to upload application.")),
+                      E("em", { style: "color: red;" }, String(error)),
+                    ]),
                   );
-                } catch (error) {
-                  if (String(error) !== "Upload has been cancelled") {
-                    UIRenderer.modalError(
-                      "Upload failed",
-                      E("div", [
-                        E("p", _("Failed to upload application.")),
-                        E("em", { style: "color: red;" }, String(error)),
-                      ]),
-                    );
-                  }
                 }
-              },
+              }
             },
-            _("Upload application"),
-          ),
+          }),
         ]),
       ]),
     ]),
@@ -1024,19 +1009,17 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
           "display: flex; flex-wrap: wrap; justify-content: space-around; padding: 1em 0;",
       },
       [
-        E(
-          "button",
-          {
-            class: "btn cbi-button-neutral prev",
-            style: "flex-basis: 20%; text-align: center;",
-            disabled: true,
-            click: () => {
-              currentPage--;
-              updateApplicationTable(data);
-            },
+        UIRenderer.renderButton({
+          label: "«",
+          type: "neutral",
+          class: "btn cbi-button-neutral prev",
+          style: "flex-basis: 20%; text-align: center;",
+          disabled: true,
+          onClick: () => {
+            currentPage--;
+            updateApplicationTable(data);
           },
-          "«",
-        ),
+        }),
         E(
           "div",
           {
@@ -1049,18 +1032,16 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
             (data.application || []).length,
           ),
         ),
-        E(
-          "button",
-          {
-            class: "btn cbi-button-neutral next",
-            style: "flex-basis: 20%; text-align: center;",
-            click: () => {
-              currentPage++;
-              updateApplicationTable(data);
-            },
+        UIRenderer.renderButton({
+          label: "»",
+          type: "neutral",
+          class: "btn cbi-button-neutral next",
+          style: "flex-basis: 20%; text-align: center;",
+          onClick: () => {
+            currentPage++;
+            updateApplicationTable(data);
           },
-          "»",
-        ),
+        }),
       ],
     ),
     E("div", { class: "table-container" }, renderApplicationTable(data)),

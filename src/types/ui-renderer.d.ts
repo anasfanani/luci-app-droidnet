@@ -22,6 +22,23 @@ declare global {
     onClick?: () => void;
   }
 
+  interface UIButtonConfig {
+    label: string;
+    type?:
+      | "positive"
+      | "negative"
+      | "primary"
+      | "neutral"
+      | "action"
+      | "save"
+      | "remove";
+    size?: "small" | "normal";
+    onClick: () => void;
+    disabled?: boolean;
+    style?: string;
+    class?: string;
+  }
+
   interface UITableConfig {
     col?: number;
     colSizeMap?: Record<number, number[]>;

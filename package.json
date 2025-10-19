@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node build.mjs",
     "build:package": "bun run build && ./.github/tools/build-package.sh",
-    "livebuildtest": "bun run build && sshpass -p 'jancok123' scp -o StrictHostKeyChecking=no -r dist/htdocs/luci-static/resources/* root@100.104.137.1:/www/luci-static/resources/ && npm run test:e2e",
+    "live:copy": "bun run build && sshpass -p 'jancok123' scp -o StrictHostKeyChecking=no -r dist/htdocs/luci-static/resources/* root@100.104.137.1:/www/luci-static/resources/",
+    "live:e2e": "bun run live:copy && bun run test:e2e",
     "version-bump": "./.github/tools/version-bump.sh",
     "watch": "tsc --watch",
     "lint": "npx eslint",

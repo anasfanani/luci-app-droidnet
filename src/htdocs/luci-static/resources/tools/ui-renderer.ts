@@ -122,26 +122,20 @@ const UIRenderer = baseclass.extend({
         if (row.action) {
           actionButtons = [
             row.value
-              ? E(
-                  "button",
-                  {
-                    class: "btn cbi-button cbi-button-remove",
-                    style:
-                      "display: block; margin: 0 auto; padding: 2px 8px; font-size: 12px; line-height: 1.2;",
-                    click: row.action.onEnable,
-                  },
-                  _("Disable"),
-                )
-              : E(
-                  "button",
-                  {
-                    class: "btn cbi-button cbi-button-action",
-                    style:
-                      "display: block; margin: 0 auto; padding: 2px 8px; font-size: 12px; line-height: 1.2;",
-                    click: row.action.onDisable,
-                  },
-                  _("Enable"),
-                ),
+              ? this.renderButton({
+                  label: "Disable",
+                  type: "remove",
+                  style:
+                    "display: block; margin: 0 auto; padding: 2px 8px; font-size: 12px; line-height: 1.2;",
+                  onClick: row.action.onEnable,
+                })
+              : this.renderButton({
+                  label: "Enable",
+                  type: "action",
+                  style:
+                    "display: block; margin: 0 auto; padding: 2px 8px; font-size: 12px; line-height: 1.2;",
+                  onClick: row.action.onDisable,
+                }),
           ];
         }
 
@@ -228,16 +222,12 @@ const UIRenderer = baseclass.extend({
           );
         } else if (filter.type === "button") {
           parts.push(
-            E(
-              "button",
-              {
-                id: filter.id,
-                class: filter.class || "btn cbi-button",
-                style: filter.style || "margin: 8px 8px 8px 0;",
-                click: filter.onClick,
-              },
-              _(filter.label),
-            ),
+            this.renderButton({
+              label: filter.label,
+              class: filter.class || "btn cbi-button",
+              style: filter.style || "margin: 8px 8px 8px 0;",
+              onClick: filter.onClick!,
+            }),
           );
         }
 
@@ -354,14 +344,10 @@ const UIRenderer = baseclass.extend({
       E("p", _(message)),
       errorMessage ? E("em", { style: "color: red;" }, errorMessage) : "",
       E("div", { class: "right" }, [
-        E(
-          "button",
-          {
-            class: "btn cbi-button",
-            click: ui.hideModal,
-          },
-          _("OK"),
-        ),
+        this.renderButton({
+          label: "OK",
+          onClick: ui.hideModal,
+        }),
       ]),
     ]);
   },
@@ -371,14 +357,10 @@ const UIRenderer = baseclass.extend({
       E("p", _(message)),
       successMessage ? E("em", { style: "color: green;" }, successMessage) : "",
       E("div", { class: "right" }, [
-        E(
-          "button",
-          {
-            class: "btn cbi-button",
-            click: ui.hideModal,
-          },
-          _("OK"),
-        ),
+        this.renderButton({
+          label: "OK",
+          onClick: ui.hideModal,
+        }),
       ]),
     ]);
   },
@@ -395,46 +377,31 @@ const UIRenderer = baseclass.extend({
     ui.showModal(_(title), [
       E("p", _(message)),
       E("div", { class: "right" }, [
-        E(
-          "button",
-          {
-            class: "btn cbi-button",
-            click: ui.hideModal,
-          },
-          _("Cancel"),
-        ),
-        E(
-          "button",
-          {
-            class: "btn cbi-button cbi-button-action",
-            click: yesCallback,
-          },
-          _("Yes"),
-        ),
+        this.renderButton({
+          label: "Cancel",
+          onClick: ui.hideModal,
+        }),
+        this.renderButton({
+          label: "Yes",
+          type: "action",
+          onClick: yesCallback,
+        }),
       ]),
     ]);
   },
 
   closeUi: function (type: "OK" | "Cancel"): HTMLElement {
     if (type === "OK") {
-      return E(
-        "button",
-        {
-          class: "btn",
-          click: ui.hideModal,
-        },
-        _("OK"),
-      );
+      return this.renderButton({
+        label: "OK",
+        onClick: ui.hideModal,
+      });
     }
 
-    return E(
-      "button",
-      {
-        class: "btn",
-        click: ui.hideModal,
-      },
-      _("Cancel"),
-    );
+    return this.renderButton({
+      label: "Cancel",
+      onClick: ui.hideModal,
+    });
   },
 
   selectDeviceForm: function (): HTMLElement {
@@ -577,6 +544,62 @@ const UIRenderer = baseclass.extend({
     );
 
     return (await m.render()) as HTMLElement;
+  },
+
+  renderButton: function (config: {
+    label: string;
+    type?:
+      | "positive"
+      | "negative"
+      | "primary"
+      | "neutral"
+      | "action"
+      | "save"
+      | "remove";
+    size?: "small" | "normal";
+    onClick: () => void;
+    disabled?: boolean;
+    style?: string;
+    class?: string;
+  }): HTMLElement {
+    const typeMap: Record<string, string> = {
+      positive: "cbi-button-save",
+      negative: "cbi-button-remove",
+      primary: "cbi-button-action",
+      neutral: "cbi-button-neutral",
+      action: "cbi-button-action",
+      save: "cbi-button-save",
+      remove: "cbi-button-remove",
+    };
+
+    const sizeStyles: Record<string, string> = {
+      small: "font-size: 11px; padding: 2px 6px;",
+      normal: "",
+    };
+
+    // If custom class provided, use it; otherwise build from type
+    let buttonClass: string;
+    if (config.class) {
+      buttonClass = config.class;
+    } else if (config.type) {
+      buttonClass = `btn cbi-button ${typeMap[config.type]}`;
+    } else {
+      buttonClass = "btn";
+    }
+
+    const sizeStyle = config.size ? sizeStyles[config.size] : "";
+    const finalStyle = [sizeStyle, config.style].filter(Boolean).join(" ");
+
+    return E(
+      "button",
+      {
+        class: buttonClass,
+        style: finalStyle || undefined,
+        disabled: config.disabled,
+        click: config.onClick,
+      },
+      _(config.label),
+    );
   },
 
   __createFormButton: function (
