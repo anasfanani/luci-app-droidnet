@@ -469,7 +469,151 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
     });
   }
 
-  const rows = currentPackages.map((pkg: AppPackage) => {
+  const createInfoButton = (uadInfo: UADPackageInfo, pkg: AppPackage) => {
+    return UIRenderer.renderButton({
+      label: "Info",
+      type: "neutral",
+      size: "small",
+      style: "margin-right: 5px;",
+      onClick: () => {
+        const desc = uadInfo.description
+          .split("\n")
+          .map((line: string, i: number, arr: string[]) =>
+            i < arr.length - 1 ? [line, E("br")] : line,
+          )
+          .flat();
+        ui.showModal(
+          _("Package Information"),
+          [
+            E("div", { style: "margin-bottom: 10px;" }, [
+              E("strong", pkg.name),
+              E("br"),
+              E("span", `Version: ${pkg.versionCode} | UID: ${pkg.uid}`),
+              E("br"),
+              E(
+                "span",
+                { style: `color: ${getRemovalColor(uadInfo.removal)};` },
+                `Removal: ${uadInfo.removal}`,
+              ),
+            ]),
+            E("div", {
+              style: "border-top: 1px solid #ccc; padding-top: 10px;",
+            }),
+            E("p", {}, desc),
+            uadInfo.dependencies.length > 0
+              ? E("div", [
+                  E("strong", "Dependencies: "),
+                  E("span", uadInfo.dependencies.join(", ")),
+                ])
+              : null,
+            E("div", { class: "right" }, [UIRenderer.closeUi("OK")]),
+          ].filter(Boolean),
+        );
+      },
+    });
+  };
+
+  const createDisableButton = (pkg: AppPackage) => {
+    return UIRenderer.renderButton({
+      label: "Disable",
+      type: "neutral",
+      size: "small",
+      style: "margin-right: 5px;",
+      onClick: () => {
+        const toggleAction = UIRenderer.createToggleAction(
+          `package ${pkg.name}`,
+          ["pm", "enable", "--user", "0", pkg.name],
+          ["pm", "disable", "--user", "0", pkg.name],
+          async (cmd: string[]) => {
+            const result = await DroidNet.exec(cmd, { su: true });
+            return {
+              code: result.code || 0,
+              stdout: result.stdout || "",
+              stderr: result.stderr || "",
+            };
+          },
+          {
+            onSuccess: (message) => {
+              UIRenderer.modalSuccess(message);
+              DroidNet.log(message);
+            },
+            onFailed: (error) => {
+              UIRenderer.modalError("Package operation failed", error);
+              DroidNet.log(error);
+            },
+            validator: (result) =>
+              result.code === 0 &&
+              !result.stdout?.includes("Security exception"),
+          },
+        );
+        toggleAction.onEnable();
+      },
+    });
+  };
+
+  const createSuspendButton = (pkg: AppPackage) => {
+    return UIRenderer.renderButton({
+      label: "Suspend",
+      type: "neutral",
+      size: "small",
+      style: "margin-right: 5px;",
+      onClick: () => {
+        const toggleAction = UIRenderer.createToggleAction(
+          `package ${pkg.name}`,
+          ["pm", "unsuspend", "--user", "0", pkg.name],
+          ["pm", "suspend", "--user", "0", pkg.name],
+          async (cmd: string[]) => {
+            const result = await DroidNet.exec(cmd, { su: true });
+            return {
+              code: result.code || 0,
+              stdout: result.stdout || "",
+              stderr: result.stderr || "",
+            };
+          },
+          {
+            onSuccess: (message) => {
+              UIRenderer.modalSuccess(message);
+              DroidNet.log(message);
+            },
+            onFailed: (error) => {
+              UIRenderer.modalError("Package operation failed", error);
+              DroidNet.log(error);
+            },
+            validator: (result) =>
+              result.code === 0 &&
+              !result.stdout?.includes("Security exception"),
+          },
+        );
+        toggleAction.onEnable();
+      },
+    });
+  };
+
+  const createRemoveButton = (
+    pkg: AppPackage,
+    removeApplication: (name: string) => Promise<void>,
+  ) => {
+    return UIRenderer.renderButton({
+      label: "Remove",
+      type: "remove",
+      size: "small",
+      onClick: () => {
+        const warning =
+          pkg.uadInfo && pkg.uadInfo.removal === "Unsafe"
+            ? _(
+                "\n⚠️ WARNING: This package is marked as UNSAFE to remove and may cause system instability!",
+              )
+            : "";
+        UIRenderer.confirmAction(
+          `Remove application ${pkg.name}`,
+          _("Are you sure you want to remove this application?") + warning,
+          () => removeApplication(pkg.name),
+        );
+      },
+    });
+  };
+
+  const renderPackageRow = (pkg: AppPackage) => {
     const uadInfo = pkg.uadInfo;
 
     const packageName = E(
@@ -507,146 +651,10 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
         )
       : E("span", { style: "color: #999; font-size: 11px;" }, "Unknown");
 
-    const infoBtn = uadInfo
-      ? UIRenderer.renderButton({
-          label: "Info",
-          type: "neutral",
-          size: "small",
-          style: "margin-right: 5px;",
-          onClick: () => {
-            const desc = uadInfo.description
-              .split("\n")
-              .map((line, i, arr) =>
-                i < arr.length - 1 ? [line, E("br")] : line,
-              )
-              .flat();
-
-            ui.showModal(
-              _("Package Information"),
-              [
-                E("div", { style: "margin-bottom: 10px;" }, [
-                  E("strong", pkg.name),
-                  E("br"),
-                  E("span", `Version: ${pkg.versionCode} | UID: ${pkg.uid}`),
-                  E("br"),
-                  E(
-                    "span",
-                    { style: `color: ${getRemovalColor(uadInfo.removal)};` },
-                    `Removal: ${uadInfo.removal}`,
-                  ),
-                ]),
-                E("div", {
-                  style: "border-top: 1px solid #ccc; padding-top: 10px;",
-                }),
-                E("p", {}, desc),
-                uadInfo.dependencies.length > 0
-                  ? E("div", [
-                      E("strong", "Dependencies: "),
-                      E("span", uadInfo.dependencies.join(", ")),
-                    ])
-                  : null,
-                E("div", { class: "right" }, [
-                  UIRenderer.renderButton({
-                    label: "OK",
-                    onClick: ui.hideModal,
-                  }),
-                ]),
-              ].filter(Boolean),
-            );
-          },
-        })
-      : null;
-
-    const disableBtn = UIRenderer.renderButton({
-      label: "Disable",
-      type: "neutral",
-      size: "small",
-      style: "margin-right: 5px;",
-      onClick: () => {
-        const toggleAction = UIRenderer.createToggleAction(
-          `package ${pkg.name}`,
-          ["pm", "enable", "--user", "0", pkg.name],
-          ["pm", "disable", "--user", "0", pkg.name],
-          async (cmd: string[]) => {
-            const result = await DroidNet.exec(cmd, { su: true });
-            return {
-              code: result.code || 0,
-              stdout: result.stdout || "",
-              stderr: result.stderr || "",
-            };
-          },
-          {
-            onSuccess: (message) => {
-              UIRenderer.modalSuccess(message);
-              DroidNet.log(message);
-            },
-            onFailed: (error) => {
-              UIRenderer.modalError("Package operation failed", error);
-              DroidNet.log(error);
-            },
-            validator: (result) =>
-              result.code === 0 &&
-              !result.stdout?.includes("Security exception"),
-          },
-        );
-        toggleAction.onEnable();
-      },
-    });
-
-    const suspendBtn = UIRenderer.renderButton({
-      label: "Suspend",
-      type: "neutral",
-      size: "small",
-      style: "margin-right: 5px;",
-      onClick: () => {
-        const toggleAction = UIRenderer.createToggleAction(
-          `package ${pkg.name}`,
-          ["pm", "unsuspend", "--user", "0", pkg.name],
-          ["pm", "suspend", "--user", "0", pkg.name],
-          async (cmd: string[]) => {
-            const result = await DroidNet.exec(cmd, { su: true });
-            return {
-              code: result.code || 0,
-              stdout: result.stdout || "",
-              stderr: result.stderr || "",
-            };
-          },
-          {
-            onSuccess: (message) => {
-              UIRenderer.modalSuccess(message);
-              DroidNet.log(message);
-            },
-            onFailed: (error) => {
-              UIRenderer.modalError("Package operation failed", error);
-              DroidNet.log(error);
-            },
-            validator: (result) =>
-              result.code === 0 &&
-              !result.stdout?.includes("Security exception"),
-          },
-        );
-        toggleAction.onEnable();
-      },
-    });
-
-    const removeBtn = UIRenderer.renderButton({
-      label: "Remove",
-      type: "remove",
-      size: "small",
-      onClick: () => {
-        const warning =
-          uadInfo && uadInfo.removal === "Unsafe"
-            ? _(
-                "\n⚠️ WARNING: This package is marked as UNSAFE to remove and may cause system instability!",
-              )
-            : "";
-        UIRenderer.confirmAction(
-          `Remove application ${pkg.name}`,
-          _("Are you sure you want to remove this application?") + warning,
-          () => removeApplication(pkg.name),
-        );
-      },
-    });
+    const infoBtn = uadInfo ? createInfoButton(uadInfo, pkg) : null;
+    const disableBtn = createDisableButton(pkg);
+    const suspendBtn = createSuspendButton(pkg);
+    const removeBtn = createRemoveButton(pkg, removeApplication);
 
     return [
       packageName,
@@ -655,7 +663,9 @@ function renderApplicationTable(data: ServiceData): HTMLElement {
       uadStatus,
       E("div", [infoBtn, disableBtn, suspendBtn, removeBtn].filter(Boolean)),
     ];
-  });
+  };
+
+  const rows = currentPackages.map(renderPackageRow);
 
   return UIRenderer.renderTable(rows, {
     headers: ["Package Name", "Version", "UID", "UAD Status", "Actions"],

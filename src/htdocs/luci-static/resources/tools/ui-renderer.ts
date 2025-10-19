@@ -252,14 +252,16 @@ const UIRenderer = baseclass.extend({
             }),
           );
         } else if (filter.type === "button") {
-          parts.push(
-            this.renderButton({
-              label: filter.label,
-              class: filter.class || "btn cbi-button",
-              style: filter.style || "margin: 8px 8px 8px 0;",
-              onClick: filter.onClick!,
-            }),
-          );
+          if (filter.onClick) {
+            parts.push(
+              this.renderButton({
+                label: filter.label,
+                class: filter.class || "btn cbi-button",
+                style: filter.style || "margin: 8px 8px 8px 0;",
+                onClick: filter.onClick,
+              }),
+            );
+          }
         }
 
         return parts;
@@ -752,6 +754,170 @@ const UIRenderer = baseclass.extend({
         );
       },
     };
+  },
+
+  renderProgressBar: function (config: {
+    value: number;
+    label?: string;
+    showPercent?: boolean;
+    class?: string;
+  }): HTMLElement {
+    const percent = Math.min(100, Math.max(0, config.value));
+    return E(
+      "div",
+      { class: "cbi-progressbar" + (config.class ? " " + config.class : "") },
+      [
+        config.label
+          ? E("div", { class: "cbi-progressbar-label" }, _(config.label))
+          : null,
+        E(
+          "div",
+          {
+            class: "cbi-progressbar-bar",
+            style: `width: ${percent}%`,
+          },
+          config.showPercent ? `${percent}%` : "",
+        ),
+      ],
+    );
+  },
+
+  renderBadge: function (config: {
+    text: string;
+    type?: "success" | "danger" | "warning" | "info" | "default";
+  }): HTMLElement {
+    const typeMap: Record<string, string> = {
+      success: "label-success",
+      danger: "label-danger",
+      warning: "label-warning",
+      info: "label-info",
+      default: "",
+    };
+    return E(
+      "span",
+      {
+        class: "label " + (typeMap[config.type || "default"] || ""),
+      },
+      _(config.text),
+    );
+  },
+
+  renderTooltip: function (config: {
+    text: string;
+    tooltip: string;
+  }): HTMLElement {
+    return E(
+      "span",
+      {
+        class: "cbi-tooltip-container",
+        "data-tooltip": config.tooltip,
+        title: config.tooltip,
+      },
+      _(config.text),
+    );
+  },
+
+  renderInput: function (config: {
+    type?: "text" | "password" | "number" | "email";
+    id?: string;
+    value?: string;
+    placeholder?: string;
+    class?: string;
+    onChange?: (value: string) => void;
+  }): HTMLElement {
+    return E("input", {
+      type: config.type || "text",
+      id: config.id,
+      value: config.value,
+      placeholder: config.placeholder,
+      class: config.class || "cbi-input-text",
+      change: config.onChange
+        ? (e: Event) => {
+            if (config.onChange) {
+              config.onChange((e.target as HTMLInputElement).value);
+            }
+          }
+        : undefined,
+    });
+  },
+
+  renderCheckbox: function (config: {
+    id?: string;
+    checked?: boolean;
+    label?: string;
+    onChange?: (checked: boolean) => void;
+  }): HTMLElement {
+    const checkbox = E("input", {
+      type: "checkbox",
+      id: config.id,
+      checked: config.checked,
+      change: config.onChange
+        ? (e: Event) => {
+            if (config.onChange) {
+              config.onChange((e.target as HTMLInputElement).checked);
+            }
+          }
+        : undefined,
+    });
+
+    return config.label
+      ? E("label", {}, [checkbox, " ", _(config.label)])
+      : checkbox;
+  },
+
+  renderSelect: function (config: {
+    id?: string;
+    options: Array<{ value: string; label: string }>;
+    selected?: string;
+    class?: string;
+    onChange?: (value: string) => void;
+  }): HTMLElement {
+    return E(
+      "select",
+      {
+        id: config.id,
+        class: config.class || "cbi-input-select",
+        change: config.onChange
+          ? (e: Event) => {
+              if (config.onChange) {
+                config.onChange((e.target as HTMLSelectElement).value);
+              }
+            }
+          : undefined,
+      },
+      config.options.map((opt) =>
+        E(
+          "option",
+          {
+            value: opt.value,
+            selected: opt.value === config.selected,
+          },
+          _(opt.label),
+        ),
+      ),
+    );
+  },
+
+  renderAlert: function (config: {
+    message: string;
+    type?: "info" | "warning" | "danger" | "success";
+    dismissible?: boolean;
+  }): HTMLElement {
+    const typeClass = config.type ? `alert-${config.type}` : "";
+    return E("div", { class: `alert ${typeClass}`.trim() }, [
+      _(config.message),
+      config.dismissible
+        ? E(
+            "button",
+            {
+              class: "close",
+              click: (e: Event) =>
+                (e.target as HTMLElement).parentElement?.remove(),
+            },
+            "×",
+          )
+        : null,
+    ]);
   },
 });
 
