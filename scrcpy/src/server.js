@@ -4,7 +4,7 @@ const { spawn } = require('child_process');
 const path = require('path');
 
 const args = process.argv.slice(2);
-const wsScrcpyPath = path.join(__dirname, 'node_modules', 'ws-scrcpy', 'dist', 'index.js');
+const wsScrcpyPath = path.join(__dirname, 'ws-scrcpy', 'dist', 'index.js');
 
 const server = spawn('node', [wsScrcpyPath, ...args], {
   stdio: 'inherit',

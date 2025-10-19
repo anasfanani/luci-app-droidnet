@@ -7,7 +7,7 @@ import globals from "globals";
 
 export default defineConfig([
   globalIgnores(
-    ["dist/**","build/**", "*.config.{js,mjs,ts}", "*.mjs","tests/**"]
+    ["dist/**","build/**", "*.config.{js,mjs,ts}", "*.mjs","tests/**","scrcpy/**"]
   ),
   eslint.configs.recommended,
   tseslint.configs.recommended,
