@@ -447,22 +447,21 @@ function renderPowerOptions(): HTMLElement[] {
         "Let you shutdown, restart, access fastboot mode or recovery mode, all in one place.",
       ),
     ),
-    E("table", { class: "table cbi-section-table" }, [
-      E(
-        "tr",
-        { class: "tr", style: "border: none;" },
-        powerActions.map(({ label, action }) =>
-          E("td", { class: "td center", style: "border: none;" }, [
-            UIRenderer.renderButton({
-              label,
-              type: "save",
-              style: "margin: 10px 0!important;",
-              onClick: action,
-            }),
-          ]),
-        ),
+    E(
+      "div",
+      {
+        class: "cbi-section-table",
+        style: "display: flex; gap: 10px; justify-content: center;",
+      },
+      powerActions.map(({ label, action }) =>
+        UIRenderer.renderButton({
+          label,
+          type: "save",
+          style: "margin: 10px 0!important;",
+          onClick: action,
+        }),
       ),
-    ]),
+    ),
   ];
 }
 
@@ -734,7 +733,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
           style: "flex-basis: 100%; min-width: 250px; padding: .25em;",
         },
         [
-          E("label", _("Disk space") + " : "),
+          UIRenderer.renderLabel({ text: "Disk space" }),
           E(
             "div",
             {
@@ -757,7 +756,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
         ],
       ),
       E("div", { class: "filter-application", style: "padding: .25em;" }, [
-        E("label", _("Filter") + " : "),
+        UIRenderer.renderLabel({ text: "Filter" }),
         E(
           "span",
           { class: "control-group", style: "display: flex; gap: 10px;" },
@@ -888,7 +887,7 @@ function renderApplicationManager(data: ServiceData): HTMLElement[] {
         ),
       ]),
       E("div", { class: "action-application", style: "padding: .25em;" }, [
-        E("label", _("Actions") + " : "),
+        UIRenderer.renderLabel({ text: "Actions" }),
         E("span", { class: "control-group", style: "display: flex;" }, [
           UIRenderer.renderButton({
             label: "Update list",

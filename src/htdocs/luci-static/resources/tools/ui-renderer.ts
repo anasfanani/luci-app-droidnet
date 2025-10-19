@@ -186,11 +186,11 @@ const UIRenderer = baseclass.extend({
 
         if (filter.label) {
           parts.push(
-            E(
-              "label",
-              { for: filter.id, style: "margin-right: 8px;" },
-              _(filter.label) + " : ",
-            ),
+            this.renderLabel({
+              text: filter.label,
+              ...(filter.id && { for: filter.id }),
+              style: "margin-right: 8px;",
+            }),
           );
         }
 
@@ -544,6 +544,42 @@ const UIRenderer = baseclass.extend({
     );
 
     return (await m.render()) as HTMLElement;
+  },
+
+  renderLabel: function (config: {
+    text: string;
+    for?: string;
+    style?: string;
+    suffix?: string;
+  }): HTMLElement {
+    const finalText = _(config.text) + (config.suffix ?? " : ");
+    const attrs: Record<string, string> = {};
+
+    if (config.for) attrs["for"] = config.for;
+    if (config.style) attrs["style"] = config.style;
+
+    return E("label", attrs, finalText);
+  },
+
+  renderTextarea: function (config: {
+    id?: string;
+    class?: string;
+    style?: string;
+    readonly?: boolean;
+    rows?: number;
+    wrap?: string;
+  }): HTMLElement {
+    const attrs: Record<string, string | number> = {
+      class: config.class || "cbi-input-textarea",
+    };
+
+    if (config.id) attrs["id"] = config.id;
+    if (config.style) attrs["style"] = config.style;
+    if (config.readonly) attrs["readonly"] = "readonly";
+    if (config.rows) attrs["rows"] = config.rows;
+    if (config.wrap) attrs["wrap"] = config.wrap;
+
+    return E("textarea", attrs);
   },
 
   renderButton: function (config: {

@@ -140,11 +140,10 @@ function renderLogControls(): HTMLElement[] {
 }
 
 function renderLogViewer(): HTMLElement {
-  return E("textarea", {
+  return UIRenderer.renderTextarea({
     id: "syslog",
-    class: "cbi-input-textarea",
     style: "height: 500px; overflow-y: scroll;",
-    readonly: "readonly",
+    readonly: true,
     wrap: "off",
     rows: 1,
   });
