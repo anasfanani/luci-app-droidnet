@@ -10,22 +10,35 @@ import {
 } from "./helpers";
 
 // Global token storage
-let authToken: string;
+let authToken: string | undefined;
 const consoleErrors: string[] = [];
+const consoleWarnings: string[] = [];
 
 test.describe("DroidNet Tests", () => {
   test.beforeEach(({ page }) => {
     consoleErrors.length = 0;
+    consoleWarnings.length = 0;
     page.on("console", (msg) => {
       if (msg.type() === "error") {
         consoleErrors.push(msg.text());
+      } else if (msg.type() === "warning") {
+        consoleWarnings.push(msg.text());
       }
     });
   });
 
-  test.afterEach(() => {
+  test.afterEach(({ page }, testInfo) => {
+    // Report warnings (non-blocking)
+    if (consoleWarnings.length > 0) {
+      console.warn(`⚠️  Console warnings (${testInfo.title}):`);
+      consoleWarnings.forEach((warning) => console.warn(`   - ${warning}`));
+    }
+
+    // Fail on errors
     if (consoleErrors.length > 0) {
-      throw new Error(`Console errors: ${consoleErrors.join(", ")}`);
+      throw new Error(
+        `❌ Console errors detected:\n${consoleErrors.map((e) => `  - ${e}`).join("\n")}`,
+      );
     }
   });
 
@@ -52,6 +65,12 @@ test.describe("DroidNet Tests", () => {
   for (const pageConfig of testPages) {
     test(`${pageConfig.title} Page`, async ({ page }) => {
       const baseUrl = process.env.LUCI_BASE_URL!;
+
+      if (!authToken) {
+        throw new Error(
+          "Auth token not available. Login test may have failed.",
+        );
+      }
 
       await page.context().addCookies([
         {
