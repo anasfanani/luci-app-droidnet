@@ -336,9 +336,10 @@ const UIRenderer = baseclass.extend({
     header?: HTMLElement,
   ): HTMLElement {
     const defaultHeader = header || this.header;
+    const sectionsArray = Array.isArray(sections) ? sections : [sections];
     return E("div", { class: "cbi-map" }, [
       defaultHeader ? E(defaultHeader) : null,
-      ...sections
+      ...sectionsArray
         .filter(Boolean)
         .flat()
         .map((_section) => E("div", { class: "cbi-section" }, _section)),
@@ -680,7 +681,10 @@ const UIRenderer = baseclass.extend({
     callback: () => Promise<void>,
     _disabled?: boolean,
   ): form.ButtonValue {
-    const o = section.option(form.ButtonValue, name, title) as form.ButtonValue;
+    const CBIButtonValue =
+      form.ButtonValue ||
+      (form as unknown as Record<string, unknown>)["Button"];
+    const o = section.option(CBIButtonValue, name, title) as form.ButtonValue;
     o.inputstyle = type;
     o.inputtitle = caption;
     o.onclick = callback;
