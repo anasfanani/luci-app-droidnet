@@ -3,6 +3,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=luci-app-droidnet-scrcpy
 PKG_VERSION:=1.0.0
 PKG_RELEASE:=1
+PKG_CHECK_FORMAT_SECURITY:=0
 
 PKG_LICENSE:=Apache-2.0
 PKG_MAINTAINER:=Hilman Maulana <hilman0.0maulana@gmail.com>
@@ -33,12 +34,15 @@ define Build/Prepare
 endef
 
 define Build/Compile
-	cd $(PKG_BUILD_DIR) && npm install https://github.com/NetrisTV/ws-scrcpy.git --production
+	cd $(PKG_BUILD_DIR) && git clone https://github.com/NetrisTV/ws-scrcpy.git
+	cd $(PKG_BUILD_DIR)/ws-scrcpy && npm ci && npm run dist && rm -rf node_modules && npm ci --omit=dev
 endef
 
 define Package/luci-app-droidnet-scrcpy/install
-	$(INSTALL_DIR) $(1)/usr/lib/droidnet-scrcpy
-	$(CP) $(PKG_BUILD_DIR)/node_modules/ws-scrcpy $(1)/usr/lib/droidnet-scrcpy/
+	$(INSTALL_DIR) $(1)/usr/lib/droidnet-scrcpy/ws-scrcpy
+	$(CP) $(PKG_BUILD_DIR)/ws-scrcpy/dist $(1)/usr/lib/droidnet-scrcpy/ws-scrcpy/
+	$(CP) $(PKG_BUILD_DIR)/ws-scrcpy/node_modules $(1)/usr/lib/droidnet-scrcpy/ws-scrcpy/
+	$(CP) $(PKG_BUILD_DIR)/ws-scrcpy/package.json $(1)/usr/lib/droidnet-scrcpy/ws-scrcpy/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/server.js $(1)/usr/lib/droidnet-scrcpy/
 	
 	$(INSTALL_DIR) $(1)/etc/init.d
